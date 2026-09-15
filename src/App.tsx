@@ -1,0 +1,41 @@
+import { Navigate, Route, Routes } from "react-router-dom";
+import { LoginScreen } from "./screens/LoginScreen";
+import { WelcomeScreen } from "./screens/WelcomeScreen";
+import { NicknameScreen } from "./screens/NicknameScreen";
+import { CourseScreen } from "./screens/CourseScreen";
+import { PresentationScreen } from "./screens/PresentationScreen";
+import { UniverseScreen } from "./screens/UniverseScreen";
+import { MaterialScreen } from "./screens/MaterialScreen";
+import { ReadyScreen } from "./screens/ReadyScreen";
+import { MissionScreen } from "./screens/MissionScreen";
+import { RewardScreen } from "./screens/RewardScreen";
+import { TeacherSpaceScreen } from "./screens/TeacherSpaceScreen";
+import { useSession } from "./lib/session";
+
+export default function App() {
+  const { ready } = useSession();
+  if (!ready) {
+    return (
+      <div className="app-shell">
+        <p>Préparation de Happy Learn…</p>
+      </div>
+    );
+  }
+
+  return (
+    <Routes>
+      <Route path="/" element={<LoginScreen />} />
+      <Route path="/accueil" element={<WelcomeScreen />} />
+      <Route path="/prenom" element={<NicknameScreen />} />
+      <Route path="/classe" element={<CourseScreen />} />
+      <Route path="/seance" element={<PresentationScreen />} />
+      <Route path="/univers" element={<UniverseScreen />} />
+      <Route path="/materiel" element={<MaterialScreen />} />
+      <Route path="/pret" element={<ReadyScreen />} />
+      <Route path="/mission" element={<MissionScreen />} />
+      <Route path="/recompense" element={<RewardScreen />} />
+      <Route path="/espace-professeur" element={<TeacherSpaceScreen />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
