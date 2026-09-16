@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "deploy": "npx wrangler pages deploy dist --project-name=happy-learn",
     "lint": "oxlint",
     "preview": "vite preview"
   },
