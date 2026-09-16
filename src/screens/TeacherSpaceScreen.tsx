@@ -110,12 +110,15 @@ export function TeacherSpaceScreen() {
     );
   }, [selectedStudent, sessions]);
 
-  if (role !== "enseignant" || !teacher) return <Navigate to="/" replace />;
+  if (role !== "enseignant" || !teacher) return <Navigate to="/connexion/enseignant" replace />;
+
+  const showCodeHint = sessions.length === 0;
 
   return (
     <Shell
       brand="Happy Learn"
       stepLabel="Espace enseignant"
+      homeTo="/espace-professeur"
       extra={
         <Button
           onClick={() => {
@@ -133,6 +136,12 @@ export function TeacherSpaceScreen() {
           Crée autant de classes que tu veux : chaque classe a son code. Suis les statistiques de chaque élève, sans note
           ni classement.
         </p>
+        {showCodeHint && current ? (
+          <div className="teacher-banner" role="status">
+            <strong>Première étape :</strong> partage le code <code>{current.code}</code> à tes élèves pour qu’ils
+            rejoignent la classe.
+          </div>
+        ) : null}
         {backend === "local" ? (
           <p className="field-help">
             Espace local sur cet appareil. Avec Supabase, les mêmes codes fonctionnent sur les tablettes de l’école.

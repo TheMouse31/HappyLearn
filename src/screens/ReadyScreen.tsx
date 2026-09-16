@@ -9,14 +9,14 @@ import { useSession } from "../lib/session";
 export function ReadyScreen() {
   const navigate = useNavigate();
   const { prenom, universe, mode, startMission, grade, subject } = useSession();
-  if (!prenom) return <Navigate to="/" replace />;
+  if (!prenom) return <Navigate to="/connexion/eleve" replace />;
   if (!isCoursePlayable(grade, subject)) return <Navigate to="/classe" replace />;
   if (!universe) return <Navigate to="/univers" replace />;
   if (!mode) return <Navigate to="/materiel" replace />;
   const def = UNIVERSES[universe];
 
   return (
-    <Shell stepLabel="A05 · Confirmation">
+    <Shell stepLabel="Prêt" backTo="/materiel" showSetupSteps>
       <div className="split">
         <aside className="mascot-stage">
           <Neo pose="universe" universe={universe} />
@@ -30,7 +30,6 @@ export function ReadyScreen() {
             <div><span>Mode</span><strong>{mode === "qcm" ? "Sans cahier · QCM" : "Avec cahier"}</strong></div>
           </div>
           <div className="actions">
-            <Button onClick={() => navigate("/materiel")}>Modifier</Button>
             <Button
               variant="primary"
               onClick={() => {

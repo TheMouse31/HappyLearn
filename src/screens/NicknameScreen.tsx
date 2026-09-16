@@ -10,10 +10,10 @@ export function NicknameScreen() {
   const { prenom, role, setPrenom } = useSession();
   const [value, setValue] = useState(prenom);
   const [error, setError] = useState("");
-  if (role !== "eleve") return <Navigate to="/" replace />;
+  if (role !== "eleve") return <Navigate to="/connexion" replace />;
 
   return (
-    <Shell stepLabel="A01 · Pseudonyme">
+    <Shell stepLabel="Prénom" backTo="/accueil">
       <section className="intro">
         <span className="kicker">Faisons connaissance</span>
         <h1>Comment veux-tu qu’on t’appelle ?</h1>
@@ -38,7 +38,6 @@ export function NicknameScreen() {
           <Neo pose="guide" className="neo-small" />
         </div>
         <div className="actions">
-          <Button onClick={() => navigate("/accueil")}>Retour</Button>
           <Button
             variant="primary"
             onClick={() => {

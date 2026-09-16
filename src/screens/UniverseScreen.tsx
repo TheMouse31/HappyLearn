@@ -12,11 +12,11 @@ export function UniverseScreen() {
   const navigate = useNavigate();
   const { prenom, universe, setUniverse, grade, subject } = useSession();
   const [error, setError] = useState("");
-  if (!prenom) return <Navigate to="/" replace />;
+  if (!prenom) return <Navigate to="/connexion/eleve" replace />;
   if (!isCoursePlayable(grade, subject)) return <Navigate to="/classe" replace />;
 
   return (
-    <Shell stepLabel="A03 · Univers">
+    <Shell stepLabel="Univers" backTo="/seance" showSetupSteps>
       <div className="split">
         <aside className="mascot-stage">
           <Neo pose={universe ? "universe" : "guide"} universe={universe} />
@@ -50,7 +50,6 @@ export function UniverseScreen() {
           </div>
           <p className="error" aria-live="polite">{error}</p>
           <div className="actions">
-            <Button onClick={() => navigate("/seance")}>Retour</Button>
             <Button
               variant="primary"
               onClick={() => {

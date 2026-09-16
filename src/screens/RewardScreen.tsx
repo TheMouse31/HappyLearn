@@ -10,12 +10,12 @@ export function RewardScreen() {
   const navigate = useNavigate();
   const { prenom, universe, collection, rewardPending, resetToHome, pickAnotherUniverse } =
     useSession();
-  if (!prenom) return <Navigate to="/" replace />;
+  if (!prenom) return <Navigate to="/connexion/eleve" replace />;
   if (!universe || !rewardPending) return <Navigate to="/accueil" replace />;
   const def = UNIVERSES[universe];
 
   return (
-    <Shell stepLabel="A06 · Mission accomplie">
+    <Shell stepLabel="Mission accomplie" homeTo="/accueil">
       <div className="split">
         <aside className="mascot-stage">
           <Neo pose="a06" universe={universe} />

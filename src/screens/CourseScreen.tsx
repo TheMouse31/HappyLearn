@@ -25,16 +25,16 @@ export function CourseScreen() {
   const playable = isCoursePlayable(pickedGrade, pickedSubject);
 
   if (role === "enseignant") return <Navigate to="/espace-professeur" replace />;
-  if (!prenom) return <Navigate to="/" replace />;
+  if (!prenom) return <Navigate to="/connexion/eleve" replace />;
 
   return (
-    <Shell brand="Happy Learn" stepLabel="Classe et matière">
+    <Shell brand="Happy Learn" stepLabel="Classe et matière" backTo="/accueil" showSetupSteps>
       <div className="split course-layout">
         <aside className="mascot-stage">
           <p className="bubble">
             {playable
               ? "Super choix ! On peut commencer la mission."
-              : "Choisis ta classe et ta matière. Certaines séances arrivent bientôt."}
+              : "Choisis ta classe et ta matière. Happy Learn couvre tout le primaire — certaines séances arrivent bientôt."}
           </p>
           <Neo pose="guide" />
         </aside>
@@ -42,8 +42,8 @@ export function CourseScreen() {
           <span className="kicker">Happy Learn</span>
           <h1>Quelle est ta classe, {prenom} ?</h1>
           <p className="lead" data-listen>
-            Indique ton niveau, puis la matière. Toutes les matières du primaire sont listées ; aujourd’hui, une mission
-            de mathématiques CM2 est déjà prête.
+            Indique ton niveau, puis la matière. Toutes les matières du primaire sont listées. Aujourd’hui, le premier
+            parcours ouvert est mathématiques CM2 — les autres arrivent bientôt.
           </p>
 
           <h2 className="section-title">Niveau</h2>
@@ -99,8 +99,8 @@ export function CourseScreen() {
                     {gradeLabel(pickedGrade)} · {subjectLabel(pickedSubject)}
                   </strong>
                   <p>
-                    Cette séance n’est pas encore disponible. Pour l’instant, seule la mission mathématiques CM2 est
-                    ouverte. Les autres niveaux et matières arriveront bientôt.
+                    Bientôt disponible. Happy Learn accueillera toutes les matières ; pour jouer maintenant, choisis{" "}
+                    <strong>CM2</strong> et <strong>Mathématiques</strong>.
                   </p>
                 </>
               )}
@@ -112,7 +112,6 @@ export function CourseScreen() {
           </p>
 
           <div className="actions">
-            <Button onClick={() => navigate("/accueil")}>Retour</Button>
             <Button
               variant="primary"
               onClick={() => {

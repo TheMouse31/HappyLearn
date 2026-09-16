@@ -11,12 +11,12 @@ export function MaterialScreen() {
   const navigate = useNavigate();
   const { prenom, universe, mode, setMode, grade, subject } = useSession();
   const [error, setError] = useState("");
-  if (!prenom) return <Navigate to="/" replace />;
+  if (!prenom) return <Navigate to="/connexion/eleve" replace />;
   if (!isCoursePlayable(grade, subject)) return <Navigate to="/classe" replace />;
   if (!universe) return <Navigate to="/univers" replace />;
 
   return (
-    <Shell stepLabel="A04 · Matériel">
+    <Shell stepLabel="Matériel" backTo="/univers" showSetupSteps>
       <div className="split">
         <aside className="mascot-stage">
           <p className="bubble">Tu peux réussir ta mission dans les deux modes. Choisis celui qui te convient aujourd’hui !</p>
@@ -58,7 +58,6 @@ export function MaterialScreen() {
           </div>
           <p className="error" aria-live="polite">{error}</p>
           <div className="actions">
-            <Button onClick={() => navigate("/univers")}>Retour</Button>
             <Button
               variant="primary"
               onClick={() => {

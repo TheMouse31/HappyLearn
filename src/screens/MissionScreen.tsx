@@ -79,7 +79,7 @@ export function MissionScreen() {
     setShowPouce(false);
   }, [index]);
 
-  if (!prenom) return <Navigate to="/" replace />;
+  if (!prenom) return <Navigate to="/connexion/eleve" replace />;
   if (!isCoursePlayable(grade, subject)) return <Navigate to="/classe" replace />;
   if (!universe || !mode) return <Navigate to="/pret" replace />;
   if (!sessionId) return <Navigate to="/pret" replace />;
@@ -185,13 +185,17 @@ export function MissionScreen() {
   return (
     <Shell
       stepLabel={`Mission ${copy.title}`}
+      confirmLeaveMission
+      homeTo="/accueil"
       extra={
         <Button
           onClick={() => {
-            void quitMission().then(() => navigate("/pret"));
+            const ok = window.confirm("Quitter la mission et revenir à l’accueil ?");
+            if (!ok) return;
+            void quitMission().then(() => navigate("/accueil"));
           }}
         >
-          Quitter la mission
+          Quitter
         </Button>
       }
     >

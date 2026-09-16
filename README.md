@@ -73,10 +73,10 @@ npx wrangler pages deploy dist --project-name happy-learn
 
 ## Connexion (écoles et particuliers)
 
-La page d’accueil `/` est la page de connexion.
+La page d’accueil `/` présente Happy Learn. La connexion est sur `/connexion` (élève ou professeur / parent).
 
-- **Élève** : prénom ou surnom, pas d’e-mail. Code classe facultatif (fourni par le professeur). À la maison, le code peut rester vide.
-- **Professeur ou parent** : e-mail + mot de passe, ou lien magique. Plusieurs classes possibles, chacune avec son code. L’espace enseignant montre les stats par élève (séances, missions terminées, réussite aux réponses, univers gagnés) et le journal des séances, **sans note ni classement**.
+- **Élève** : `/connexion/eleve` — prénom ou surnom, pas d’e-mail. Code classe facultatif (fourni par le professeur). À la maison, le code peut rester vide.
+- **Professeur ou parent** : `/connexion/enseignant` — e-mail + mot de passe, ou lien magique. Plusieurs classes possibles, chacune avec son code. L’espace enseignant montre les stats par élève (séances, missions terminées, réussite aux réponses, univers gagnés) et le journal des séances, **sans note ni classement**.
 
 ## Parcours enfant
 

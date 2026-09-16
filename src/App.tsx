@@ -1,5 +1,8 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import { LoginScreen } from "./screens/LoginScreen";
+import { HomePage } from "./screens/HomePage";
+import { ConnexionScreen } from "./screens/ConnexionScreen";
+import { EleveLoginScreen } from "./screens/EleveLoginScreen";
+import { TeacherLoginScreen } from "./screens/TeacherLoginScreen";
 import { WelcomeScreen } from "./screens/WelcomeScreen";
 import { NicknameScreen } from "./screens/NicknameScreen";
 import { CourseScreen } from "./screens/CourseScreen";
@@ -24,7 +27,10 @@ export default function App() {
 
   return (
     <Routes>
-      <Route path="/" element={<LoginScreen />} />
+      <Route path="/" element={<HomePage />} />
+      <Route path="/connexion" element={<ConnexionScreen />} />
+      <Route path="/connexion/eleve" element={<EleveLoginScreen />} />
+      <Route path="/connexion/enseignant" element={<TeacherLoginScreen />} />
       <Route path="/accueil" element={<WelcomeScreen />} />
       <Route path="/prenom" element={<NicknameScreen />} />
       <Route path="/classe" element={<CourseScreen />} />

@@ -1,4 +1,4 @@
-0.0.0
+0.1.0
 
-Happy Learn V0 — gel avant évolutions UX (home, navigation).
-Commit de référence : figé par le tag git v0 et la branche backup/v0.
+Happy Learn V0.1 — home publique, connexions séparées, bouton Accueil, navigation fluide.
+Revenir à V0 : git switch backup/v0  ou  git checkout v0
