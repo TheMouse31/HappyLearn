@@ -923,6 +923,26 @@ p {
   min-width: 0;
 }
 
+.stats-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin: 22px 0 8px;
+  padding: 14px 16px;
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.stats-filters .field {
+  margin: 0;
+}
+
+.stats-filters select,
+.stats-filters input[type="date"] {
+  width: 100%;
+}
+
 .teacher-tabs {
   margin: 20px 0 8px;
   max-width: 420px;
