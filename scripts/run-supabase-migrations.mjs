@@ -40,6 +40,11 @@ async function run(sql, label) {
   });
   const text = await res.text();
   if (!res.ok) {
+    // Idempotent re-runs: policies/tables may already exist on the target project.
+    if (/already exists/i.test(text)) {
+      console.log("SKIP (already exists)", label);
+      return;
+    }
     console.error("FAIL", label, res.status, text);
     throw new Error(label);
   }
