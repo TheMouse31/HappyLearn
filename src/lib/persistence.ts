@@ -138,7 +138,8 @@ export type Persistence = {
       niveau: GradeLevel;
       matiere: SubjectSlug;
       missionId: string;
-      univers: UniverseSlug;
+      /** Laissé null : l'élève choisit son univers. */
+      univers?: UniverseSlug | null;
       mode: PlayMode;
     } | null,
   ) => Promise<ClasseSession | null>;

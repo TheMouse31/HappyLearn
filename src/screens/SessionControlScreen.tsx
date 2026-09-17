@@ -1,15 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "../components/Button";
 import { Shell } from "../components/Shell";
 import { GRADES, SUBJECTS, gradeLabel, subjectLabel } from "../data/catalog";
 import { listMissions } from "../data/missions";
-import type { GradeLevel, PlayMode, SubjectSlug, UniverseSlug } from "../data/types";
+import type { GradeLevel, PlayMode, SubjectSlug } from "../data/types";
 import { formatStudentName } from "../data/types";
-import { UNIVERSES } from "../data/universes";
 import { useSession } from "../lib/session";
-
-const UNIVERSE_OPTIONS = Object.values(UNIVERSES);
 
 export function SessionControlScreen() {
   const navigate = useNavigate();
@@ -37,14 +34,19 @@ export function SessionControlScreen() {
   const [grade, setGrade] = useState<GradeLevel>("cm2");
   const [subject, setSubject] = useState<SubjectSlug>("maths");
   const [missionId, setMissionId] = useState("cm2-maths-fractions-01");
-  const [universe, setUniverse] = useState<UniverseSlug>("football");
   const [mode, setMode] = useState<PlayMode>("qcm");
+
+  const refreshLiveSessionRef = useRef(refreshLiveSession);
+  const listClassMissionsDoneRef = useRef(listClassMissionsDone);
+  refreshLiveSessionRef.current = refreshLiveSession;
+  listClassMissionsDoneRef.current = listClassMissionsDone;
 
   const missions = useMemo(() => listMissions(grade, subject), [grade, subject]);
 
+  // Ne dépend pas de l'identité de refreshLiveSession (sinon boucle de re-renders).
   useEffect(() => {
-    void refreshLiveSession();
-  }, [current?.id, refreshLiveSession]);
+    void refreshLiveSessionRef.current();
+  }, [current?.id]);
 
   useEffect(() => {
     if (!current) {
@@ -52,13 +54,13 @@ export function SessionControlScreen() {
       return;
     }
     let cancelled = false;
-    void listClassMissionsDone(current.id).then((ids) => {
+    void listClassMissionsDoneRef.current(current.id).then((ids) => {
       if (!cancelled) setDoneMissions(ids);
     });
     return () => {
       cancelled = true;
     };
-  }, [current?.id, listClassMissionsDone, liveSession?.missionId]);
+  }, [current?.id, liveSession?.missionId]);
 
   useEffect(() => {
     if (missions.length === 0) return;
@@ -86,7 +88,7 @@ export function SessionControlScreen() {
         <h1>Session de classe</h1>
         <p className="lead" data-listen>
           Lance une session pour {current?.nom ?? "ta classe"} : un nouveau code à chaque démarrage. Les élèves
-          rejoignent, tu lances les missions, tu vois qui est connecté.
+          rejoignent, tu lances les missions, tu vois qui est connecté. Chaque élève choisit ensuite son univers.
         </p>
 
         {backend === "local" ? (
@@ -195,8 +197,8 @@ export function SessionControlScreen() {
                 <section className="roster-panel" aria-label="Lancer une activité">
                   <h2>Activité</h2>
                   <p className="field-help">
-                    Les élèves en salle d’attente sont poussés dans la mission. Tu peux enchaîner plusieurs exercices
-                    dans la même session.
+                    Tu choisis le parcours et le mode. Les élèves choisissent ensuite leur univers, puis démarrent la
+                    mission. Tu peux enchaîner plusieurs exercices dans la même session.
                   </p>
                   <div className="activity-grid">
                     <div className="field">
@@ -248,20 +250,6 @@ export function SessionControlScreen() {
                       </select>
                     </div>
                     <div className="field">
-                      <label htmlFor="act-univers">Univers</label>
-                      <select
-                        id="act-univers"
-                        value={universe}
-                        onChange={(event) => setUniverse(event.target.value as UniverseSlug)}
-                      >
-                        {UNIVERSE_OPTIONS.map((item) => (
-                          <option key={item.slug} value={item.slug}>
-                            {item.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="field">
                       <label htmlFor="act-mode">Mode</label>
                       <select
                         id="act-mode"
@@ -277,17 +265,20 @@ export function SessionControlScreen() {
                     <Button
                       variant="primary"
                       type="button"
-                      disabled={busy || missions.length === 0 || !missions.some((m) => m.id === missionId && m.available)}
+                      disabled={
+                        busy ||
+                        missions.length === 0 ||
+                        !missions.some((m) => m.id === missionId && m.available)
+                      }
                       onClick={() => {
                         setBusy(true);
                         void setClassActivity({
                           niveau: grade,
                           matiere: subject,
                           missionId,
-                          univers: universe,
                           mode,
                         })
-                          .then(() => listClassMissionsDone(current.id).then(setDoneMissions))
+                          .then(() => listClassMissionsDoneRef.current(current.id).then(setDoneMissions))
                           .finally(() => setBusy(false));
                       }}
                     >
@@ -310,13 +301,16 @@ export function SessionControlScreen() {
                     <p className="field-help">
                       En cours : {gradeLabel(liveSession.niveau)} · {subjectLabel(liveSession.matiere)} ·{" "}
                       {listMissions().find((item) => item.id === liveSession.missionId)?.title ??
-                        liveSession.missionId}
+                        liveSession.missionId}{" "}
+                      · mode {liveSession.mode === "cahier" ? "cahier" : "QCM"} (univers au choix de l’élève)
                     </p>
                   ) : null}
                 </section>
               </>
             ) : (
-              <p className="field-help">Aucune session ouverte. Clique sur « Lancer une session » pour générer un code.</p>
+              <p className="field-help">
+                Aucune session ouverte. Clique sur « Lancer une session » pour générer un code.
+              </p>
             )}
           </>
         )}
