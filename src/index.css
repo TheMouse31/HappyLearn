@@ -1129,6 +1129,15 @@ p {
   text-decoration: none;
 }
 
+button.text-link {
+  border: 0;
+  background: transparent;
+  padding: 8px 4px;
+  min-height: auto;
+  box-shadow: none;
+  cursor: pointer;
+}
+
 .nav-text-link:hover,
 .text-link:hover {
   text-decoration: underline;

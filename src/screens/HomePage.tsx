@@ -5,7 +5,7 @@ import { useSession } from "../lib/session";
 
 export function HomePage() {
   const navigate = useNavigate();
-  const { role } = useSession();
+  const { role, logout } = useSession();
   const continueTo =
     role === "eleve" ? "/accueil" : role === "enseignant" ? "/espace-professeur" : null;
 
@@ -24,9 +24,15 @@ export function HomePage() {
               <button type="button" className="primary" onClick={() => navigate(continueTo)}>
                 Continuer
               </button>
-              <Link className="text-link" to="/connexion">
+              <button
+                type="button"
+                className="text-link"
+                onClick={() => {
+                  void logout().then(() => navigate("/connexion"));
+                }}
+              >
                 Changer de compte
-              </Link>
+              </button>
             </div>
           ) : (
             <div className="role-card-grid" role="group" aria-label="Qui es-tu ?">
