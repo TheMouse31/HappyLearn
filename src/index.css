@@ -949,6 +949,30 @@ p {
   margin-top: 8px;
 }
 
+.presence-pill {
+  display: inline-block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+
+.presence-connecte {
+  color: #0b6b3a;
+  background: #e6f8ee;
+}
+
+.presence-deconnecte {
+  color: #7a4a00;
+  background: #fff3df;
+}
+
+.presence-absent {
+  color: #5a6270;
+  background: #eef1f5;
+}
+
 .stats-filters .field {
   margin: 0;
 }
