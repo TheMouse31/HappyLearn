@@ -123,19 +123,72 @@ export function loadLocalClassStudents(): ClassStudent[] {
   try {
     const raw = JSON.parse(localStorage.getItem(CLASS_STUDENTS_KEY) ?? "[]") as unknown;
     if (!Array.isArray(raw)) return [];
-    return raw.filter((item): item is ClassStudent => {
-      if (!item || typeof item !== "object") return false;
-      const row = item as { id?: unknown; classId?: unknown; prenom?: unknown };
-      return (
-        typeof row.id === "string" &&
-        typeof row.classId === "string" &&
-        typeof row.prenom === "string" &&
-        row.prenom.trim().length > 0
-      );
-    });
+    return raw
+      .map((item): ClassStudent | null => {
+        if (!item || typeof item !== "object") return null;
+        const row = item as { id?: unknown; classId?: unknown; prenom?: unknown; nom?: unknown };
+        if (
+          typeof row.id !== "string" ||
+          typeof row.classId !== "string" ||
+          typeof row.prenom !== "string" ||
+          row.prenom.trim().length === 0
+        ) {
+          return null;
+        }
+        return {
+          id: row.id,
+          classId: row.classId,
+          prenom: row.prenom,
+          nom: typeof row.nom === "string" ? row.nom : "",
+        };
+      })
+      .filter((item): item is ClassStudent => item !== null);
   } catch {
     return [];
   }
+}
+
+const LIVE_PARTICIPANT_KEY = "happy-learn-live-participant";
+
+export type LiveParticipantLocal = {
+  sessionId: string;
+  participantId: string;
+  eleveId: string;
+  prenom: string;
+  nom: string;
+  sessionCode: string;
+};
+
+export function loadLiveParticipant(): LiveParticipantLocal | null {
+  try {
+    const raw = JSON.parse(localStorage.getItem(LIVE_PARTICIPANT_KEY) ?? "null") as unknown;
+    if (!raw || typeof raw !== "object") return null;
+    const row = raw as LiveParticipantLocal;
+    if (
+      typeof row.sessionId !== "string" ||
+      typeof row.participantId !== "string" ||
+      typeof row.eleveId !== "string" ||
+      typeof row.prenom !== "string" ||
+      typeof row.sessionCode !== "string"
+    ) {
+      return null;
+    }
+    return {
+      sessionId: row.sessionId,
+      participantId: row.participantId,
+      eleveId: row.eleveId,
+      prenom: row.prenom,
+      nom: typeof row.nom === "string" ? row.nom : "",
+      sessionCode: row.sessionCode,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function saveLiveParticipant(value: LiveParticipantLocal | null): void {
+  if (!value) localStorage.removeItem(LIVE_PARTICIPANT_KEY);
+  else localStorage.setItem(LIVE_PARTICIPANT_KEY, JSON.stringify(value));
 }
 
 export function saveLocalClassStudents(items: ClassStudent[]): void {

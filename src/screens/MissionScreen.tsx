@@ -6,7 +6,8 @@ import { HintOverlay } from "../components/HintOverlay";
 import { Neo } from "../components/Neo";
 import { Shell } from "../components/Shell";
 import { UniverseScene } from "../components/UniverseScene";
-import { BILAN_CHOICES, STEPS } from "../data/steps";
+import { BILAN_CHOICES } from "../data/steps";
+import { defaultMissionFor, findMission } from "../data/missions";
 import type { Step } from "../data/types";
 import {
   advanceDelay,
@@ -53,8 +54,19 @@ function FractionFields({
 
 export function MissionScreen() {
   const navigate = useNavigate();
-  const { prenom, universe, mode, sessionId, recordAnswer, completeMission, quitMission, grade, subject } =
-    useSession();
+  const {
+    prenom,
+    universe,
+    mode,
+    sessionId,
+    recordAnswer,
+    completeMission,
+    quitMission,
+    grade,
+    subject,
+    missionId,
+    lockedSession,
+  } = useSession();
   const [index, setIndex] = useState(0);
   const [raw, setRaw] = useState("");
   const [top, setTop] = useState("");
@@ -64,9 +76,17 @@ export function MissionScreen() {
   const [kind, setKind] = useState<"ok" | "retry" | "hint" | "info">("info");
   const [hint, setHint] = useState("");
   const [showPouce, setShowPouce] = useState(false);
-  const step = STEPS[index];
+
+  const mission =
+    findMission(missionId) ?? defaultMissionFor(grade, subject) ?? findMission("cm2-maths-fractions-01");
+  const steps = mission?.steps ?? [];
+  const step = steps[index];
 
   const options = useMemo(() => (step ? qcmOptions(step) : []), [step?.id]);
+
+  useEffect(() => {
+    setIndex(0);
+  }, [mission?.id, sessionId]);
 
   useEffect(() => {
     setRaw("");
@@ -80,10 +100,16 @@ export function MissionScreen() {
   }, [index]);
 
   if (!prenom) return <Navigate to="/connexion/eleve" replace />;
-  if (!isCoursePlayable(grade, subject)) return <Navigate to="/classe" replace />;
-  if (!universe || !mode) return <Navigate to="/pret" replace />;
-  if (!sessionId) return <Navigate to="/pret" replace />;
-  if (!step) return <Navigate to="/recompense" replace />;
+  if (!isCoursePlayable(grade, subject) && !lockedSession) return <Navigate to="/classe" replace />;
+  if (!universe || !mode) {
+    return <Navigate to={lockedSession ? "/salle-attente" : "/pret"} replace />;
+  }
+  if (!sessionId) {
+    return <Navigate to={lockedSession ? "/salle-attente" : "/pret"} replace />;
+  }
+  if (!step) {
+    return <Navigate to={lockedSession ? "/salle-attente" : "/recompense"} replace />;
+  }
 
   const copy = step.copy[universe];
   const qcm = usesQcm(step, mode);
@@ -93,8 +119,10 @@ export function MissionScreen() {
       : raw;
 
   function goNext() {
-    if (index >= STEPS.length - 1) {
-      void completeMission().then(() => navigate("/recompense"));
+    if (index >= steps.length - 1) {
+      void completeMission().then(() => {
+        navigate(lockedSession ? "/salle-attente" : "/recompense");
+      });
       return;
     }
     setIndex((value) => value + 1);
@@ -135,7 +163,13 @@ export function MissionScreen() {
         </div>
       );
     }
-    if (qcm && (current.kind === "fraction-choice" || current.kind === "simplify" || current.kind === "number" || current.kind === "direction")) {
+    if (
+      qcm &&
+      (current.kind === "fraction-choice" ||
+        current.kind === "simplify" ||
+        current.kind === "number" ||
+        current.kind === "direction")
+    ) {
       return (
         <div className="qcm" role="group" aria-label="Propositions">
           {options.map((value) => (
@@ -185,18 +219,20 @@ export function MissionScreen() {
   return (
     <Shell
       stepLabel={`Mission ${copy.title}`}
-      confirmLeaveMission
-      homeTo="/accueil"
+      confirmLeaveMission={!lockedSession}
+      homeTo={lockedSession ? "/salle-attente" : "/accueil"}
       extra={
-        <Button
-          onClick={() => {
-            const ok = window.confirm("Quitter la mission et revenir à l’accueil ?");
-            if (!ok) return;
-            void quitMission().then(() => navigate("/accueil"));
-          }}
-        >
-          Quitter
-        </Button>
+        lockedSession ? null : (
+          <Button
+            onClick={() => {
+              const ok = window.confirm("Quitter la mission et revenir à l’accueil ?");
+              if (!ok) return;
+              void quitMission().then(() => navigate("/accueil"));
+            }}
+          >
+            Quitter
+          </Button>
+        )
       }
     >
       <div className="mission-layout">
@@ -217,7 +253,9 @@ export function MissionScreen() {
           </div>
           <span className="kicker">{step.kicker}</span>
           <h1>{copy.title}</h1>
-          <p className="lead" data-listen>{copy.statement}</p>
+          <p className="lead" data-listen>
+            {copy.statement}
+          </p>
           {copy.note ? <p>{copy.note}</p> : null}
           {step.twoStep ? (
             <div className="two-steps">
@@ -267,13 +305,17 @@ export function MissionScreen() {
                 >
                   Un indice
                 </Button>
-                <Button variant="primary" onClick={() => void onValidate()} disabled={kind === "ok" || !currentValue || currentValue === "/"}>
+                <Button
+                  variant="primary"
+                  onClick={() => void onValidate()}
+                  disabled={kind === "ok" || !currentValue || currentValue === "/"}
+                >
                   Valider
                 </Button>
               </>
             ) : step.kind === "teaser" ? (
               <Button variant="primary" onClick={goNext}>
-                Voir ma récompense
+                {lockedSession ? "Terminer" : "Voir ma récompense"}
               </Button>
             ) : step.kind === "bilan" ? null : (
               <Button variant="primary" onClick={goNext}>

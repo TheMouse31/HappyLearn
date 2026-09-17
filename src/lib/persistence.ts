@@ -1,10 +1,13 @@
 import { UNIVERSES } from "../data/universes";
 import type {
   ChildSession,
+  ClasseSession,
   ClassRecord,
   ClassStudent,
   GradeLevel,
   PlayMode,
+  SessionParticipant,
+  SessionStatsFilters,
   StoredAnswer,
   SubjectSlug,
   UniverseSlug,
@@ -26,16 +29,67 @@ import { getSupabase } from "./supabase";
 export type CourseContext = {
   grade: GradeLevel | null;
   subject: SubjectSlug | null;
+  classId?: string | null;
+  classeSessionId?: string | null;
+  eleveId?: string | null;
+  missionId?: string | null;
 };
+
+export type JoinSessionResult =
+  | { ok: true; participant: SessionParticipant; session: ClasseSession }
+  | { ok: false; error: string };
 
 function normalizeStudentPrenom(raw: string): string {
   return raw.trim().slice(0, 20);
 }
 
+function normalizeStudentNom(raw: string): string {
+  return raw.trim().slice(0, 40);
+}
+
+function sameName(a: string, b: string): boolean {
+  return a.localeCompare(b, "fr", { sensitivity: "base" }) === 0;
+}
+
 function sortStudents(items: ClassStudent[]): ClassStudent[] {
-  return [...items].sort((a, b) =>
-    a.prenom.localeCompare(b.prenom, "fr", { sensitivity: "base" }),
-  );
+  return [...items].sort((a, b) => {
+    const byPrenom = a.prenom.localeCompare(b.prenom, "fr", { sensitivity: "base" });
+    if (byPrenom !== 0) return byPrenom;
+    return a.nom.localeCompare(b.nom, "fr", { sensitivity: "base" });
+  });
+}
+
+const LOCAL_CLASSE_SESSIONS_KEY = "happy-learn-classe-sessions";
+const LOCAL_PARTICIPANTS_KEY = "happy-learn-session-participants";
+
+function readJson<T>(key: string, fallback: T): T {
+  try {
+    return JSON.parse(localStorage.getItem(key) ?? "") as T;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeJson(key: string, value: unknown): void {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+function isUniverse(value: unknown): value is UniverseSlug {
+  return value === "football" || value === "rugby" || value === "equitation" || value === "espace";
+}
+
+function isMode(value: unknown): value is PlayMode {
+  return value === "cahier" || value === "qcm";
+}
+
+function mapLocalClasseSession(row: ClasseSession): ClasseSession {
+  return {
+    ...row,
+    niveau: row.niveau && isGradeLevel(row.niveau) ? row.niveau : null,
+    matiere: row.matiere && isSubjectSlug(row.matiere) ? row.matiere : null,
+    univers: row.univers && isUniverse(row.univers) ? row.univers : null,
+    mode: row.mode && isMode(row.mode) ? row.mode : null,
+  };
 }
 
 export type Persistence = {
@@ -57,30 +111,157 @@ export type Persistence = {
   renameClass: (classId: string, nom: string) => Promise<void>;
   listClassStudents: (classId: string) => Promise<ClassStudent[]>;
   listStudentsByClassCode: (code: string) => Promise<ClassStudent[]>;
-  addClassStudent: (classId: string, prenom: string) => Promise<ClassStudent | string>;
-  renameClassStudent: (studentId: string, prenom: string) => Promise<string | null>;
+  addClassStudent: (
+    classId: string,
+    prenom: string,
+    nom?: string,
+  ) => Promise<ClassStudent | string>;
+  renameClassStudent: (
+    studentId: string,
+    prenom: string,
+    nom?: string,
+  ) => Promise<string | null>;
   removeClassStudent: (studentId: string) => Promise<void>;
-  listSessionsByClassCode: (code: string) => Promise<ChildSession[]>;
+  listSessionsByClassCode: (
+    code: string,
+    filters?: SessionStatsFilters,
+  ) => Promise<ChildSession[]>;
   listAnswersBySessionIds: (sessionIds: string[]) => Promise<StoredAnswer[]>;
+  openClassSession: (classId: string) => Promise<ClasseSession>;
+  closeClassSession: (sessionId: string) => Promise<void>;
+  getActiveClassSession: (classId: string) => Promise<ClasseSession | null>;
+  findActiveSessionByCode: (code: string) => Promise<ClasseSession | null>;
+  getClasseSessionById: (sessionId: string) => Promise<ClasseSession | null>;
+  setSessionActivity: (
+    sessionId: string,
+    activity: {
+      niveau: GradeLevel;
+      matiere: SubjectSlug;
+      missionId: string;
+      univers: UniverseSlug;
+      mode: PlayMode;
+    } | null,
+  ) => Promise<ClasseSession | null>;
+  joinSession: (sessionCode: string, eleveId: string) => Promise<JoinSessionResult>;
+  heartbeat: (participantId: string) => Promise<void>;
+  leaveSession: (participantId: string) => Promise<void>;
+  listParticipants: (sessionId: string) => Promise<SessionParticipant[]>;
+  kickParticipant: (participantId: string) => Promise<void>;
+  listClassMissionsDone: (classId: string) => Promise<string[]>;
+  listClassSessionsHistory: (classId: string) => Promise<ClasseSession[]>;
 };
 
 const SESSIONS_KEY = "mission-maths-sessions";
 const ANSWERS_KEY = "mission-maths-answers";
 
-function readJson<T>(key: string, fallback: T): T {
-  try {
-    return JSON.parse(localStorage.getItem(key) ?? "") as T;
-  } catch {
-    return fallback;
-  }
+function applySessionFilters(
+  sessions: ChildSession[],
+  filters?: SessionStatsFilters,
+): ChildSession[] {
+  if (!filters) return sessions;
+  return sessions.filter((session) => {
+    if (filters.eleveId && session.eleveId !== filters.eleveId) return false;
+    if (filters.classeSessionId && session.classeSessionId !== filters.classeSessionId) {
+      return false;
+    }
+    if (filters.dateFrom && session.startedAt < filters.dateFrom) return false;
+    if (filters.dateTo) {
+      const end = filters.dateTo.includes("T") ? filters.dateTo : `${filters.dateTo}T23:59:59.999Z`;
+      if (session.startedAt > end) return false;
+    }
+    return true;
+  });
 }
 
-function isUniverse(value: unknown): value is UniverseSlug {
-  return value === "football" || value === "rugby" || value === "equitation" || value === "espace";
+function mapRemoteClasseSession(row: {
+  id: string;
+  class_id: string;
+  code: string;
+  statut: string;
+  niveau: string | null;
+  matiere: string | null;
+  mission_id: string | null;
+  univers: string | null;
+  mode: string | null;
+  created_at: string;
+  closed_at: string | null;
+}): ClasseSession | null {
+  if (row.statut !== "ouverte" && row.statut !== "fermee") return null;
+  return {
+    id: row.id,
+    classId: row.class_id,
+    code: row.code,
+    statut: row.statut,
+    niveau: isGradeLevel(row.niveau) ? row.niveau : null,
+    matiere: isSubjectSlug(row.matiere) ? row.matiere : null,
+    missionId: row.mission_id,
+    univers: isUniverse(row.univers) ? row.univers : null,
+    mode: isMode(row.mode) ? row.mode : null,
+    createdAt: row.created_at,
+    closedAt: row.closed_at,
+  };
 }
 
-function isMode(value: unknown): value is PlayMode {
-  return value === "cahier" || value === "qcm";
+function mapRemoteParticipant(row: {
+  id: string;
+  session_id: string;
+  eleve_id: string;
+  prenom: string;
+  nom: string | null;
+  device_id: string;
+  statut: string;
+  joined_at: string;
+  last_seen_at: string;
+}): SessionParticipant | null {
+  if (row.statut !== "connecte" && row.statut !== "deconnecte") return null;
+  return {
+    id: row.id,
+    sessionId: row.session_id,
+    eleveId: row.eleve_id,
+    prenom: row.prenom,
+    nom: row.nom ?? "",
+    deviceId: row.device_id,
+    statut: row.statut,
+    joinedAt: row.joined_at,
+    lastSeenAt: row.last_seen_at,
+  };
+}
+
+function mapRemoteSession(row: {
+  id: string;
+  device_id: string;
+  prenom: string;
+  univers: string;
+  mode: string;
+  started_at: string;
+  finished_at: string | null;
+  recompense_obtenue: boolean;
+  code_classe: string | null;
+  niveau?: string | null;
+  matiere?: string | null;
+  class_id?: string | null;
+  classe_session_id?: string | null;
+  eleve_id?: string | null;
+  mission_id?: string | null;
+}): ChildSession | null {
+  if (!isUniverse(row.univers) || !isMode(row.mode)) return null;
+  return {
+    id: row.id,
+    deviceId: row.device_id,
+    prenom: row.prenom,
+    universe: row.univers,
+    mode: row.mode,
+    startedAt: row.started_at,
+    finishedAt: row.finished_at,
+    rewardEarned: row.recompense_obtenue,
+    classCode: row.code_classe,
+    grade: isGradeLevel(row.niveau) ? row.niveau : null,
+    subject: isSubjectSlug(row.matiere) ? row.matiere : null,
+    classId: row.class_id ?? null,
+    classeSessionId: row.classe_session_id ?? null,
+    eleveId: row.eleve_id ?? null,
+    missionId: row.mission_id ?? null,
+  };
 }
 
 export const localPersistence: Persistence = {
@@ -98,6 +279,10 @@ export const localPersistence: Persistence = {
       classCode: classCode || null,
       grade: course?.grade ?? null,
       subject: course?.subject ?? null,
+      classId: course?.classId ?? null,
+      classeSessionId: course?.classeSessionId ?? null,
+      eleveId: course?.eleveId ?? null,
+      missionId: course?.missionId ?? null,
     };
     const sessions = readJson<ChildSession[]>(SESSIONS_KEY, []);
     sessions.push(session);
@@ -168,86 +353,245 @@ export const localPersistence: Persistence = {
     if (!found) return [];
     return localPersistence.listClassStudents(found.id);
   },
-  async addClassStudent(classId, prenom) {
+  async addClassStudent(classId, prenom, nom = "") {
     const nextPrenom = normalizeStudentPrenom(prenom);
+    const nextNom = normalizeStudentNom(nom);
     if (!nextPrenom) return "Indique un prénom.";
     const all = loadLocalClassStudents();
     const duplicate = all.some(
       (item) =>
         item.classId === classId &&
-        item.prenom.localeCompare(nextPrenom, "fr", { sensitivity: "base" }) === 0,
+        sameName(item.prenom, nextPrenom) &&
+        sameName(item.nom, nextNom),
     );
-    if (duplicate) return "Ce prénom est déjà dans la liste.";
-    const record: ClassStudent = { id: newId(), classId, prenom: nextPrenom };
+    if (duplicate) return "Cet élève est déjà dans la liste.";
+    const record: ClassStudent = { id: newId(), classId, prenom: nextPrenom, nom: nextNom };
     all.push(record);
     saveLocalClassStudents(all);
     return record;
   },
-  async renameClassStudent(studentId, prenom) {
+  async renameClassStudent(studentId, prenom, nom) {
     const nextPrenom = normalizeStudentPrenom(prenom);
     if (!nextPrenom) return "Indique un prénom.";
     const all = loadLocalClassStudents();
     const current = all.find((item) => item.id === studentId);
     if (!current) return "Élève introuvable.";
+    const nextNom = nom === undefined ? current.nom : normalizeStudentNom(nom);
     const duplicate = all.some(
       (item) =>
         item.id !== studentId &&
         item.classId === current.classId &&
-        item.prenom.localeCompare(nextPrenom, "fr", { sensitivity: "base" }) === 0,
+        sameName(item.prenom, nextPrenom) &&
+        sameName(item.nom, nextNom),
     );
-    if (duplicate) return "Ce prénom est déjà dans la liste.";
+    if (duplicate) return "Cet élève est déjà dans la liste.";
     saveLocalClassStudents(
-      all.map((item) => (item.id === studentId ? { ...item, prenom: nextPrenom } : item)),
+      all.map((item) =>
+        item.id === studentId ? { ...item, prenom: nextPrenom, nom: nextNom } : item,
+      ),
     );
     return null;
   },
   async removeClassStudent(studentId) {
     saveLocalClassStudents(loadLocalClassStudents().filter((item) => item.id !== studentId));
   },
-  async listSessionsByClassCode(code) {
-    return readJson<ChildSession[]>(SESSIONS_KEY, [])
+  async listSessionsByClassCode(code, filters) {
+    const sessions = readJson<ChildSession[]>(SESSIONS_KEY, [])
       .filter((session) => session.classCode === code)
       .map((session) => ({
         ...session,
         grade: session.grade ?? null,
         subject: session.subject ?? null,
+        classId: session.classId ?? null,
+        classeSessionId: session.classeSessionId ?? null,
+        eleveId: session.eleveId ?? null,
+        missionId: session.missionId ?? null,
       }));
+    return applySessionFilters(sessions, filters);
   },
   async listAnswersBySessionIds(sessionIds) {
     if (sessionIds.length === 0) return [];
     const wanted = new Set(sessionIds);
     return readJson<StoredAnswer[]>(ANSWERS_KEY, []).filter((answer) => wanted.has(answer.sessionId));
   },
+  async openClassSession(classId) {
+    const sessions = readJson<ClasseSession[]>(LOCAL_CLASSE_SESSIONS_KEY, []).map(mapLocalClasseSession);
+    const now = new Date().toISOString();
+    const next = sessions.map((item) =>
+      item.classId === classId && item.statut === "ouverte"
+        ? { ...item, statut: "fermee" as const, closedAt: now, missionId: null, univers: null, mode: null, niveau: null, matiere: null }
+        : item,
+    );
+    let code = generateClassCode();
+    while (next.some((item) => item.code === code)) code = generateClassCode();
+    const created: ClasseSession = {
+      id: newId(),
+      classId,
+      code,
+      statut: "ouverte",
+      niveau: null,
+      matiere: null,
+      missionId: null,
+      univers: null,
+      mode: null,
+      createdAt: now,
+      closedAt: null,
+    };
+    next.push(created);
+    writeJson(LOCAL_CLASSE_SESSIONS_KEY, next);
+    return created;
+  },
+  async closeClassSession(sessionId) {
+    const sessions = readJson<ClasseSession[]>(LOCAL_CLASSE_SESSIONS_KEY, []);
+    writeJson(
+      LOCAL_CLASSE_SESSIONS_KEY,
+      sessions.map((item) =>
+        item.id === sessionId
+          ? {
+              ...item,
+              statut: "fermee" as const,
+              closedAt: new Date().toISOString(),
+              missionId: null,
+              univers: null,
+              mode: null,
+              niveau: null,
+              matiere: null,
+            }
+          : item,
+      ),
+    );
+  },
+  async getActiveClassSession(classId) {
+    const found = readJson<ClasseSession[]>(LOCAL_CLASSE_SESSIONS_KEY, []).find(
+      (item) => item.classId === classId && item.statut === "ouverte",
+    );
+    return found ? mapLocalClasseSession(found) : null;
+  },
+  async findActiveSessionByCode(code) {
+    const found = readJson<ClasseSession[]>(LOCAL_CLASSE_SESSIONS_KEY, []).find(
+      (item) => item.code === code && item.statut === "ouverte",
+    );
+    return found ? mapLocalClasseSession(found) : null;
+  },
+  async getClasseSessionById(sessionId) {
+    const found = readJson<ClasseSession[]>(LOCAL_CLASSE_SESSIONS_KEY, []).find(
+      (item) => item.id === sessionId,
+    );
+    return found ? mapLocalClasseSession(found) : null;
+  },
+  async setSessionActivity(sessionId, activity) {
+    const sessions = readJson<ClasseSession[]>(LOCAL_CLASSE_SESSIONS_KEY, []);
+    let updated: ClasseSession | null = null;
+    const next = sessions.map((item) => {
+      if (item.id !== sessionId) return item;
+      updated = mapLocalClasseSession({
+        ...item,
+        niveau: activity?.niveau ?? null,
+        matiere: activity?.matiere ?? null,
+        missionId: activity?.missionId ?? null,
+        univers: activity?.univers ?? null,
+        mode: activity?.mode ?? null,
+      });
+      return updated;
+    });
+    writeJson(LOCAL_CLASSE_SESSIONS_KEY, next);
+    return updated;
+  },
+  async joinSession(sessionCode, eleveId) {
+    const session = await localPersistence.findActiveSessionByCode(sessionCode);
+    if (!session) return { ok: false, error: "Aucune session ouverte avec ce code." };
+    const roster = await localPersistence.listClassStudents(session.classId);
+    const eleve = roster.find((item) => item.id === eleveId);
+    if (!eleve) return { ok: false, error: "Choisis ton nom dans la liste de ta classe." };
+    const deviceId = getDeviceId();
+    const participants = readJson<SessionParticipant[]>(LOCAL_PARTICIPANTS_KEY, []);
+    const existing = participants.find(
+      (item) => item.sessionId === session.id && item.eleveId === eleveId,
+    );
+    if (existing) {
+      if (existing.deviceId !== deviceId && existing.statut === "connecte") {
+        return { ok: false, error: "Ce nom est déjà pris dans la session." };
+      }
+      if (existing.deviceId !== deviceId) {
+        return { ok: false, error: "Ce nom est déjà pris dans la session." };
+      }
+      const reconnected: SessionParticipant = {
+        ...existing,
+        statut: "connecte",
+        lastSeenAt: new Date().toISOString(),
+      };
+      writeJson(
+        LOCAL_PARTICIPANTS_KEY,
+        participants.map((item) => (item.id === existing.id ? reconnected : item)),
+      );
+      return { ok: true, participant: reconnected, session };
+    }
+    const created: SessionParticipant = {
+      id: newId(),
+      sessionId: session.id,
+      eleveId,
+      prenom: eleve.prenom,
+      nom: eleve.nom,
+      deviceId,
+      statut: "connecte",
+      joinedAt: new Date().toISOString(),
+      lastSeenAt: new Date().toISOString(),
+    };
+    participants.push(created);
+    writeJson(LOCAL_PARTICIPANTS_KEY, participants);
+    return { ok: true, participant: created, session };
+  },
+  async heartbeat(participantId) {
+    const participants = readJson<SessionParticipant[]>(LOCAL_PARTICIPANTS_KEY, []);
+    writeJson(
+      LOCAL_PARTICIPANTS_KEY,
+      participants.map((item) =>
+        item.id === participantId
+          ? { ...item, lastSeenAt: new Date().toISOString(), statut: "connecte" as const }
+          : item,
+      ),
+    );
+  },
+  async leaveSession(participantId) {
+    const participants = readJson<SessionParticipant[]>(LOCAL_PARTICIPANTS_KEY, []);
+    writeJson(
+      LOCAL_PARTICIPANTS_KEY,
+      participants.map((item) =>
+        item.id === participantId
+          ? { ...item, statut: "deconnecte" as const, lastSeenAt: new Date().toISOString() }
+          : item,
+      ),
+    );
+  },
+  async listParticipants(sessionId) {
+    return readJson<SessionParticipant[]>(LOCAL_PARTICIPANTS_KEY, [])
+      .filter((item) => item.sessionId === sessionId)
+      .sort((a, b) => a.prenom.localeCompare(b.prenom, "fr", { sensitivity: "base" }));
+  },
+  async kickParticipant(participantId) {
+    writeJson(
+      LOCAL_PARTICIPANTS_KEY,
+      readJson<SessionParticipant[]>(LOCAL_PARTICIPANTS_KEY, []).filter(
+        (item) => item.id !== participantId,
+      ),
+    );
+  },
+  async listClassMissionsDone(classId) {
+    const done = new Set<string>();
+    for (const session of readJson<ChildSession[]>(SESSIONS_KEY, [])) {
+      if (session.classId === classId && session.rewardEarned && session.missionId) {
+        done.add(session.missionId);
+      }
+    }
+    return [...done];
+  },
+  async listClassSessionsHistory(classId) {
+    return readJson<ClasseSession[]>(LOCAL_CLASSE_SESSIONS_KEY, [])
+      .filter((item) => item.classId === classId)
+      .map(mapLocalClasseSession)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  },
 };
-
-function mapRemoteSession(row: {
-  id: string;
-  device_id: string;
-  prenom: string;
-  univers: string;
-  mode: string;
-  started_at: string;
-  finished_at: string | null;
-  recompense_obtenue: boolean;
-  code_classe: string | null;
-  niveau?: string | null;
-  matiere?: string | null;
-}): ChildSession | null {
-  if (!isUniverse(row.univers) || !isMode(row.mode)) return null;
-  return {
-    id: row.id,
-    deviceId: row.device_id,
-    prenom: row.prenom,
-    universe: row.univers,
-    mode: row.mode,
-    startedAt: row.started_at,
-    finishedAt: row.finished_at,
-    rewardEarned: row.recompense_obtenue,
-    classCode: row.code_classe,
-    grade: isGradeLevel(row.niveau) ? row.niveau : null,
-    subject: isSubjectSlug(row.matiere) ? row.matiere : null,
-  };
-}
 
 export async function createPersistence(): Promise<Persistence> {
   const client = getSupabase();
@@ -267,6 +611,10 @@ export async function createPersistence(): Promise<Persistence> {
           code_classe: classCode || null,
           niveau: course?.grade ?? null,
           matiere: course?.subject ?? null,
+          class_id: course?.classId ?? null,
+          classe_session_id: course?.classeSessionId ?? null,
+          eleve_id: course?.eleveId ?? null,
+          mission_id: course?.missionId ?? null,
         })
         .select("id")
         .single();
@@ -358,7 +706,7 @@ export async function createPersistence(): Promise<Persistence> {
     async listClassStudents(classId) {
       const { data, error } = await client
         .from("eleves_classe")
-        .select("id, class_id, prenom")
+        .select("id, class_id, prenom, nom")
         .eq("class_id", classId)
         .order("prenom", { ascending: true });
       if (error || !data) return localPersistence.listClassStudents(classId);
@@ -367,6 +715,7 @@ export async function createPersistence(): Promise<Persistence> {
           id: row.id as string,
           classId: row.class_id as string,
           prenom: row.prenom as string,
+          nom: (row.nom as string | null) ?? "",
         })),
       );
     },
@@ -375,34 +724,35 @@ export async function createPersistence(): Promise<Persistence> {
       if (!found) return [];
       return supabasePersistence.listClassStudents(found.id);
     },
-    async addClassStudent(classId, prenom) {
+    async addClassStudent(classId, prenom, nom = "") {
       const nextPrenom = normalizeStudentPrenom(prenom);
+      const nextNom = normalizeStudentNom(nom);
       if (!nextPrenom) return "Indique un prénom.";
       const { data, error } = await client
         .from("eleves_classe")
-        .insert({ class_id: classId, prenom: nextPrenom })
-        .select("id, class_id, prenom")
+        .insert({ class_id: classId, prenom: nextPrenom, nom: nextNom })
+        .select("id, class_id, prenom, nom")
         .single();
       if (error || !data) {
-        if (error?.code === "23505") return "Ce prénom est déjà dans la liste.";
-        return localPersistence.addClassStudent(classId, nextPrenom);
+        if (error?.code === "23505") return "Cet élève est déjà dans la liste.";
+        return localPersistence.addClassStudent(classId, nextPrenom, nextNom);
       }
       return {
         id: data.id as string,
         classId: data.class_id as string,
         prenom: data.prenom as string,
+        nom: (data.nom as string | null) ?? "",
       };
     },
-    async renameClassStudent(studentId, prenom) {
+    async renameClassStudent(studentId, prenom, nom) {
       const nextPrenom = normalizeStudentPrenom(prenom);
       if (!nextPrenom) return "Indique un prénom.";
-      const { error } = await client
-        .from("eleves_classe")
-        .update({ prenom: nextPrenom })
-        .eq("id", studentId);
+      const patch: { prenom: string; nom?: string } = { prenom: nextPrenom };
+      if (nom !== undefined) patch.nom = normalizeStudentNom(nom);
+      const { error } = await client.from("eleves_classe").update(patch).eq("id", studentId);
       if (error) {
-        if (error.code === "23505") return "Ce prénom est déjà dans la liste.";
-        return localPersistence.renameClassStudent(studentId, nextPrenom);
+        if (error.code === "23505") return "Cet élève est déjà dans la liste.";
+        return localPersistence.renameClassStudent(studentId, nextPrenom, nom);
       }
       return null;
     },
@@ -410,13 +760,23 @@ export async function createPersistence(): Promise<Persistence> {
       const { error } = await client.from("eleves_classe").delete().eq("id", studentId);
       if (error) await localPersistence.removeClassStudent(studentId);
     },
-    async listSessionsByClassCode(code) {
-      const { data, error } = await client
+    async listSessionsByClassCode(code, filters) {
+      let query = client
         .from("sessions_enfant")
-        .select("id, device_id, prenom, univers, mode, started_at, finished_at, recompense_obtenue, code_classe, niveau, matiere")
+        .select(
+          "id, device_id, prenom, univers, mode, started_at, finished_at, recompense_obtenue, code_classe, niveau, matiere, class_id, classe_session_id, eleve_id, mission_id",
+        )
         .eq("code_classe", code)
         .order("started_at", { ascending: false });
-      if (error || !data) return localPersistence.listSessionsByClassCode(code);
+      if (filters?.eleveId) query = query.eq("eleve_id", filters.eleveId);
+      if (filters?.classeSessionId) query = query.eq("classe_session_id", filters.classeSessionId);
+      if (filters?.dateFrom) query = query.gte("started_at", filters.dateFrom);
+      if (filters?.dateTo) {
+        const end = filters.dateTo.includes("T") ? filters.dateTo : `${filters.dateTo}T23:59:59.999Z`;
+        query = query.lte("started_at", end);
+      }
+      const { data, error } = await query;
+      if (error || !data) return localPersistence.listSessionsByClassCode(code, filters);
       return data
         .map((row) => mapRemoteSession(row as Parameters<typeof mapRemoteSession>[0]))
         .filter((item): item is ChildSession => item !== null);
@@ -436,6 +796,242 @@ export async function createPersistence(): Promise<Persistence> {
         attempts: Number(row.attempts ?? 1),
         createdAt: (row.created_at as string) ?? new Date().toISOString(),
       }));
+    },
+    async openClassSession(classId) {
+      const now = new Date().toISOString();
+      await client
+        .from("classe_sessions")
+        .update({
+          statut: "fermee",
+          closed_at: now,
+          mission_id: null,
+          univers: null,
+          mode: null,
+          niveau: null,
+          matiere: null,
+        })
+        .eq("class_id", classId)
+        .eq("statut", "ouverte");
+
+      for (let attempt = 0; attempt < 8; attempt += 1) {
+        const code = generateClassCode();
+        const { data, error } = await client
+          .from("classe_sessions")
+          .insert({ class_id: classId, code, statut: "ouverte" })
+          .select(
+            "id, class_id, code, statut, niveau, matiere, mission_id, univers, mode, created_at, closed_at",
+          )
+          .single();
+        if (!error && data) {
+          const mapped = mapRemoteClasseSession(data as Parameters<typeof mapRemoteClasseSession>[0]);
+          if (mapped) return mapped;
+        }
+      }
+      return localPersistence.openClassSession(classId);
+    },
+    async closeClassSession(sessionId) {
+      const { error } = await client
+        .from("classe_sessions")
+        .update({
+          statut: "fermee",
+          closed_at: new Date().toISOString(),
+          mission_id: null,
+          univers: null,
+          mode: null,
+          niveau: null,
+          matiere: null,
+        })
+        .eq("id", sessionId);
+      if (error) await localPersistence.closeClassSession(sessionId);
+    },
+    async getActiveClassSession(classId) {
+      const { data, error } = await client
+        .from("classe_sessions")
+        .select(
+          "id, class_id, code, statut, niveau, matiere, mission_id, univers, mode, created_at, closed_at",
+        )
+        .eq("class_id", classId)
+        .eq("statut", "ouverte")
+        .maybeSingle();
+      if (error || !data) return localPersistence.getActiveClassSession(classId);
+      return mapRemoteClasseSession(data as Parameters<typeof mapRemoteClasseSession>[0]);
+    },
+    async findActiveSessionByCode(code) {
+      const { data, error } = await client
+        .from("classe_sessions")
+        .select(
+          "id, class_id, code, statut, niveau, matiere, mission_id, univers, mode, created_at, closed_at",
+        )
+        .eq("code", code)
+        .eq("statut", "ouverte")
+        .maybeSingle();
+      if (error || !data) return localPersistence.findActiveSessionByCode(code);
+      return mapRemoteClasseSession(data as Parameters<typeof mapRemoteClasseSession>[0]);
+    },
+    async getClasseSessionById(sessionId) {
+      const { data, error } = await client
+        .from("classe_sessions")
+        .select(
+          "id, class_id, code, statut, niveau, matiere, mission_id, univers, mode, created_at, closed_at",
+        )
+        .eq("id", sessionId)
+        .maybeSingle();
+      if (error || !data) return localPersistence.getClasseSessionById(sessionId);
+      return mapRemoteClasseSession(data as Parameters<typeof mapRemoteClasseSession>[0]);
+    },
+    async setSessionActivity(sessionId, activity) {
+      const { data, error } = await client
+        .from("classe_sessions")
+        .update({
+          niveau: activity?.niveau ?? null,
+          matiere: activity?.matiere ?? null,
+          mission_id: activity?.missionId ?? null,
+          univers: activity?.univers ?? null,
+          mode: activity?.mode ?? null,
+        })
+        .eq("id", sessionId)
+        .select(
+          "id, class_id, code, statut, niveau, matiere, mission_id, univers, mode, created_at, closed_at",
+        )
+        .single();
+      if (error || !data) return localPersistence.setSessionActivity(sessionId, activity);
+      return mapRemoteClasseSession(data as Parameters<typeof mapRemoteClasseSession>[0]);
+    },
+    async joinSession(sessionCode, eleveId) {
+      const session = await supabasePersistence.findActiveSessionByCode(sessionCode);
+      if (!session) return { ok: false, error: "Aucune session ouverte avec ce code." };
+      const roster = await supabasePersistence.listClassStudents(session.classId);
+      const eleve = roster.find((item) => item.id === eleveId);
+      if (!eleve) return { ok: false, error: "Choisis ton nom dans la liste de ta classe." };
+
+      const { data: existingRows, error: existingError } = await client
+        .from("session_participants")
+        .select(
+          "id, session_id, eleve_id, prenom, nom, device_id, statut, joined_at, last_seen_at",
+        )
+        .eq("session_id", session.id)
+        .eq("eleve_id", eleveId)
+        .maybeSingle();
+
+      if (!existingError && existingRows) {
+        const existing = mapRemoteParticipant(
+          existingRows as Parameters<typeof mapRemoteParticipant>[0],
+        );
+        if (!existing) return { ok: false, error: "Impossible de rejoindre la session." };
+        if (existing.deviceId !== deviceId) {
+          return { ok: false, error: "Ce nom est déjà pris dans la session." };
+        }
+        const { data: updated, error: updateError } = await client
+          .from("session_participants")
+          .update({
+            statut: "connecte",
+            last_seen_at: new Date().toISOString(),
+          })
+          .eq("id", existing.id)
+          .select(
+            "id, session_id, eleve_id, prenom, nom, device_id, statut, joined_at, last_seen_at",
+          )
+          .single();
+        if (updateError || !updated) {
+          return localPersistence.joinSession(sessionCode, eleveId);
+        }
+        const participant = mapRemoteParticipant(
+          updated as Parameters<typeof mapRemoteParticipant>[0],
+        );
+        if (!participant) return { ok: false, error: "Impossible de rejoindre la session." };
+        return { ok: true, participant, session };
+      }
+
+      const { data, error } = await client
+        .from("session_participants")
+        .insert({
+          session_id: session.id,
+          eleve_id: eleveId,
+          prenom: eleve.prenom,
+          nom: eleve.nom,
+          device_id: deviceId,
+          statut: "connecte",
+        })
+        .select(
+          "id, session_id, eleve_id, prenom, nom, device_id, statut, joined_at, last_seen_at",
+        )
+        .single();
+
+      if (error || !data) {
+        if (error?.code === "23505") {
+          return { ok: false, error: "Ce nom est déjà pris dans la session." };
+        }
+        return localPersistence.joinSession(sessionCode, eleveId);
+      }
+      const participant = mapRemoteParticipant(data as Parameters<typeof mapRemoteParticipant>[0]);
+      if (!participant) return { ok: false, error: "Impossible de rejoindre la session." };
+      return { ok: true, participant, session };
+    },
+    async heartbeat(participantId) {
+      const { error } = await client
+        .from("session_participants")
+        .update({
+          last_seen_at: new Date().toISOString(),
+          statut: "connecte",
+        })
+        .eq("id", participantId);
+      if (error) await localPersistence.heartbeat(participantId);
+    },
+    async leaveSession(participantId) {
+      const { error } = await client
+        .from("session_participants")
+        .update({
+          statut: "deconnecte",
+          last_seen_at: new Date().toISOString(),
+        })
+        .eq("id", participantId);
+      if (error) await localPersistence.leaveSession(participantId);
+    },
+    async listParticipants(sessionId) {
+      const { data, error } = await client
+        .from("session_participants")
+        .select(
+          "id, session_id, eleve_id, prenom, nom, device_id, statut, joined_at, last_seen_at",
+        )
+        .eq("session_id", sessionId)
+        .order("prenom", { ascending: true });
+      if (error || !data) return localPersistence.listParticipants(sessionId);
+      return data
+        .map((row) => mapRemoteParticipant(row as Parameters<typeof mapRemoteParticipant>[0]))
+        .filter((item): item is SessionParticipant => item !== null);
+    },
+    async kickParticipant(participantId) {
+      const { error } = await client.from("session_participants").delete().eq("id", participantId);
+      if (error) await localPersistence.kickParticipant(participantId);
+    },
+    async listClassMissionsDone(classId) {
+      const { data, error } = await client
+        .from("sessions_enfant")
+        .select("mission_id")
+        .eq("class_id", classId)
+        .eq("recompense_obtenue", true)
+        .not("mission_id", "is", null);
+      if (error || !data) return localPersistence.listClassMissionsDone(classId);
+      return [
+        ...new Set(
+          data
+            .map((row) => row.mission_id as string | null)
+            .filter((id): id is string => typeof id === "string" && id.length > 0),
+        ),
+      ];
+    },
+    async listClassSessionsHistory(classId) {
+      const { data, error } = await client
+        .from("classe_sessions")
+        .select(
+          "id, class_id, code, statut, niveau, matiere, mission_id, univers, mode, created_at, closed_at",
+        )
+        .eq("class_id", classId)
+        .order("created_at", { ascending: false });
+      if (error || !data) return localPersistence.listClassSessionsHistory(classId);
+      return data
+        .map((row) => mapRemoteClasseSession(row as Parameters<typeof mapRemoteClasseSession>[0]))
+        .filter((item): item is ClasseSession => item !== null);
     },
   };
 

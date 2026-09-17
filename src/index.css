@@ -934,6 +934,21 @@ p {
   background: #fff;
 }
 
+.activity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin: 12px 0 16px;
+}
+
+.activity-grid select {
+  width: 100%;
+}
+
+.session-control .roster-panel {
+  margin-top: 8px;
+}
+
 .stats-filters .field {
   margin: 0;
 }
