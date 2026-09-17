@@ -3,7 +3,8 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "../components/Button";
 import { Shell } from "../components/Shell";
 import { gradeLabel, subjectLabel } from "../data/catalog";
-import type { ChildSession, ClassStudent } from "../data/types";
+import type { ChildSession, ClasseSession, ClassStudent } from "../data/types";
+import { formatStudentName } from "../data/types";
 import { UNIVERSES } from "../data/universes";
 import { useSession } from "../lib/session";
 import { buildStudentStats, universeShortList } from "../lib/studentStats";
@@ -38,6 +39,7 @@ export function TeacherSpaceScreen() {
     removeClassStudent,
     loadClassSessions,
     loadClassAnswers,
+    listClassSessionsHistory,
     logout,
     backend,
   } = useSession();
@@ -46,17 +48,24 @@ export function TeacherSpaceScreen() {
   const [nom, setNom] = useState(current?.nom ?? "");
   const [newClassName, setNewClassName] = useState("");
   const [sessions, setSessions] = useState<ChildSession[]>([]);
+  const [sessionHistory, setSessionHistory] = useState<ClasseSession[]>([]);
   const [roster, setRoster] = useState<ClassStudent[]>([]);
   const [rosterReady, setRosterReady] = useState(false);
-  const [newStudentName, setNewStudentName] = useState("");
+  const [newStudentPrenom, setNewStudentPrenom] = useState("");
+  const [newStudentNom, setNewStudentNom] = useState("");
   const [rosterError, setRosterError] = useState("");
   const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
-  const [editingName, setEditingName] = useState("");
+  const [editingPrenom, setEditingPrenom] = useState("");
+  const [editingNom, setEditingNom] = useState("");
   const [copied, setCopied] = useState(false);
   const [busyCreate, setBusyCreate] = useState(false);
   const [createError, setCreateError] = useState("");
   const [tab, setTab] = useState<TeacherTab>("eleves");
   const [selectedStudentKey, setSelectedStudentKey] = useState<string | null>(null);
+  const [filterEleveId, setFilterEleveId] = useState("");
+  const [filterSessionId, setFilterSessionId] = useState("");
+  const [filterDateFrom, setFilterDateFrom] = useState("");
+  const [filterDateTo, setFilterDateTo] = useState("");
 
   async function refreshRoster(classId: string) {
     setRosterReady(false);
@@ -81,7 +90,8 @@ export function TeacherSpaceScreen() {
     if (!current) {
       setRoster([]);
       setRosterReady(true);
-      setNewStudentName("");
+      setNewStudentPrenom("");
+      setNewStudentNom("");
       setRosterError("");
       setEditingStudentId(null);
       return;
@@ -102,12 +112,38 @@ export function TeacherSpaceScreen() {
   }, [current?.id, listClassStudents]);
 
   useEffect(() => {
+    setFilterEleveId("");
+    setFilterSessionId("");
+    setFilterDateFrom("");
+    setFilterDateTo("");
+  }, [current?.id]);
+
+  useEffect(() => {
+    if (!current) {
+      setSessionHistory([]);
+      return;
+    }
+    let cancelled = false;
+    void listClassSessionsHistory(current.id).then((rows) => {
+      if (!cancelled) setSessionHistory(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [current?.id, listClassSessionsHistory]);
+
+  useEffect(() => {
     if (!current) {
       setSessions([]);
       return;
     }
     let cancelled = false;
-    void loadClassSessions(current.code).then((rows) => {
+    void loadClassSessions(current.code, {
+      eleveId: filterEleveId || null,
+      classeSessionId: filterSessionId || null,
+      dateFrom: filterDateFrom || null,
+      dateTo: filterDateTo || null,
+    }).then((rows) => {
       if (!cancelled) {
         setSessions(rows);
         setSelectedStudentKey(null);
@@ -116,7 +152,15 @@ export function TeacherSpaceScreen() {
     return () => {
       cancelled = true;
     };
-  }, [current?.id, current?.code, loadClassSessions]);
+  }, [
+    current?.id,
+    current?.code,
+    filterEleveId,
+    filterSessionId,
+    filterDateFrom,
+    filterDateTo,
+    loadClassSessions,
+  ]);
 
   const [answersReady, setAnswersReady] = useState(false);
   const [answerRows, setAnswerRows] = useState<Awaited<ReturnType<typeof loadClassAnswers>>>([]);
@@ -143,6 +187,9 @@ export function TeacherSpaceScreen() {
   const selectedStudent = studentStats.find((item) => item.key === selectedStudentKey) ?? null;
   const studentSessions = useMemo(() => {
     if (!selectedStudent) return [];
+    if (selectedStudent.eleveId) {
+      return sessions.filter((session) => session.eleveId === selectedStudent.eleveId);
+    }
     const [prenomPart, deviceId] = selectedStudent.key.split("::");
     return sessions.filter(
       (session) =>
@@ -174,13 +221,14 @@ export function TeacherSpaceScreen() {
         <span className="kicker">Suivi de classe</span>
         <h1>Bonjour, {teacher.email}</h1>
         <p className="lead" data-listen>
-          Crée tes classes, ajoute la liste des élèves, puis partage le code. Les enfants choisissent leur prénom dans
-          la liste. Tu suis leurs missions sans note ni classement.
+          Crée tes classes, ajoute les élèves (prénom et nom), puis partage le code permanent. Tu peux aussi lancer une
+          session live pour piloter les missions en classe. Les enfants choisissent leur nom dans la liste. Tu suis
+          leurs missions sans note ni classement.
         </p>
         {showSetupHint && current ? (
           <div className="teacher-banner" role="status">
-            <strong>Première étape :</strong> ajoute les prénoms de ta classe ci-dessous, puis partage le code{" "}
-            <code>{current.code}</code>.
+            <strong>Première étape :</strong> ajoute les élèves (prénom et nom) de ta classe ci-dessous, puis partage
+            le code <code>{current.code}</code>.
           </div>
         ) : null}
         {backend === "local" ? (
@@ -268,6 +316,12 @@ export function TeacherSpaceScreen() {
                   </div>
                 </div>
 
+                <div className="actions" style={{ marginBottom: 18 }}>
+                  <Button variant="primary" type="button" onClick={() => navigate("/espace-professeur/session")}>
+                    Pilotage de session
+                  </Button>
+                </div>
+
                 <div className="field" style={{ maxWidth: 420 }}>
                   <label htmlFor="nom-classe">Nom de la classe</label>
                   <input
@@ -286,8 +340,8 @@ export function TeacherSpaceScreen() {
                 <section className="roster-panel" aria-label="Liste des élèves">
                   <h2>Liste des élèves ({roster.length})</h2>
                   <p className="field-help">
-                    Ces prénoms apparaissent quand un élève entre le code {current.code}. Tu peux les modifier à tout
-                    moment.
+                    Ces élèves (prénom et nom) apparaissent quand un enfant entre le code {current.code}. Tu peux les
+                    modifier à tout moment.
                   </p>
                   {!rosterReady ? <p>Chargement de la liste…</p> : null}
                   {rosterReady ? (
@@ -299,7 +353,7 @@ export function TeacherSpaceScreen() {
                               className="roster-edit-row"
                               onSubmit={(event) => {
                                 event.preventDefault();
-                                void renameClassStudent(student.id, editingName).then((message) => {
+                                void renameClassStudent(student.id, editingPrenom, editingNom).then((message) => {
                                   if (message) {
                                     setRosterError(message);
                                     return;
@@ -311,10 +365,18 @@ export function TeacherSpaceScreen() {
                               }}
                             >
                               <input
-                                value={editingName}
+                                value={editingPrenom}
                                 maxLength={20}
-                                aria-label={`Modifier ${student.prenom}`}
-                                onChange={(event) => setEditingName(event.target.value)}
+                                placeholder="Prénom"
+                                aria-label={`Modifier le prénom de ${formatStudentName(student.prenom, student.nom)}`}
+                                onChange={(event) => setEditingPrenom(event.target.value)}
+                              />
+                              <input
+                                value={editingNom}
+                                maxLength={40}
+                                placeholder="Nom"
+                                aria-label={`Modifier le nom de ${formatStudentName(student.prenom, student.nom)}`}
+                                onChange={(event) => setEditingNom(event.target.value)}
                               />
                               <Button type="submit" variant="primary">
                                 Enregistrer
@@ -331,13 +393,14 @@ export function TeacherSpaceScreen() {
                             </form>
                           ) : (
                             <div className="roster-row">
-                              <strong>{student.prenom}</strong>
+                              <strong>{formatStudentName(student.prenom, student.nom)}</strong>
                               <div className="roster-row-actions">
                                 <Button
                                   type="button"
                                   onClick={() => {
                                     setEditingStudentId(student.id);
-                                    setEditingName(student.prenom);
+                                    setEditingPrenom(student.prenom);
+                                    setEditingNom(student.nom);
                                     setRosterError("");
                                   }}
                                 >
@@ -346,7 +409,8 @@ export function TeacherSpaceScreen() {
                                 <Button
                                   type="button"
                                   onClick={() => {
-                                    const ok = window.confirm(`Retirer ${student.prenom} de la liste ?`);
+                                    const label = formatStudentName(student.prenom, student.nom);
+                                    const ok = window.confirm(`Retirer ${label} de la liste ?`);
                                     if (!ok) return;
                                     void removeClassStudent(student.id).then(() => refreshRoster(current.id));
                                   }}
@@ -361,34 +425,45 @@ export function TeacherSpaceScreen() {
                     </ul>
                   ) : null}
                   {rosterReady && roster.length === 0 ? (
-                    <p className="field-help">Aucun élève pour l’instant. Ajoute les prénoms de ta classe.</p>
+                    <p className="field-help">Aucun élève pour l’instant. Ajoute prénom et nom de ta classe.</p>
                   ) : null}
                   <form
                     className="roster-add"
                     onSubmit={(event) => {
                       event.preventDefault();
                       setRosterError("");
-                      void addClassStudent(current.id, newStudentName).then((result) => {
+                      void addClassStudent(current.id, newStudentPrenom, newStudentNom).then((result) => {
                         if (typeof result === "string") {
                           setRosterError(result);
                           return;
                         }
-                        setNewStudentName("");
+                        setNewStudentPrenom("");
+                        setNewStudentNom("");
                         void refreshRoster(current.id);
                       });
                     }}
                   >
                     <div className="field">
-                      <label htmlFor="nouvel-eleve">Ajouter un élève</label>
+                      <label htmlFor="nouvel-eleve-prenom">Prénom</label>
                       <input
-                        id="nouvel-eleve"
-                        value={newStudentName}
+                        id="nouvel-eleve-prenom"
+                        value={newStudentPrenom}
                         maxLength={20}
                         placeholder="Prénom"
-                        onChange={(event) => setNewStudentName(event.target.value)}
+                        onChange={(event) => setNewStudentPrenom(event.target.value)}
                       />
                     </div>
-                    <Button type="submit" variant="primary" disabled={!newStudentName.trim()}>
+                    <div className="field">
+                      <label htmlFor="nouvel-eleve-nom">Nom</label>
+                      <input
+                        id="nouvel-eleve-nom"
+                        value={newStudentNom}
+                        maxLength={40}
+                        placeholder="Nom"
+                        onChange={(event) => setNewStudentNom(event.target.value)}
+                      />
+                    </div>
+                    <Button type="submit" variant="primary" disabled={!newStudentPrenom.trim()}>
                       Ajouter
                     </Button>
                   </form>
@@ -398,6 +473,58 @@ export function TeacherSpaceScreen() {
                     </p>
                   ) : null}
                 </section>
+
+                <div className="stats-filters" aria-label="Filtres du suivi">
+                  <div className="field">
+                    <label htmlFor="filtre-eleve">Élève</label>
+                    <select
+                      id="filtre-eleve"
+                      value={filterEleveId}
+                      onChange={(event) => setFilterEleveId(event.target.value)}
+                    >
+                      <option value="">Tous les élèves</option>
+                      {roster.map((student) => (
+                        <option key={student.id} value={student.id}>
+                          {formatStudentName(student.prenom, student.nom)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="field">
+                    <label htmlFor="filtre-session">Séance live</label>
+                    <select
+                      id="filtre-session"
+                      value={filterSessionId}
+                      onChange={(event) => setFilterSessionId(event.target.value)}
+                    >
+                      <option value="">Toutes les séances</option>
+                      {sessionHistory.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.code} · {formatWhen(item.createdAt)}
+                          {item.statut === "ouverte" ? " (ouverte)" : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="field">
+                    <label htmlFor="filtre-date-from">Du</label>
+                    <input
+                      id="filtre-date-from"
+                      type="date"
+                      value={filterDateFrom}
+                      onChange={(event) => setFilterDateFrom(event.target.value)}
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="filtre-date-to">Au</label>
+                    <input
+                      id="filtre-date-to"
+                      type="date"
+                      value={filterDateTo}
+                      onChange={(event) => setFilterDateTo(event.target.value)}
+                    />
+                  </div>
+                </div>
 
                 <div className="role-tabs teacher-tabs" role="tablist" aria-label="Vue du suivi">
                   <button
@@ -427,7 +554,7 @@ export function TeacherSpaceScreen() {
                       <p>Chargement des statistiques…</p>
                     ) : studentStats.length === 0 ? (
                       <p>
-                        Aucune activité pour l’instant. Quand un élève entre le code {current.code}, choisit son prénom
+                        Aucune activité pour l’instant. Quand un élève entre le code {current.code}, choisit son nom
                         dans la liste et joue, ses stats apparaissent ici.
                       </p>
                     ) : (
@@ -551,7 +678,7 @@ export function TeacherSpaceScreen() {
                           <tbody>
                             {sessions.map((session) => (
                               <tr key={session.id}>
-                                <td>{session.prenom}</td>
+                                <td>{formatStudentName(session.prenom, "")}</td>
                                 <td>
                                   {session.grade && session.subject
                                     ? `${gradeLabel(session.grade)} · ${subjectLabel(session.subject)}`

@@ -1,10 +1,12 @@
 import { gradeLabel, subjectLabel } from "../data/catalog";
-import type { ChildSession, StoredAnswer, UniverseSlug } from "../data/types";
+import type { ChildSession, SessionStatsFilters, StoredAnswer, UniverseSlug } from "../data/types";
+import { formatStudentName } from "../data/types";
 import { UNIVERSES } from "../data/universes";
 
 export type StudentStats = {
   key: string;
   prenom: string;
+  eleveId: string | null;
   sessionsStarted: number;
   missionsCompleted: number;
   missionsAbandoned: number;
@@ -26,7 +28,25 @@ function parcoursLabel(session: ChildSession): string | null {
   return `${gradeLabel(session.grade)} · ${subjectLabel(session.subject)}`;
 }
 
-/** Regroupe les séances d’une classe par élève (prénom + appareil). */
+export function filterSessions(
+  sessions: ChildSession[],
+  filters: SessionStatsFilters,
+): ChildSession[] {
+  return sessions.filter((session) => {
+    if (filters.eleveId && session.eleveId !== filters.eleveId) return false;
+    if (filters.classeSessionId && session.classeSessionId !== filters.classeSessionId) {
+      return false;
+    }
+    if (filters.dateFrom && session.startedAt < filters.dateFrom) return false;
+    if (filters.dateTo) {
+      const end = filters.dateTo.includes("T") ? filters.dateTo : `${filters.dateTo}T23:59:59.999Z`;
+      if (session.startedAt > end) return false;
+    }
+    return true;
+  });
+}
+
+/** Regroupe les séances d’une classe par élève (eleve_id si dispo, sinon prénom + appareil). */
 export function buildStudentStats(
   sessions: ChildSession[],
   answers: StoredAnswer[],
@@ -40,7 +60,9 @@ export function buildStudentStats(
 
   const byStudent = new Map<string, ChildSession[]>();
   for (const session of sessions) {
-    const key = `${normalizePrenom(session.prenom)}::${session.deviceId}`;
+    const key = session.eleveId
+      ? `eleve::${session.eleveId}`
+      : `${normalizePrenom(session.prenom)}::${session.deviceId}`;
     const list = byStudent.get(key) ?? [];
     list.push(session);
     byStudent.set(key, list);
@@ -55,10 +77,15 @@ export function buildStudentStats(
   const stats: StudentStats[] = [];
   for (const [key, list] of byStudent) {
     const sorted = [...list].sort((a, b) => b.startedAt.localeCompare(a.startedAt));
-    const prenom = sorted[0]?.prenom.trim() || "Élève";
+    const first = sorted[0];
+    const prenom = first?.prenom.trim() || "Élève";
     const nameKey = normalizePrenom(prenom);
     const duplicate = (prenomCounts.get(nameKey) ?? 0) > 1;
-    const displayName = duplicate ? `${prenom} · ${key.slice(-4)}` : prenom;
+    const displayName = first?.eleveId
+      ? prenom
+      : duplicate
+        ? `${prenom} · ${key.slice(-4)}`
+        : prenom;
 
     let completed = 0;
     let abandoned = 0;
@@ -88,6 +115,7 @@ export function buildStudentStats(
     stats.push({
       key,
       prenom: displayName,
+      eleveId: first?.eleveId ?? null,
       sessionsStarted: sorted.length,
       missionsCompleted: completed,
       missionsAbandoned: abandoned,
@@ -102,6 +130,10 @@ export function buildStudentStats(
   }
 
   return stats.sort((a, b) => a.prenom.localeCompare(b.prenom, "fr"));
+}
+
+export function displaySessionStudent(session: ChildSession): string {
+  return formatStudentName(session.prenom, "");
 }
 
 export function universeShortList(slugs: UniverseSlug[]): string {

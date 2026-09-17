@@ -7,7 +7,7 @@ import { useSession } from "../lib/session";
 
 export function WelcomeScreen() {
   const navigate = useNavigate();
-  const { prenom, role, classCode, grade, subject, logout } = useSession();
+  const { prenom, displayName, role, classCode, grade, subject, logout } = useSession();
   if (role === "enseignant") return <Navigate to="/espace-professeur" replace />;
   if (!prenom) return <Navigate to="/connexion/eleve" replace />;
 
@@ -32,7 +32,7 @@ export function WelcomeScreen() {
     >
       <section className="intro">
         <span className="kicker">Happy Learn</span>
-        <h1>Salut {prenom} !</h1>
+        <h1>Salut {displayName} !</h1>
         <p className="lead" data-listen>
           Ici tu prépares ta mission : classe, matière, univers. Néo t’accompagne à chaque étape.
         </p>
@@ -46,7 +46,7 @@ export function WelcomeScreen() {
           <p>Indique ensuite ton niveau (CP à CM2) et ta matière.</p>
         )}
         <div className="mascot-stage">
-          <p className="bubble">Bonjour {prenom} ! Je serai ton guide pendant tes missions.</p>
+          <p className="bubble">Bonjour {displayName} ! Je serai ton guide pendant tes missions.</p>
           <Neo pose="guide" />
         </div>
         <div className="actions">

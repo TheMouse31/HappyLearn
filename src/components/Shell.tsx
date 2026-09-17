@@ -15,7 +15,8 @@ type Props = {
   confirmLeaveMission?: boolean;
 };
 
-function defaultHomeTo(role: string | null | undefined): string {
+function defaultHomeTo(role: string | null | undefined, lockedSession: boolean): string {
+  if (lockedSession) return "/salle-attente";
   if (role === "eleve") return "/accueil";
   if (role === "enseignant") return "/espace-professeur";
   return "/";
@@ -33,11 +34,16 @@ export function Shell({
 }: Props) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { role } = useSession();
-  const resolvedHome = homeTo ?? defaultHomeTo(role);
-  const brandTo = role === "enseignant" ? "/" : resolvedHome;
+  const { role, lockedSession } = useSession();
+  const resolvedHome = homeTo ?? defaultHomeTo(role, lockedSession);
+  const brandTo = lockedSession ? "/salle-attente" : role === "enseignant" ? "/" : resolvedHome;
+  const hideNav = lockedSession && (pathname === "/salle-attente" || pathname === "/mission");
 
   function goHome() {
+    if (lockedSession) {
+      navigate("/salle-attente");
+      return;
+    }
     if (confirmLeaveMission || pathname === "/mission") {
       const ok = window.confirm("Quitter la mission et revenir à l’accueil ?");
       if (!ok) return;
@@ -50,28 +56,39 @@ export function Shell({
       <ListenButton />
       <header className="topbar">
         <div className="topbar-start">
-          {backTo ? (
+          {backTo && !hideNav ? (
             <button type="button" className="nav-icon-btn" onClick={() => navigate(backTo)} aria-label="Retour">
               ← Retour
             </button>
           ) : null}
-          <Link to={brandTo} className="brand brand-link" aria-label={`${brand} — accueil`}>
-            <span className="brand-mark" aria-hidden="true">
-              ✦
+          {hideNav ? (
+            <span className="brand">
+              <span className="brand-mark" aria-hidden="true">
+                ✦
+              </span>
+              {brand}
             </span>
-            {brand}
-          </Link>
+          ) : (
+            <Link to={brandTo} className="brand brand-link" aria-label={`${brand} — accueil`}>
+              <span className="brand-mark" aria-hidden="true">
+                ✦
+              </span>
+              {brand}
+            </Link>
+          )}
         </div>
         <div className="topbar-end">
           {stepLabel ? <div className="step-pill">{stepLabel}</div> : null}
-          <button type="button" className="nav-icon-btn home-btn" onClick={goHome} aria-label="Accueil">
-            <span aria-hidden="true">⌂</span>
-            <span>Accueil</span>
-          </button>
+          {!hideNav ? (
+            <button type="button" className="nav-icon-btn home-btn" onClick={goHome} aria-label="Accueil">
+              <span aria-hidden="true">⌂</span>
+              <span>Accueil</span>
+            </button>
+          ) : null}
           {extra}
         </div>
       </header>
-      {showSetupSteps ? <SetupSteps /> : null}
+      {showSetupSteps && !lockedSession ? <SetupSteps /> : null}
       <div className="window">{children}</div>
     </div>
   );

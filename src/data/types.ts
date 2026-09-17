@@ -14,7 +14,6 @@ export type SubjectSlug =
   | "arts-plastiques"
   | "education-musicale";
 
-
 export type TeacherAccount = {
   id: string;
   email: string;
@@ -31,6 +30,55 @@ export type ClassStudent = {
   id: string;
   classId: string;
   prenom: string;
+  /** Nom de famille (peut être vide pour les anciens enregistrements). */
+  nom: string;
+};
+
+export type ClasseSessionStatus = "ouverte" | "fermee";
+
+export type ClasseSession = {
+  id: string;
+  classId: string;
+  code: string;
+  statut: ClasseSessionStatus;
+  niveau: GradeLevel | null;
+  matiere: SubjectSlug | null;
+  missionId: string | null;
+  univers: UniverseSlug | null;
+  mode: PlayMode | null;
+  createdAt: string;
+  closedAt: string | null;
+};
+
+export type ParticipantStatus = "connecte" | "deconnecte";
+
+export type SessionParticipant = {
+  id: string;
+  sessionId: string;
+  eleveId: string;
+  prenom: string;
+  nom: string;
+  deviceId: string;
+  statut: ParticipantStatus;
+  joinedAt: string;
+  lastSeenAt: string;
+};
+
+export type MissionDef = {
+  id: string;
+  grade: GradeLevel;
+  subject: SubjectSlug;
+  title: string;
+  blurb: string;
+  steps: Step[];
+  available: boolean;
+};
+
+export type SessionStatsFilters = {
+  eleveId?: string | null;
+  classeSessionId?: string | null;
+  dateFrom?: string | null;
+  dateTo?: string | null;
 };
 
 export type StepKind =
@@ -98,6 +146,10 @@ export type ChildSession = {
   classCode: string | null;
   grade: GradeLevel | null;
   subject: SubjectSlug | null;
+  classId?: string | null;
+  classeSessionId?: string | null;
+  eleveId?: string | null;
+  missionId?: string | null;
 };
 
 export type StoredAnswer = {
@@ -108,3 +160,8 @@ export type StoredAnswer = {
   attempts: number;
   createdAt: string;
 };
+
+/** Affiche « Prénom Nom » (sans double espace si nom vide). */
+export function formatStudentName(prenom: string, nom = ""): string {
+  return `${prenom.trim()} ${nom.trim()}`.trim();
+}

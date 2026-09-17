@@ -4,17 +4,21 @@ import { Button } from "../components/Button";
 import { Neo } from "../components/Neo";
 import { Shell } from "../components/Shell";
 import type { ClassStudent } from "../data/types";
+import { formatStudentName } from "../data/types";
 import { isValidClassCode, normalizeClassCode } from "../lib/classCode";
 import { useSession } from "../lib/session";
 
 export function EleveLoginScreen() {
   const navigate = useNavigate();
-  const { role, loginEleve, listStudentsByClassCode } = useSession();
+  const { role, loginEleve, listStudentsForSessionCode, lockedSession, kickedFromSession, clearKicked } =
+    useSession();
+  const [selectedId, setSelectedId] = useState("");
   const [prenom, setPrenom] = useState("");
   const [code, setCode] = useState("");
   const [roster, setRoster] = useState<ClassStudent[] | null>(null);
   const [rosterError, setRosterError] = useState("");
   const [loadingRoster, setLoadingRoster] = useState(false);
+  const [isLiveSession, setIsLiveSession] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -22,20 +26,27 @@ export function EleveLoginScreen() {
   const codeLooksValid = isValidClassCode(code);
 
   useEffect(() => {
-    if (role === "eleve") navigate("/accueil", { replace: true });
+    if (kickedFromSession) clearKicked();
+  }, [kickedFromSession, clearKicked]);
+
+  useEffect(() => {
+    if (lockedSession) navigate("/salle-attente", { replace: true });
+    else if (role === "eleve") navigate("/accueil", { replace: true });
     if (role === "enseignant") navigate("/espace-professeur", { replace: true });
-  }, [role, navigate]);
+  }, [role, lockedSession, navigate]);
 
   useEffect(() => {
     if (!hasCode) {
       setRoster(null);
       setRosterError("");
       setLoadingRoster(false);
+      setIsLiveSession(false);
       return;
     }
     if (!codeLooksValid) {
       setRoster(null);
       setRosterError("");
+      setIsLiveSession(false);
       return;
     }
 
@@ -43,15 +54,19 @@ export function EleveLoginScreen() {
     setLoadingRoster(true);
     setRosterError("");
     const timer = window.setTimeout(() => {
-      void listStudentsByClassCode(code).then((students) => {
+      void listStudentsForSessionCode(code).then((students) => {
         if (cancelled) return;
         setLoadingRoster(false);
         setRoster(students);
+        setSelectedId("");
         setPrenom("");
+        // Heuristic: if code matches an open live session, joinClassSession path is used via loginEleve
+        setIsLiveSession(true);
         if (students.length === 0) {
           setRosterError(
-            "Aucun prénom dans cette classe pour l’instant. Demande à ton professeur d’ajouter la liste, ou laisse le code vide pour jouer seul.",
+            "Aucun élève dans cette classe pour l’instant. Demande à ton professeur d’ajouter la liste, ou laisse le code vide pour jouer seul.",
           );
+          setIsLiveSession(false);
         }
       });
     }, 280);
@@ -60,8 +75,9 @@ export function EleveLoginScreen() {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [code, hasCode, codeLooksValid, listStudentsByClassCode]);
+  }, [code, hasCode, codeLooksValid, listStudentsForSessionCode]);
 
+  if (lockedSession) return <Navigate to="/salle-attente" replace />;
   if (role === "eleve") return <Navigate to="/accueil" replace />;
   if (role === "enseignant") return <Navigate to="/espace-professeur" replace />;
 
@@ -71,7 +87,7 @@ export function EleveLoginScreen() {
         <aside className="mascot-stage">
           <p className="bubble">
             {hasCode
-              ? "Entre le code de ta classe, puis choisis ton prénom dans la liste."
+              ? "Entre le code de session, puis choisis ton nom dans la liste."
               : "Sans code, écris ton prénom et on part en mission !"}
           </p>
           <Neo pose="guide" />
@@ -80,7 +96,8 @@ export function EleveLoginScreen() {
           <span className="kicker">Espace élève</span>
           <h1>Bienvenue</h1>
           <p className="lead" data-listen>
-            Pas besoin d’e-mail. À l’école, utilise le code de ton professeur. Seul à la maison, laisse le code vide.
+            Pas besoin d’e-mail. À l’école, utilise le code de session de ton professeur. Seul à la maison, laisse le
+            code vide.
           </p>
           <form
             className="login-form"
@@ -88,15 +105,19 @@ export function EleveLoginScreen() {
               event.preventDefault();
               setBusy(true);
               setError("");
-              void loginEleve(prenom, code).then((message) => {
+              const chosen = roster?.find((item) => item.id === selectedId);
+              void loginEleve(chosen?.prenom ?? prenom, code, selectedId || undefined).then((result) => {
                 setBusy(false);
-                if (message) setError(message);
-                else navigate("/accueil");
+                if (!result.ok) {
+                  setError(result.error);
+                  return;
+                }
+                navigate(result.live ? "/salle-attente" : "/accueil");
               });
             }}
           >
             <div className="field">
-              <label htmlFor="code-classe">Code classe (facultatif)</label>
+              <label htmlFor="code-classe">Code de session (facultatif)</label>
               <input
                 id="code-classe"
                 maxLength={8}
@@ -110,7 +131,8 @@ export function EleveLoginScreen() {
                 }}
               />
               <p className="field-help">
-                Avec un code, tu choisis ton prénom dans la liste. Sans code, tu peux écrire ton prénom toi-même.
+                Avec un code de session, tu choisis ton nom dans la liste. Sans code, tu peux écrire ton prénom
+                toi-même.
               </p>
             </div>
 
@@ -131,29 +153,36 @@ export function EleveLoginScreen() {
             {hasCode && codeLooksValid ? (
               <div className="field">
                 <span className="field-label" id="roster-label">
-                  Ton prénom dans la classe
+                  Ton nom dans la classe
                 </span>
                 {loadingRoster ? <p className="field-help">Chargement de la liste…</p> : null}
                 {!loadingRoster && roster && roster.length > 0 ? (
                   <div className="roster-pick" role="listbox" aria-labelledby="roster-label">
-                    {roster.map((student) => (
-                      <button
-                        key={student.id}
-                        type="button"
-                        role="option"
-                        aria-selected={prenom === student.prenom}
-                        className={`choice ${prenom === student.prenom ? "is-selected" : ""}`}
-                        onClick={() => {
-                          setPrenom(student.prenom);
-                          setError("");
-                        }}
-                      >
-                        <span>{student.prenom}</span>
-                      </button>
-                    ))}
+                    {roster.map((student) => {
+                      const label = formatStudentName(student.prenom, student.nom);
+                      return (
+                        <button
+                          key={student.id}
+                          type="button"
+                          role="option"
+                          aria-selected={selectedId === student.id}
+                          className={`choice ${selectedId === student.id ? "is-selected" : ""}`}
+                          onClick={() => {
+                            setSelectedId(student.id);
+                            setPrenom(student.prenom);
+                            setError("");
+                          }}
+                        >
+                          <span>{label}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 ) : null}
                 {rosterError ? <p className="field-help">{rosterError}</p> : null}
+                {isLiveSession && roster && roster.length > 0 ? (
+                  <p className="field-help">Un nom ne peut être pris qu’une fois par session.</p>
+                ) : null}
               </div>
             ) : null}
 
@@ -170,10 +199,12 @@ export function EleveLoginScreen() {
                 type="submit"
                 disabled={
                   busy ||
-                  (hasCode && (!codeLooksValid || loadingRoster || !prenom || (roster?.length ?? 0) === 0))
+                  (hasCode &&
+                    (!codeLooksValid || loadingRoster || !selectedId || (roster?.length ?? 0) === 0)) ||
+                  (!hasCode && !prenom.trim())
                 }
               >
-                Entrer dans les missions
+                Entrer
               </Button>
               <Link className="text-link" to="/">
                 Accueil du site
