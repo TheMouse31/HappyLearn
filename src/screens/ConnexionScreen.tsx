@@ -21,7 +21,7 @@ export function ConnexionScreen() {
         <span className="kicker">Connexion</span>
         <h1>Qui es-tu ?</h1>
         <p className="lead" data-listen>
-          Les élèves n’utilisent pas d’e-mail. Les professeurs et les parents se connectent avec un e-mail.
+          Les élèves n’utilisent pas d’e-mail. Les professeurs se connectent avec un e-mail.
         </p>
         <div className="role-card-grid" role="group" aria-label="Qui es-tu ?">
           <Link className="role-card" to="/connexion/eleve">
@@ -29,7 +29,7 @@ export function ConnexionScreen() {
             <span className="role-card-hint">École ou à la maison · prénom, pas d’e-mail</span>
           </Link>
           <Link className="role-card role-card-teacher" to="/connexion/enseignant">
-            <span className="role-card-label">Je suis professeur ou parent</span>
+            <span className="role-card-label">Je suis professeur</span>
             <span className="role-card-hint">E-mail, mot de passe ou lien magique</span>
           </Link>
         </div>

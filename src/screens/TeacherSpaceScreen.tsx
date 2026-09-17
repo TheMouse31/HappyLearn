@@ -3,7 +3,7 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "../components/Button";
 import { Shell } from "../components/Shell";
 import { gradeLabel, subjectLabel } from "../data/catalog";
-import type { ChildSession } from "../data/types";
+import type { ChildSession, ClassStudent } from "../data/types";
 import { UNIVERSES } from "../data/universes";
 import { useSession } from "../lib/session";
 import { buildStudentStats, universeShortList } from "../lib/studentStats";
@@ -32,6 +32,10 @@ export function TeacherSpaceScreen() {
     ensureClass,
     createClass,
     renameClass,
+    listClassStudents,
+    addClassStudent,
+    renameClassStudent,
+    removeClassStudent,
     loadClassSessions,
     loadClassAnswers,
     logout,
@@ -42,11 +46,24 @@ export function TeacherSpaceScreen() {
   const [nom, setNom] = useState(current?.nom ?? "");
   const [newClassName, setNewClassName] = useState("");
   const [sessions, setSessions] = useState<ChildSession[]>([]);
+  const [roster, setRoster] = useState<ClassStudent[]>([]);
+  const [rosterReady, setRosterReady] = useState(false);
+  const [newStudentName, setNewStudentName] = useState("");
+  const [rosterError, setRosterError] = useState("");
+  const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
   const [copied, setCopied] = useState(false);
   const [busyCreate, setBusyCreate] = useState(false);
   const [createError, setCreateError] = useState("");
   const [tab, setTab] = useState<TeacherTab>("eleves");
   const [selectedStudentKey, setSelectedStudentKey] = useState<string | null>(null);
+
+  async function refreshRoster(classId: string) {
+    setRosterReady(false);
+    const rows = await listClassStudents(classId);
+    setRoster(rows);
+    setRosterReady(true);
+  }
 
   useEffect(() => {
     if (classes.length === 0) {
@@ -59,6 +76,30 @@ export function TeacherSpaceScreen() {
   useEffect(() => {
     if (current) setNom(current.nom);
   }, [current?.id, current?.nom]);
+
+  useEffect(() => {
+    if (!current) {
+      setRoster([]);
+      setRosterReady(true);
+      setNewStudentName("");
+      setRosterError("");
+      setEditingStudentId(null);
+      return;
+    }
+    let cancelled = false;
+    setRosterReady(false);
+    void listClassStudents(current.id).then((rows) => {
+      if (!cancelled) {
+        setRoster(rows);
+        setRosterReady(true);
+        setRosterError("");
+        setEditingStudentId(null);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [current?.id, listClassStudents]);
 
   useEffect(() => {
     if (!current) {
@@ -112,7 +153,7 @@ export function TeacherSpaceScreen() {
 
   if (role !== "enseignant" || !teacher) return <Navigate to="/connexion/enseignant" replace />;
 
-  const showCodeHint = sessions.length === 0;
+  const showSetupHint = rosterReady && roster.length === 0;
 
   return (
     <Shell
@@ -133,13 +174,13 @@ export function TeacherSpaceScreen() {
         <span className="kicker">Suivi de classe</span>
         <h1>Bonjour, {teacher.email}</h1>
         <p className="lead" data-listen>
-          Crée autant de classes que tu veux : chaque classe a son code. Suis les statistiques de chaque élève, sans note
-          ni classement.
+          Crée tes classes, ajoute la liste des élèves, puis partage le code. Les enfants choisissent leur prénom dans
+          la liste. Tu suis leurs missions sans note ni classement.
         </p>
-        {showCodeHint && current ? (
+        {showSetupHint && current ? (
           <div className="teacher-banner" role="status">
-            <strong>Première étape :</strong> partage le code <code>{current.code}</code> à tes élèves pour qu’ils
-            rejoignent la classe.
+            <strong>Première étape :</strong> ajoute les prénoms de ta classe ci-dessous, puis partage le code{" "}
+            <code>{current.code}</code>.
           </div>
         ) : null}
         {backend === "local" ? (
@@ -242,6 +283,122 @@ export function TeacherSpaceScreen() {
                   />
                 </div>
 
+                <section className="roster-panel" aria-label="Liste des élèves">
+                  <h2>Liste des élèves ({roster.length})</h2>
+                  <p className="field-help">
+                    Ces prénoms apparaissent quand un élève entre le code {current.code}. Tu peux les modifier à tout
+                    moment.
+                  </p>
+                  {!rosterReady ? <p>Chargement de la liste…</p> : null}
+                  {rosterReady ? (
+                    <ul className="roster-list">
+                      {roster.map((student) => (
+                        <li key={student.id}>
+                          {editingStudentId === student.id ? (
+                            <form
+                              className="roster-edit-row"
+                              onSubmit={(event) => {
+                                event.preventDefault();
+                                void renameClassStudent(student.id, editingName).then((message) => {
+                                  if (message) {
+                                    setRosterError(message);
+                                    return;
+                                  }
+                                  setEditingStudentId(null);
+                                  setRosterError("");
+                                  void refreshRoster(current.id);
+                                });
+                              }}
+                            >
+                              <input
+                                value={editingName}
+                                maxLength={20}
+                                aria-label={`Modifier ${student.prenom}`}
+                                onChange={(event) => setEditingName(event.target.value)}
+                              />
+                              <Button type="submit" variant="primary">
+                                Enregistrer
+                              </Button>
+                              <Button
+                                type="button"
+                                onClick={() => {
+                                  setEditingStudentId(null);
+                                  setRosterError("");
+                                }}
+                              >
+                                Annuler
+                              </Button>
+                            </form>
+                          ) : (
+                            <div className="roster-row">
+                              <strong>{student.prenom}</strong>
+                              <div className="roster-row-actions">
+                                <Button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingStudentId(student.id);
+                                    setEditingName(student.prenom);
+                                    setRosterError("");
+                                  }}
+                                >
+                                  Modifier
+                                </Button>
+                                <Button
+                                  type="button"
+                                  onClick={() => {
+                                    const ok = window.confirm(`Retirer ${student.prenom} de la liste ?`);
+                                    if (!ok) return;
+                                    void removeClassStudent(student.id).then(() => refreshRoster(current.id));
+                                  }}
+                                >
+                                  Retirer
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  {rosterReady && roster.length === 0 ? (
+                    <p className="field-help">Aucun élève pour l’instant. Ajoute les prénoms de ta classe.</p>
+                  ) : null}
+                  <form
+                    className="roster-add"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      setRosterError("");
+                      void addClassStudent(current.id, newStudentName).then((result) => {
+                        if (typeof result === "string") {
+                          setRosterError(result);
+                          return;
+                        }
+                        setNewStudentName("");
+                        void refreshRoster(current.id);
+                      });
+                    }}
+                  >
+                    <div className="field">
+                      <label htmlFor="nouvel-eleve">Ajouter un élève</label>
+                      <input
+                        id="nouvel-eleve"
+                        value={newStudentName}
+                        maxLength={20}
+                        placeholder="Prénom"
+                        onChange={(event) => setNewStudentName(event.target.value)}
+                      />
+                    </div>
+                    <Button type="submit" variant="primary" disabled={!newStudentName.trim()}>
+                      Ajouter
+                    </Button>
+                  </form>
+                  {rosterError ? (
+                    <p className="error" aria-live="polite">
+                      {rosterError}
+                    </p>
+                  ) : null}
+                </section>
+
                 <div className="role-tabs teacher-tabs" role="tablist" aria-label="Vue du suivi">
                   <button
                     type="button"
@@ -250,7 +407,7 @@ export function TeacherSpaceScreen() {
                     className={tab === "eleves" ? "is-selected" : ""}
                     onClick={() => setTab("eleves")}
                   >
-                    Élèves ({studentStats.length})
+                    Activité ({studentStats.length})
                   </button>
                   <button
                     type="button"
@@ -270,8 +427,8 @@ export function TeacherSpaceScreen() {
                       <p>Chargement des statistiques…</p>
                     ) : studentStats.length === 0 ? (
                       <p>
-                        Aucun élève pour ce code pour l’instant. Quand un enfant entre le code {current.code} et joue,
-                        ses stats apparaissent ici.
+                        Aucune activité pour l’instant. Quand un élève entre le code {current.code}, choisit son prénom
+                        dans la liste et joue, ses stats apparaissent ici.
                       </p>
                     ) : (
                       <div className="session-table-wrap">

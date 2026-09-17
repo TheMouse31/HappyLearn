@@ -1,12 +1,23 @@
 import { UNIVERSES } from "../data/universes";
-import type { ChildSession, ClassRecord, GradeLevel, PlayMode, StoredAnswer, SubjectSlug, UniverseSlug } from "../data/types";
+import type {
+  ChildSession,
+  ClassRecord,
+  ClassStudent,
+  GradeLevel,
+  PlayMode,
+  StoredAnswer,
+  SubjectSlug,
+  UniverseSlug,
+} from "../data/types";
 import { isGradeLevel, isSubjectSlug } from "../data/catalog";
 import { generateClassCode } from "./classCode";
 import {
   getDeviceId,
+  loadLocalClassStudents,
   loadLocalClasses,
   loadLocalCollection,
   newId,
+  saveLocalClassStudents,
   saveLocalClasses,
   saveLocalCollection,
 } from "./localKeys";
@@ -16,6 +27,16 @@ export type CourseContext = {
   grade: GradeLevel | null;
   subject: SubjectSlug | null;
 };
+
+function normalizeStudentPrenom(raw: string): string {
+  return raw.trim().slice(0, 20);
+}
+
+function sortStudents(items: ClassStudent[]): ClassStudent[] {
+  return [...items].sort((a, b) =>
+    a.prenom.localeCompare(b.prenom, "fr", { sensitivity: "base" }),
+  );
+}
 
 export type Persistence = {
   backend: "local" | "supabase";
@@ -34,6 +55,11 @@ export type Persistence = {
   listClasses: (teacherId: string) => Promise<ClassRecord[]>;
   createClass: (teacherId: string, nom: string) => Promise<ClassRecord>;
   renameClass: (classId: string, nom: string) => Promise<void>;
+  listClassStudents: (classId: string) => Promise<ClassStudent[]>;
+  listStudentsByClassCode: (code: string) => Promise<ClassStudent[]>;
+  addClassStudent: (classId: string, prenom: string) => Promise<ClassStudent | string>;
+  renameClassStudent: (studentId: string, prenom: string) => Promise<string | null>;
+  removeClassStudent: (studentId: string) => Promise<void>;
   listSessionsByClassCode: (code: string) => Promise<ChildSession[]>;
   listAnswersBySessionIds: (sessionIds: string[]) => Promise<StoredAnswer[]>;
 };
@@ -133,6 +159,50 @@ export const localPersistence: Persistence = {
   async renameClass(classId, nom) {
     const next = loadLocalClasses().map((item) => (item.id === classId ? { ...item, nom } : item));
     saveLocalClasses(next);
+  },
+  async listClassStudents(classId) {
+    return sortStudents(loadLocalClassStudents().filter((item) => item.classId === classId));
+  },
+  async listStudentsByClassCode(code) {
+    const found = loadLocalClasses().find((item) => item.code === code);
+    if (!found) return [];
+    return localPersistence.listClassStudents(found.id);
+  },
+  async addClassStudent(classId, prenom) {
+    const nextPrenom = normalizeStudentPrenom(prenom);
+    if (!nextPrenom) return "Indique un prénom.";
+    const all = loadLocalClassStudents();
+    const duplicate = all.some(
+      (item) =>
+        item.classId === classId &&
+        item.prenom.localeCompare(nextPrenom, "fr", { sensitivity: "base" }) === 0,
+    );
+    if (duplicate) return "Ce prénom est déjà dans la liste.";
+    const record: ClassStudent = { id: newId(), classId, prenom: nextPrenom };
+    all.push(record);
+    saveLocalClassStudents(all);
+    return record;
+  },
+  async renameClassStudent(studentId, prenom) {
+    const nextPrenom = normalizeStudentPrenom(prenom);
+    if (!nextPrenom) return "Indique un prénom.";
+    const all = loadLocalClassStudents();
+    const current = all.find((item) => item.id === studentId);
+    if (!current) return "Élève introuvable.";
+    const duplicate = all.some(
+      (item) =>
+        item.id !== studentId &&
+        item.classId === current.classId &&
+        item.prenom.localeCompare(nextPrenom, "fr", { sensitivity: "base" }) === 0,
+    );
+    if (duplicate) return "Ce prénom est déjà dans la liste.";
+    saveLocalClassStudents(
+      all.map((item) => (item.id === studentId ? { ...item, prenom: nextPrenom } : item)),
+    );
+    return null;
+  },
+  async removeClassStudent(studentId) {
+    saveLocalClassStudents(loadLocalClassStudents().filter((item) => item.id !== studentId));
   },
   async listSessionsByClassCode(code) {
     return readJson<ChildSession[]>(SESSIONS_KEY, [])
@@ -284,6 +354,61 @@ export async function createPersistence(): Promise<Persistence> {
     async renameClass(classId, nom) {
       const { error } = await client.from("classes").update({ nom }).eq("id", classId);
       if (error) await localPersistence.renameClass(classId, nom);
+    },
+    async listClassStudents(classId) {
+      const { data, error } = await client
+        .from("eleves_classe")
+        .select("id, class_id, prenom")
+        .eq("class_id", classId)
+        .order("prenom", { ascending: true });
+      if (error || !data) return localPersistence.listClassStudents(classId);
+      return sortStudents(
+        data.map((row) => ({
+          id: row.id as string,
+          classId: row.class_id as string,
+          prenom: row.prenom as string,
+        })),
+      );
+    },
+    async listStudentsByClassCode(code) {
+      const found = await supabasePersistence.findClassByCode(code);
+      if (!found) return [];
+      return supabasePersistence.listClassStudents(found.id);
+    },
+    async addClassStudent(classId, prenom) {
+      const nextPrenom = normalizeStudentPrenom(prenom);
+      if (!nextPrenom) return "Indique un prénom.";
+      const { data, error } = await client
+        .from("eleves_classe")
+        .insert({ class_id: classId, prenom: nextPrenom })
+        .select("id, class_id, prenom")
+        .single();
+      if (error || !data) {
+        if (error?.code === "23505") return "Ce prénom est déjà dans la liste.";
+        return localPersistence.addClassStudent(classId, nextPrenom);
+      }
+      return {
+        id: data.id as string,
+        classId: data.class_id as string,
+        prenom: data.prenom as string,
+      };
+    },
+    async renameClassStudent(studentId, prenom) {
+      const nextPrenom = normalizeStudentPrenom(prenom);
+      if (!nextPrenom) return "Indique un prénom.";
+      const { error } = await client
+        .from("eleves_classe")
+        .update({ prenom: nextPrenom })
+        .eq("id", studentId);
+      if (error) {
+        if (error.code === "23505") return "Ce prénom est déjà dans la liste.";
+        return localPersistence.renameClassStudent(studentId, nextPrenom);
+      }
+      return null;
+    },
+    async removeClassStudent(studentId) {
+      const { error } = await client.from("eleves_classe").delete().eq("id", studentId);
+      if (error) await localPersistence.removeClassStudent(studentId);
     },
     async listSessionsByClassCode(code) {
       const { data, error } = await client

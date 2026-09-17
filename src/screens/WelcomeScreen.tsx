@@ -59,7 +59,7 @@ export function WelcomeScreen() {
           <Button onClick={() => navigate("/classe")}>
             {courseLabel ? "Changer de classe / matière" : "Choisir classe et matière"}
           </Button>
-          <Button onClick={() => navigate("/prenom")}>Changer de prénom</Button>
+          {!classCode ? <Button onClick={() => navigate("/prenom")}>Changer de prénom</Button> : null}
         </div>
       </section>
     </Shell>

@@ -38,11 +38,11 @@ Pour un build Pages, les mêmes variables doivent être définies **au moment du
 Projet actuel branché : migrations `supabase/migrations/` + `supabase/seed.sql` déjà appliquées.
 
 1. Créer un projet (si besoin).
-2. Exécuter dans l’ordre : `20260915_init.sql`, `20260915_classes_enseignants.sql`, `20260915_happy_learn_course.sql`, puis `seed.sql` (ou `scripts/run-supabase-migrations.mjs` avec un access token).
+2. Exécuter dans l’ordre : `20260915_init.sql`, `20260915_classes_enseignants.sql`, `20260915_happy_learn_course.sql`, `20260917_eleves_classe.sql`, puis `seed.sql` (ou `scripts/run-supabase-migrations.mjs` avec un access token).
 3. Storage (plus tard) : bucket public `neo` pour les visuels webp. En local / Pages, les fichiers sont dans `public/neo/`.
 4. Authentication
-   - **Élèves** : pas de compte e-mail. Prénom ou surnom (20 caractères) + code classe facultatif.
-   - **Professeurs / parents** : inscription libre (e-mail + mot de passe) ou lien magique. Self-signup ouvert, confirmation e-mail désactivée pour les tests.
+   - **Élèves** : pas de compte e-mail. Sans code : prénom libre. Avec code classe : choix du prénom dans la liste saisie par le professeur.
+   - **Professeurs** : inscription libre (e-mail + mot de passe) ou lien magique. Self-signup ouvert, confirmation e-mail désactivée pour les tests.
    - **URL Configuration** (déjà en place pour la démo) :
      - Site URL : `https://happy-learn.pages.dev`
      - Redirect allow-list : `http://localhost:5173/**`, `http://127.0.0.1:5173/**`, `https://happy-learn.pages.dev/**`, `https://*.happy-learn.pages.dev/**`
@@ -73,16 +73,16 @@ npx wrangler pages deploy dist --project-name happy-learn
 
 ## Connexion (écoles et particuliers)
 
-La page d’accueil `/` présente Happy Learn. La connexion est sur `/connexion` (élève ou professeur / parent).
+La page d’accueil `/` présente Happy Learn. La connexion est sur `/connexion` (élève ou professeur).
 
-- **Élève** : `/connexion/eleve` — prénom ou surnom, pas d’e-mail. Code classe facultatif (fourni par le professeur). À la maison, le code peut rester vide.
-- **Professeur ou parent** : `/connexion/enseignant` — e-mail + mot de passe, ou lien magique. Plusieurs classes possibles, chacune avec son code. L’espace enseignant montre les stats par élève (séances, missions terminées, réussite aux réponses, univers gagnés) et le journal des séances, **sans note ni classement**.
+- **Élève** : `/connexion/eleve` — sans code : prénom libre. Avec code classe : sélection du prénom dans la liste du professeur.
+- **Professeur** : `/connexion/enseignant` — e-mail + mot de passe, ou lien magique. Crée des classes, gère la liste d’élèves, partage un code. L’espace enseignant montre les stats par élève (séances, missions terminées, réussite aux réponses, univers gagnés) et le journal des séances, **sans note ni classement**.
 
 ## Parcours enfant
 
 Connexion élève → A00 accueil → `/classe` (niveau + matière) → A02 présentation → A03 univers → A04 cahier ou QCM → A05 confirmation → mission → A06 récompense.
 
-A01 (changer de prénom) reste accessible depuis l’accueil.
+A01 (changer de prénom) reste accessible depuis l’accueil **seulement sans code classe**.
 
 Séquence unique (nombres identiques) :
 
@@ -102,7 +102,7 @@ Quitter une mission = retour sans étoile. Checklist : `docs/PARCOURS-8.md`.
 ## Fait
 
 - SPA Vite + React + TypeScript strict + React Router
-- Page de connexion élèves / professeurs-parents
+- Page de connexion élèves / professeurs
 - Catalogue CP–CM2 + matières du primaire (jouable : CM2 maths)
 - Écrans A00–A06 et mission sans iframe
 - Moteur unique, 4 univers, modes cahier et QCM
@@ -110,7 +110,7 @@ Quitter une mission = retour sans étoile. Checklist : `docs/PARCOURS-8.md`.
 - Indices avec Néo habillé, pouce après une bonne réponse, applaudissement en fin de mission, A06 corps/bras
 - Visuels Néo en webp (`public/neo/`)
 - Collection + traces localStorage / Supabase
-- Plusieurs classes par enseignant, stats élèves par classe
+- Plusieurs classes par enseignant, liste d’élèves éditable, stats élèves par classe
 - Supabase Auth (self-signup) + migrations + seed
 - Déploiement Cloudflare Pages (`happy-learn.pages.dev`)
 - Lecture à voix haute, `lang=fr`, `aria-live`, `prefers-reduced-motion`

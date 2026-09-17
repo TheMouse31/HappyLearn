@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { isGradeLevel, isSubjectSlug } from "../data/catalog";
-import type { AppRole, ClassRecord, GradeLevel, PlayMode, SubjectSlug, TeacherAccount, UniverseSlug } from "../data/types";
+import type { AppRole, ClassRecord, ClassStudent, GradeLevel, PlayMode, SubjectSlug, TeacherAccount, UniverseSlug } from "../data/types";
 import { isValidClassCode, normalizeClassCode } from "./classCode";
 import { teacherAuthMessage, isEmail } from "./authMessages";
 import {
@@ -43,6 +43,11 @@ type SessionState = {
   setUniverse: (value: UniverseSlug) => void;
   setMode: (value: PlayMode) => void;
   loginEleve: (prenom: string, code: string) => Promise<string | null>;
+  listStudentsByClassCode: (code: string) => Promise<ClassStudent[]>;
+  listClassStudents: (classId: string) => Promise<ClassStudent[]>;
+  addClassStudent: (classId: string, prenom: string) => Promise<ClassStudent | string>;
+  renameClassStudent: (studentId: string, prenom: string) => Promise<string | null>;
+  removeClassStudent: (studentId: string) => Promise<void>;
   loginTeacherPassword: (email: string, password: string, mode: "connexion" | "inscription") => Promise<string | null>;
   loginTeacherMagic: (email: string) => Promise<string | null>;
   loginTeacherLocal: (email: string) => Promise<string | null>;
@@ -175,20 +180,57 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         }
         if (code) {
           const found = await store.findClassByCode(code);
-          if (found) setClassName(found.nom);
-          else if (store.backend === "supabase") {
+          if (!found) {
+            if (store.backend === "supabase") {
+              return "Ce code classe n’est pas reconnu. Demande-le à ton professeur, ou laisse vide à la maison.";
+            }
             return "Ce code classe n’est pas reconnu. Demande-le à ton professeur, ou laisse vide à la maison.";
           }
+          const roster = await store.listClassStudents(found.id);
+          if (roster.length === 0) {
+            return "Ton professeur n’a pas encore ajouté les prénoms de la classe. Demande-lui, ou laisse le code vide pour jouer seul.";
+          }
+          const match = roster.find(
+            (item) => item.prenom.localeCompare(next, "fr", { sensitivity: "base" }) === 0,
+          );
+          if (!match) {
+            return "Choisis ton prénom dans la liste de ta classe.";
+          }
+          setClassName(found.nom);
+          setPrenomState(match.prenom);
+          savePrenom(match.prenom);
         } else {
           setClassName("");
+          setPrenomState(next);
+          savePrenom(next);
         }
-        setPrenomState(next);
-        savePrenom(next);
         setClassCode(code);
         saveClassCode(code);
         setTeacher(null);
         setRole("eleve");
         return null;
+      },
+      listStudentsByClassCode: async (code) => {
+        const store = persistence ?? localPersistence;
+        const normalized = normalizeClassCode(code);
+        if (!isValidClassCode(normalized)) return [];
+        return store.listStudentsByClassCode(normalized);
+      },
+      listClassStudents: async (classId) => {
+        const store = persistence ?? localPersistence;
+        return store.listClassStudents(classId);
+      },
+      addClassStudent: async (classId, prenom) => {
+        const store = persistence ?? localPersistence;
+        return store.addClassStudent(classId, prenom);
+      },
+      renameClassStudent: async (studentId, prenom) => {
+        const store = persistence ?? localPersistence;
+        return store.renameClassStudent(studentId, prenom);
+      },
+      removeClassStudent: async (studentId) => {
+        const store = persistence ?? localPersistence;
+        await store.removeClassStudent(studentId);
       },
       loginTeacherPassword: async (email, password, authMode) => {
         if (!isEmail(email)) return "Indique un e-mail professionnel valide.";

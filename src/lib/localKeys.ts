@@ -1,5 +1,5 @@
 import { isGradeLevel, isSubjectSlug } from "../data/catalog";
-import type { GradeLevel, SubjectSlug, UniverseSlug } from "../data/types";
+import type { ClassStudent, GradeLevel, SubjectSlug, UniverseSlug } from "../data/types";
 
 const DEVICE_KEY = "mission-maths-device";
 const COLLECTION_KEY = "mission-maths-collection";
@@ -9,6 +9,7 @@ const COURSE_GRADE_KEY = "happy-learn-grade";
 const COURSE_SUBJECT_KEY = "happy-learn-subject";
 const TEACHER_KEY = "mission-maths-teacher";
 const CLASSES_KEY = "mission-maths-classes";
+const CLASS_STUDENTS_KEY = "mission-maths-class-students";
 
 export function getDeviceId(): string {
   const existing = localStorage.getItem(DEVICE_KEY);
@@ -116,6 +117,29 @@ export function saveLocalClasses(
   items: { id: string; nom: string; code: string; teacherId: string }[],
 ): void {
   localStorage.setItem(CLASSES_KEY, JSON.stringify(items));
+}
+
+export function loadLocalClassStudents(): ClassStudent[] {
+  try {
+    const raw = JSON.parse(localStorage.getItem(CLASS_STUDENTS_KEY) ?? "[]") as unknown;
+    if (!Array.isArray(raw)) return [];
+    return raw.filter((item): item is ClassStudent => {
+      if (!item || typeof item !== "object") return false;
+      const row = item as { id?: unknown; classId?: unknown; prenom?: unknown };
+      return (
+        typeof row.id === "string" &&
+        typeof row.classId === "string" &&
+        typeof row.prenom === "string" &&
+        row.prenom.trim().length > 0
+      );
+    });
+  } catch {
+    return [];
+  }
+}
+
+export function saveLocalClassStudents(items: ClassStudent[]): void {
+  localStorage.setItem(CLASS_STUDENTS_KEY, JSON.stringify(items));
 }
 
 export function loadLocalCollection(): UniverseSlug[] {

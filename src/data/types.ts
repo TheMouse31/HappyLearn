@@ -27,6 +27,12 @@ export type ClassRecord = {
   code: string;
 };
 
+export type ClassStudent = {
+  id: string;
+  classId: string;
+  prenom: string;
+};
+
 export type StepKind =
   | "tutorial"
   | "continue"

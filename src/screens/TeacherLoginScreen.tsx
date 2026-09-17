@@ -28,17 +28,17 @@ export function TeacherLoginScreen() {
   if (role === "enseignant") return <Navigate to="/espace-professeur" replace />;
 
   return (
-    <Shell brand="Happy Learn" stepLabel="Professeur / parent" homeTo="/" backTo="/connexion">
+    <Shell brand="Happy Learn" stepLabel="Professeur" homeTo="/" backTo="/connexion">
       <div className="split login-layout">
         <aside className="mascot-stage">
-          <p className="bubble">L’espace enseignant sert à l’école comme à la maison.</p>
+          <p className="bubble">L’espace enseignant sert à préparer ta classe et suivre les missions.</p>
           <Neo pose="guide" />
         </aside>
         <section>
           <span className="kicker">Espace enseignant</span>
           <h1>Connexion</h1>
           <p className="lead" data-listen>
-            Crée des classes, partage un code à tes élèves, et suis leurs missions sans note ni classement.
+            Crée des classes, ajoute tes élèves, partage un code, et suis leurs missions sans note ni classement.
           </p>
           <form
             className="login-form"

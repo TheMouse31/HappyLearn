@@ -7,10 +7,11 @@ import { useSession } from "../lib/session";
 
 export function NicknameScreen() {
   const navigate = useNavigate();
-  const { prenom, role, setPrenom } = useSession();
+  const { prenom, role, classCode, setPrenom } = useSession();
   const [value, setValue] = useState(prenom);
   const [error, setError] = useState("");
   if (role !== "eleve") return <Navigate to="/connexion" replace />;
+  if (classCode) return <Navigate to="/accueil" replace />;
 
   return (
     <Shell stepLabel="Prénom" backTo="/accueil">
