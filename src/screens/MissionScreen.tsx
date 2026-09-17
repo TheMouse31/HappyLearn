@@ -66,6 +66,7 @@ export function MissionScreen() {
     subject,
     missionId,
     lockedSession,
+    liveSession,
   } = useSession();
   const [index, setIndex] = useState(0);
   const [raw, setRaw] = useState("");
@@ -87,6 +88,23 @@ export function MissionScreen() {
   useEffect(() => {
     setIndex(0);
   }, [mission?.id, sessionId]);
+
+  // Si le prof arrête l'activité, ramener l'élève en salle d'attente.
+  useEffect(() => {
+    if (!lockedSession) return;
+    if (liveSession?.missionId) return;
+    if (!sessionId && !universe) {
+      navigate("/salle-attente", { replace: true });
+      return;
+    }
+    let cancelled = false;
+    void quitMission().then(() => {
+      if (!cancelled) navigate("/salle-attente", { replace: true });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [lockedSession, liveSession?.missionId, sessionId, universe, quitMission, navigate]);
 
   useEffect(() => {
     setRaw("");
