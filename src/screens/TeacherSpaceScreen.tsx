@@ -319,11 +319,16 @@ export function TeacherSpaceScreen() {
 
   useEffect(() => {
     if (!classesOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape") setClassesOpen(false);
     }
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
   }, [classesOpen]);
 
   async function toggleCoveredInClass(themeId: string, next: boolean) {

@@ -1091,22 +1091,15 @@ p {
   font-size: 1.35rem;
 }
 
-.teacher-layout {
-  display: grid;
-  grid-template-columns: minmax(200px, 240px) minmax(0, 1fr);
-  gap: 20px;
-  align-items: start;
-  margin-top: 20px;
-}
-
 .app-shell:has(.suivi-classe) {
   width: min(1520px, 100%);
 }
 
 .app-shell:has(.suivi-classe) .window {
   min-height: min(82dvh, 960px);
-  padding-left: 20px;
-  padding-right: 20px;
+  padding-left: 16px;
+  padding-right: 16px;
+  overflow-x: clip;
 }
 
 .suivi-classe .class-detail.suivi-main {
@@ -1130,6 +1123,7 @@ p {
   align-items: center;
   gap: 8px 12px;
   min-height: var(--tap);
+  max-width: 100%;
   padding: 10px 14px;
   border: 2px solid var(--line);
   border-radius: 16px;
@@ -1144,6 +1138,11 @@ p {
 .suivi-classes-trigger:hover {
   border-color: #0f6a45;
   background: #f4fff8;
+}
+
+.suivi-classes-trigger:focus-visible {
+  outline: 3px solid #21dc78;
+  outline-offset: 2px;
 }
 
 .suivi-classes-trigger-label {
@@ -1225,20 +1224,6 @@ p {
   margin-top: 4px;
   padding-top: 14px;
   border-top: 1px solid #e3f3ea;
-}
-
-.class-panel {
-  display: grid;
-  gap: 14px;
-  padding: 16px;
-  border: 2px solid var(--line);
-  border-radius: 18px;
-  background: #fff;
-}
-
-.class-panel h2 {
-  margin: 0;
-  font-size: 1.15rem;
 }
 
 .class-list {
@@ -1337,16 +1322,14 @@ p {
 
 .stats-filters .field {
   margin: 0;
+  min-width: 0;
 }
 
 .stats-filters select,
 .stats-filters input[type="date"] {
   width: 100%;
-}
-
-.teacher-tabs {
-  margin: 20px 0 8px;
-  max-width: 560px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .suivi-greeting {
@@ -1364,10 +1347,16 @@ p {
   margin-bottom: 16px;
 }
 
+.suivi-header-main {
+  min-width: 0;
+  flex: 1 1 220px;
+}
+
 .suivi-header-main h1 {
   margin: 0 0 10px;
-  font-size: clamp(1.6rem, 3vw, 2.1rem);
+  font-size: clamp(1.45rem, 3vw, 2.1rem);
   line-height: 1.15;
+  overflow-wrap: anywhere;
 }
 
 .suivi-code {
@@ -1400,6 +1389,7 @@ p {
   flex-wrap: wrap;
   align-items: center;
   gap: 10px;
+  max-width: 100%;
 }
 
 .suivi-prepare-toggle {
@@ -1498,6 +1488,11 @@ p {
 
 .suivi-panel h2 {
   margin: 0;
+}
+
+.suivi-classe .teacher-space h2,
+.suivi-classe h2 {
+  margin-top: 0;
 }
 
 .suivi-panel-head {
@@ -1660,10 +1655,9 @@ p {
   border-radius: 14px;
 }
 
-@media (max-width: 900px) {
-  .stats-filters.suivi-filters-full {
-    grid-template-columns: 1fr 1fr;
-  }
+.suivi-table-full .session-table {
+  width: 100%;
+  table-layout: fixed;
 }
 
 .suivi-eleve-name {
@@ -1744,15 +1738,6 @@ p {
   color: var(--ink);
 }
 
-.suivi-table-full,
-.suivi-table-full .session-table {
-  width: 100%;
-}
-
-.suivi-table-full .session-table {
-  table-layout: fixed;
-}
-
 .suivi-journal-table .col-eleve { width: 22%; }
 .suivi-journal-table .col-parcours { width: 40%; }
 .suivi-journal-table .col-resultat { width: 24%; }
@@ -1825,6 +1810,7 @@ p {
 .programme-check input {
   width: 1.25rem;
   height: 1.25rem;
+  flex: 0 0 auto;
   accent-color: #0f6a45;
 }
 
@@ -1840,6 +1826,10 @@ p {
 }
 
 @media (max-width: 900px) {
+  .stats-filters.suivi-filters-full {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .suivi-eleve-cols,
   .suivi-theme-cols {
     display: none;
@@ -1876,6 +1866,38 @@ p {
   .suivi-theme-status { grid-area: status; }
 }
 
+@media (max-width: 620px) {
+  .stats-filters.suivi-filters-full,
+  .suivi-programme .stats-filters.suivi-filters-full {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .suivi-header-actions {
+    width: 100%;
+  }
+
+  .suivi-header-actions > button {
+    flex: 1 1 auto;
+  }
+
+  .suivi-modes {
+    width: 100%;
+  }
+
+  .suivi-modes button {
+    flex: 1 1 auto;
+  }
+
+  .suivi-summary {
+    gap: 12px;
+  }
+
+  .suivi-summary-item {
+    min-width: 0;
+    flex: 1 1 calc(50% - 12px);
+  }
+}
+
 .muted {
   color: #5a7266;
 }
@@ -1899,21 +1921,6 @@ p {
   border-radius: inherit;
   background: linear-gradient(90deg, #1bbf6a, #0f6a45);
   transition: width 0.25s ease;
-}
-
-.programme-check {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: var(--tap);
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.programme-check input {
-  width: 1.1rem;
-  height: 1.1rem;
-  accent-color: #0f6a45;
 }
 
 .programme-status {
@@ -1945,10 +1952,6 @@ p {
   color: #4a5c52;
 }
 
-.programme-table tr.status-fait td:first-child {
-  font-weight: 600;
-}
-
 .student-detail {
   margin-top: 22px;
   padding: 16px 18px;
@@ -1975,12 +1978,6 @@ p {
 
 .session-table tr.is-selected-row {
   background: #eafff2;
-}
-
-@media (max-width: 860px) {
-  .teacher-layout {
-    grid-template-columns: 1fr;
-  }
 }
 
 .session-table-wrap {
