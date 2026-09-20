@@ -2530,3 +2530,198 @@ button.text-link {
   }
 }
 
+
+/* —— Mode daltonien (deutéranopie : bleu = succès, ambre = attention) —— */
+.colorblind-toggle.is-on {
+  border-color: #2563eb;
+  background: #eff6ff;
+  color: #1e3a8a;
+}
+
+@media (max-width: 620px) {
+  .colorblind-toggle-label {
+    display: none;
+  }
+}
+
+html[data-colorblind="1"] {
+  --page: #eef4ff;
+  --panel: #f8faff;
+  --ink: #0f172a;
+  --soft: #334155;
+  --line: #93c5fd;
+  --action: #2563eb;
+  --action-ink: #0b1f4d;
+  --action-2: #60a5fa;
+  --soft-action: #eff6ff;
+  --error: #be185d;
+  --gold: #d97706;
+  --hint: #7c3aed;
+}
+
+html[data-colorblind="1"] body {
+  background:
+    radial-gradient(circle at 16% 18%, #bfdbfe 0, transparent 38%),
+    radial-gradient(circle at 84% 4%, #ddd6fe 0, transparent 44%),
+    linear-gradient(145deg, #eef4ff 0, #e0e7ff 53%, #dbeafe 100%);
+}
+
+html[data-colorblind="1"] .topbar,
+html[data-colorblind="1"] .window {
+  background: var(--panel);
+  border-color: var(--line);
+}
+
+html[data-colorblind="1"] .primary {
+  border-color: #3b82f6;
+  background: linear-gradient(145deg, var(--action-2), var(--action));
+  color: #fff;
+}
+
+html[data-colorblind="1"] button:focus-visible,
+html[data-colorblind="1"] input:focus-visible {
+  outline-color: #2563eb;
+}
+
+/* Pastilles : forme + motif en plus de la couleur */
+html[data-colorblind="1"] .programme-status.status-fait,
+html[data-colorblind="1"] .suivi-activity.status-recent,
+html[data-colorblind="1"] .presence-connecte {
+  background: #dbeafe;
+  color: #1e3a8a;
+  box-shadow: inset 4px 0 0 #2563eb;
+}
+
+html[data-colorblind="1"] .programme-status.status-partiel_app {
+  background: #ede9fe;
+  color: #5b21b6;
+  box-shadow: inset 4px 0 0 #7c3aed;
+}
+
+html[data-colorblind="1"] .programme-status.status-partiel_classe,
+html[data-colorblind="1"] .suivi-activity.status-pause,
+html[data-colorblind="1"] .presence-deconnecte {
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      #ffedd5,
+      #ffedd5 4px,
+      #fed7aa 4px,
+      #fed7aa 8px
+    );
+  color: #9a3412;
+  box-shadow: inset 4px 0 0 #d97706;
+}
+
+html[data-colorblind="1"] .programme-status.status-a_faire,
+html[data-colorblind="1"] .suivi-activity.status-never,
+html[data-colorblind="1"] .presence-absent {
+  background: #f1f5f9;
+  color: #334155;
+  box-shadow: inset 4px 0 0 #64748b;
+  border: 1px dashed #94a3b8;
+}
+
+html[data-colorblind="1"] .suivi-theme-row.status-fait {
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+
+html[data-colorblind="1"] .suivi-theme-row.status-partiel_classe {
+  background: #fff7ed;
+}
+
+html[data-colorblind="1"] .suivi-theme-row.status-partiel_app {
+  background: #f5f3ff;
+}
+
+html[data-colorblind="1"] .suivi-theme-app .is-yes,
+html[data-colorblind="1"] .suivi-eleve-rate,
+html[data-colorblind="1"] .class-item span,
+html[data-colorblind="1"] .suivi-classes-trigger-code,
+html[data-colorblind="1"] .linkish,
+html[data-colorblind="1"] .suivi-prepare-toggle {
+  color: #1d4ed8;
+}
+
+html[data-colorblind="1"] .suivi-summary,
+html[data-colorblind="1"] .student-detail,
+html[data-colorblind="1"] .suivi-eleve-row.is-open,
+html[data-colorblind="1"] .class-item.is-selected,
+html[data-colorblind="1"] .suivi-modes button.is-selected {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+html[data-colorblind="1"] .suivi-eleve-detail {
+  background: #eff6ff;
+}
+
+html[data-colorblind="1"] .programme-progress-bar > i,
+html[data-colorblind="1"] .progress i.on {
+  background: linear-gradient(90deg, #60a5fa, #2563eb);
+}
+
+html[data-colorblind="1"] .listen {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+html[data-colorblind="1"] .listen.is-on {
+  background: #ffedd5;
+  border-color: #d97706;
+}
+
+html[data-colorblind="1"] .kicker {
+  color: #1d4ed8;
+}
+
+html[data-colorblind="1"] .code-hero,
+html[data-colorblind="1"] .suivi-code {
+  border-color: #93c5fd;
+  background: #eff6ff;
+}
+
+html[data-colorblind="1"] .brand-mark {
+  background: #1d4ed8;
+}
+
+html[data-colorblind="1"] .step-pill {
+  border-color: #93c5fd;
+  color: #1e3a8a;
+}
+
+html[data-colorblind="1"] .feedback.ok {
+  color: #1d4ed8;
+}
+
+html[data-colorblind="1"] .feedback.retry {
+  color: #c2410c;
+}
+
+html[data-colorblind="1"] .star.on,
+html[data-colorblind="1"] .progress-dot.on,
+html[data-colorblind="1"] .mission-progress .fill,
+html[data-colorblind="1"] .bar-fill,
+html[data-colorblind="1"] .xp-fill {
+  background: #2563eb;
+}
+
+html[data-colorblind="1"] .choice.is-correct,
+html[data-colorblind="1"] .option.is-correct,
+html[data-colorblind="1"] button.is-correct {
+  border-color: #2563eb;
+  background: #dbeafe;
+  color: #1e3a8a;
+}
+
+html[data-colorblind="1"] .role-card:hover,
+html[data-colorblind="1"] .mission-card:hover,
+html[data-colorblind="1"] a.primary,
+html[data-colorblind="1"] .nav-cta {
+  border-color: #3b82f6;
+}
+
+html[data-colorblind="1"] .home-btn {
+  border-color: #93c5fd;
+}

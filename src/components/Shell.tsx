@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import type { ReactNode } from "react";
+import { ColorblindToggle } from "./ColorblindToggle";
 import { ListenButton } from "./ListenButton";
 import { SetupSteps } from "./SetupSteps";
 import { useSession } from "../lib/session";
@@ -79,6 +80,7 @@ export function Shell({
         </div>
         <div className="topbar-end">
           {stepLabel ? <div className="step-pill">{stepLabel}</div> : null}
+          <ColorblindToggle />
           {!hideNav ? (
             <button type="button" className="nav-icon-btn home-btn" onClick={goHome} aria-label="Accueil">
               <span aria-hidden="true">⌂</span>

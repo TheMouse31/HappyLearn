@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import type { ReactNode } from "react";
+import { ColorblindToggle } from "./ColorblindToggle";
 import { ListenButton } from "./ListenButton";
 import { useSession } from "../lib/session";
 
@@ -27,6 +28,7 @@ export function PublicLayout({ children }: Props) {
           <a className="nav-text-link" href="#comment-ca-marche">
             Comment ça marche
           </a>
+          <ColorblindToggle />
           {continueTo ? (
             <button type="button" className="primary nav-cta" onClick={() => navigate(continueTo)}>
               Continuer
