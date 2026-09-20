@@ -109,6 +109,7 @@ export function TeacherSpaceScreen() {
   const [createError, setCreateError] = useState("");
   const [mode, setMode] = useState<SuiviMode>("eleves");
   const [prepareOpen, setPrepareOpen] = useState(true);
+  const [classesOpen, setClassesOpen] = useState(false);
   const [selectedStudentKey, setSelectedStudentKey] = useState<string | null>(null);
   const [filterEleveId, setFilterEleveId] = useState("");
   const [filterSessionId, setFilterSessionId] = useState("");
@@ -312,6 +313,19 @@ export function TeacherSpaceScreen() {
     return [...groups.entries()];
   }, [sessions]);
 
+  useEffect(() => {
+    if (!current && classes.length === 0) setClassesOpen(true);
+  }, [current, classes.length]);
+
+  useEffect(() => {
+    if (!classesOpen) return;
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") setClassesOpen(false);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [classesOpen]);
+
   async function toggleCoveredInClass(themeId: string, next: boolean) {
     if (!current) return;
     setProgBusyId(themeId);
@@ -362,73 +376,139 @@ export function TeacherSpaceScreen() {
       }
     >
       <section className="teacher-space suivi-classe">
-        <span className="kicker">Suivi de classe</span>
-        <p className="suivi-greeting">Connecté · {teacher.email}</p>
+        <div className="suivi-topbar">
+          <div>
+            <span className="kicker">Suivi de classe</span>
+            <p className="suivi-greeting">Connecté · {teacher.email}</p>
+          </div>
+          <button
+            type="button"
+            className="suivi-classes-trigger"
+            aria-haspopup="dialog"
+            aria-expanded={classesOpen}
+            onClick={() => setClassesOpen(true)}
+          >
+            <span className="suivi-classes-trigger-label">Tes classes</span>
+            <strong>{current ? current.nom : "Choisir une classe"}</strong>
+            {current ? <span className="suivi-classes-trigger-code">{current.code}</span> : null}
+          </button>
+        </div>
         {backend === "local" ? (
           <p className="field-help">
             Espace local sur cet appareil. Avec Supabase, les mêmes codes fonctionnent sur les tablettes de l’école.
           </p>
         ) : null}
 
-        <div className="teacher-layout">
-          <aside className="class-panel" aria-label="Tes classes">
-            <h2>Tes classes</h2>
-            {classes.length === 0 ? (
-              <p className="field-help">Création de ta première classe…</p>
-            ) : (
-              <ul className="class-list">
-                {classes.map((item) => (
-                  <li key={item.id}>
-                    <button
-                      type="button"
-                      className={`class-item ${current?.id === item.id ? "is-selected" : ""}`}
-                      aria-pressed={current?.id === item.id}
-                      onClick={() => setActiveClassId(item.id)}
-                    >
-                      <strong>{item.nom}</strong>
-                      <span>{item.code}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            <div className="field create-class">
-              <label htmlFor="nouvelle-classe">Nouvelle classe</label>
-              <input
-                id="nouvelle-classe"
-                value={newClassName}
-                maxLength={40}
-                placeholder="Ex. CM2 A"
-                onChange={(event) => {
-                  setNewClassName(event.target.value);
-                  setCreateError("");
-                }}
-              />
-              <Button
-                variant="primary"
-                type="button"
-                disabled={busyCreate}
-                onClick={() => {
-                  setBusyCreate(true);
-                  setCreateError("");
-                  void createClass(newClassName)
-                    .then((created) => {
-                      if (!created) setCreateError("Impossible de créer la classe. Réessaie.");
-                      else setNewClassName("");
-                    })
-                    .finally(() => setBusyCreate(false));
-                }}
-              >
-                Créer une classe
-              </Button>
-              {createError ? <p className="error">{createError}</p> : null}
+        {classesOpen ? (
+          <div
+            className="suivi-modal-backdrop"
+            role="presentation"
+            onClick={() => setClassesOpen(false)}
+          >
+            <div
+              className="suivi-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="suivi-classes-title"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="suivi-modal-head">
+                <h2 id="suivi-classes-title">Tes classes</h2>
+                <button
+                  type="button"
+                  className="suivi-modal-close"
+                  aria-label="Fermer"
+                  onClick={() => setClassesOpen(false)}
+                >
+                  Fermer
+                </button>
+              </div>
+              {classes.length === 0 ? (
+                <p className="field-help">Création de ta première classe…</p>
+              ) : (
+                <ul className="class-list suivi-modal-list">
+                  {classes.map((item) => (
+                    <li key={item.id}>
+                      <button
+                        type="button"
+                        className={`class-item ${current?.id === item.id ? "is-selected" : ""}`}
+                        aria-pressed={current?.id === item.id}
+                        onClick={() => {
+                          setActiveClassId(item.id);
+                          setClassesOpen(false);
+                        }}
+                      >
+                        <strong>{item.nom}</strong>
+                        <span>{item.code}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <div className="field create-class">
+                <label htmlFor="nouvelle-classe">Nouvelle classe</label>
+                <input
+                  id="nouvelle-classe"
+                  value={newClassName}
+                  maxLength={40}
+                  placeholder="Ex. CM2 A"
+                  autoFocus={classes.length === 0}
+                  onChange={(event) => {
+                    setNewClassName(event.target.value);
+                    setCreateError("");
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      if (!newClassName.trim() || busyCreate) return;
+                      setBusyCreate(true);
+                      setCreateError("");
+                      void createClass(newClassName)
+                        .then((created) => {
+                          if (!created) setCreateError("Impossible de créer la classe. Réessaie.");
+                          else {
+                            setNewClassName("");
+                            setClassesOpen(false);
+                          }
+                        })
+                        .finally(() => setBusyCreate(false));
+                    }
+                  }}
+                />
+                <Button
+                  variant="primary"
+                  type="button"
+                  disabled={busyCreate}
+                  onClick={() => {
+                    setBusyCreate(true);
+                    setCreateError("");
+                    void createClass(newClassName)
+                      .then((created) => {
+                        if (!created) setCreateError("Impossible de créer la classe. Réessaie.");
+                        else {
+                          setNewClassName("");
+                          setClassesOpen(false);
+                        }
+                      })
+                      .finally(() => setBusyCreate(false));
+                  }}
+                >
+                  Créer une classe
+                </Button>
+                {createError ? <p className="error">{createError}</p> : null}
+              </div>
             </div>
-          </aside>
+          </div>
+        ) : null}
 
-          <div className="class-detail">
+        <div className="class-detail suivi-main">
             {!current ? (
-              <p>Sélectionne ou crée une classe pour commencer.</p>
+              <div className="suivi-empty-class">
+                <p>Sélectionne ou crée une classe pour commencer.</p>
+                <Button variant="primary" type="button" onClick={() => setClassesOpen(true)}>
+                  Ouvrir mes classes
+                </Button>
+              </div>
             ) : (
               <>
                 <header className="suivi-header">
@@ -1092,7 +1172,6 @@ export function TeacherSpaceScreen() {
                 ) : null}
               </>
             )}
-          </div>
         </div>
       </section>
     </Shell>
