@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>Happy Learn — Guide utilisateur</title>
+  <style>
+    @page { size: A4; margin: 16mm 14mm 18mm 14mm; }
+    :root {
+      --ink: #1a2e1f;
+      --muted: #4a5c50;
+      --line: #d7e0d9;
+      --accent: #1f7a4c;
+      --bg: #f6faf7;
+      --warn: #8a5a00;
+      --warn-bg: #fff8e8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      color: var(--ink);
+      line-height: 1.45;
+      font-size: 10.5pt;
+      margin: 0;
+    }
+    h1 { font-size: 26pt; margin: 0 0 8pt; line-height: 1.15; }
+    h2 {
+      font-size: 14pt;
+      margin: 20pt 0 8pt;
+      padding-bottom: 4pt;
+      border-bottom: 2px solid var(--accent);
+      page-break-after: avoid;
+    }
+    h3 { font-size: 11.5pt; margin: 12pt 0 6pt; color: var(--accent); page-break-after: avoid; }
+    p, li { orphans: 3; widows: 3; }
+    .cover {
+      min-height: 230mm;
+      padding: 28pt;
+      border: 1px solid var(--line);
+      border-radius: 12pt;
+      background: linear-gradient(160deg, #e8f5ee, #fff 55%, #f0f7f3);
+      page-break-after: always;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .kicker {
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      font-size: 9pt;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .lead { font-size: 12.5pt; color: var(--muted); max-width: 40em; }
+    .meta { margin-top: 24pt; padding-top: 12pt; border-top: 1px solid var(--line); color: var(--muted); font-size: 10pt; }
+    .toc { page-break-after: always; }
+    .toc ol { padding-left: 1.2em; }
+    .toc li { margin: 5pt 0; }
+    .figure {
+      margin: 8pt 0 12pt;
+      border: 1px solid var(--line);
+      border-radius: 8pt;
+      overflow: hidden;
+      page-break-inside: avoid;
+      background: var(--bg);
+    }
+    .figure img {
+      display: block;
+      width: 100%;
+      max-height: 105mm;
+      object-fit: contain;
+      object-position: top;
+      background: #eef3ef;
+    }
+    .figure figcaption {
+      padding: 6pt 10pt;
+      font-size: 9pt;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+      background: #fff;
+    }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10pt; }
+    .grid-2 .figure img { max-height: 72mm; }
+    .steps { counter-reset: step; list-style: none; padding: 0; margin: 6pt 0 12pt; }
+    .steps li {
+      position: relative;
+      padding: 8pt 10pt 8pt 36pt;
+      margin: 0 0 6pt;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 8pt;
+      page-break-inside: avoid;
+    }
+    .steps li::before {
+      counter-increment: step;
+      content: counter(step);
+      position: absolute;
+      left: 8pt;
+      top: 8pt;
+      width: 20pt;
+      height: 20pt;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      font-size: 10pt;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      line-height: 20pt;
+    }
+    .tip, .warn, .info {
+      border-radius: 8pt;
+      padding: 8pt 10pt;
+      margin: 8pt 0 12pt;
+      page-break-inside: avoid;
+    }
+    .tip { background: var(--bg); border-left: 3pt solid var(--accent); }
+    .warn { background: var(--warn-bg); border-left: 3pt solid var(--warn); }
+    .info { background: #eef4ff; border-left: 3pt solid #355f9b; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8pt 0 12pt;
+      font-size: 9.5pt;
+      page-break-inside: avoid;
+    }
+    th, td { border: 1px solid var(--line); padding: 5pt 7pt; text-align: left; vertical-align: top; }
+    th { background: var(--bg); }
+    .badge {
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      font-size: 8pt;
+      font-weight: 700;
+      padding: 2pt 7pt;
+      border-radius: 999pt;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .pagebreak { page-break-before: always; }
+    .muted { color: var(--muted); }
+    code {
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 8.5pt;
+      background: #eef5f0;
+      padding: 1pt 3pt;
+      border-radius: 3pt;
+    }
+    footer.note { margin-top: 16pt; font-size: 8.5pt; color: var(--muted); }
+  </style>
+</head>
+<body>
+
+<section class="cover">
+  <div class="kicker">Guide utilisateur</div>
+  <h1>Happy Learn</h1>
+  <p class="lead">
+    Ce guide explique comment utiliser Happy Learn en classe ou à la maison :
+    connexion, mission solo, session live, espace professeur et créateur de missions.
+    Aucune connaissance technique n’est requise.
+  </p>
+  <div class="meta">
+    <p><strong>Public :</strong> enseignants · élèves · familles</p>
+    <p><strong>Site :</strong> https://happylearn.net · https://happy-learn.pages.dev</p>
+    <p><strong>Version :</strong> 0.1 · septembre 2026</p>
+  </div>
+</section>
+
+<section class="toc">
+  <h2>Sommaire</h2>
+  <ol>
+    <li>Démarrer en 2 minutes</li>
+    <li>Guide élève — jouer une mission solo</li>
+    <li>Guide élève — rejoindre une session de classe</li>
+    <li>Guide enseignant — préparer sa classe</li>
+    <li>Guide enseignant — piloter une session live</li>
+    <li>Guide enseignant — créer une mission</li>
+    <li>Astuces, accessibilité et dépannage</li>
+    <li>Rappels importants</li>
+  </ol>
+</section>
+
+<!-- 1 -->
+<h2>1. Démarrer en 2 minutes</h2>
+<p>Ouvre Happy Learn dans un navigateur (Chrome, Edge, Safari, Firefox) sur ordinateur ou tablette.</p>
+<div class="grid-2">
+  <figure class="figure">
+    <img src="pdf-assets/01_accueil.png" alt="Page d’accueil" />
+    <figcaption>Figure 1 — Accueil Happy Learn</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="pdf-assets/02_connexion.png" alt="Choix de connexion" />
+    <figcaption>Figure 2 — Choisis ton rôle</figcaption>
+  </figure>
+</div>
+<table>
+  <thead><tr><th>Je suis…</th><th>Je clique sur…</th><th>Puis…</th></tr></thead>
+  <tbody>
+    <tr><td>Élève</td><td><strong>Élève</strong></td><td>Prénom libre <em>ou</em> code donné par le professeur</td></tr>
+    <tr><td>Enseignant</td><td><strong>Enseignant</strong></td><td>E-mail + mot de passe (ou lien magique)</td></tr>
+  </tbody>
+</table>
+<div class="tip"><strong>Astuce :</strong> en démo locale sans compte serveur, l’espace enseignant peut s’ouvrir avec un e-mail seul (identifiant de l’appareil).</div>
+
+<!-- 2 -->
+<h2 class="pagebreak">2. Guide élève — jouer une mission solo</h2>
+<p>Parcours recommandé quand tu n’es pas en session de classe.</p>
+
+<ol class="steps">
+  <li><strong>Connexion élève</strong> — entre ton prénom (sans code), puis valide.</li>
+  <li><strong>Accueil</strong> — lance la mission ou change le parcours (niveau / matière).</li>
+  <li><strong>Niveau &amp; matière</strong> — pour l’instant, le parcours jouable est <strong>CM2 · Mathématiques</strong>.</li>
+  <li><strong>Présentation</strong> — lis l’objectif de la séance, puis choisis ton univers.</li>
+  <li><strong>Univers</strong> — Football, Rugby, Équitation ou Espace : l’histoire change, les calculs restent les mêmes.</li>
+  <li><strong>Matériel</strong> — cahier (tu tapes tes réponses) ou QCM (propositions mélangées).</li>
+  <li><strong>Prêt</strong> — vérifie tes choix, puis entre dans la mission.</li>
+  <li><strong>Mission</strong> — lis la consigne, réponds, utilise un indice si besoin, continue jusqu’à la récompense.</li>
+</ol>
+
+<div class="grid-2">
+  <figure class="figure">
+    <img src="pdf-assets/03_connexion_eleve.png" alt="Connexion élève" />
+    <figcaption>Figure 3 — Connexion élève</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="pdf-assets/05_accueil_eleve.png" alt="Accueil élève" />
+    <figcaption>Figure 4 — Ton accueil</figcaption>
+  </figure>
+</div>
+<div class="grid-2">
+  <figure class="figure">
+    <img src="pdf-assets/08_univers.png" alt="Choix d’univers" />
+    <figcaption>Figure 5 — Choix d’univers</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="pdf-assets/09_materiel.png" alt="Cahier ou QCM" />
+    <figcaption>Figure 6 — Cahier ou QCM</figcaption>
+  </figure>
+</div>
+<figure class="figure">
+  <img src="pdf-assets/22_mission.png" alt="Écran de mission" />
+  <figcaption>Figure 7 — Pendant la mission : scène + consigne + réponse</figcaption>
+</figure>
+
+<h3>Pendant la mission</h3>
+<ul>
+  <li><strong>Valider</strong> envoie ta réponse. Si c’est juste, Néo encourage et l’étape suivante arrive.</li>
+  <li><strong>Un indice</strong> t’aide sans donner directement la réponse.</li>
+  <li><strong>Écouter cette page</strong> lit le texte à voix haute.</li>
+  <li><strong>Quitter</strong> revient à l’accueil <em>sans</em> gagner la récompense de la mission.</li>
+</ul>
+<div class="info"><strong>À retenir :</strong> Happy Learn ne met pas de note et ne fait pas de classement. L’objectif est de réussir la mission et de gagner une récompense visuelle.</div>
+
+<!-- 3 -->
+<h2 class="pagebreak">3. Guide élève — rejoindre une session de classe</h2>
+<p>Quand le professeur lance une session live, tu rejoins avec un <strong>code</strong>.</p>
+<ol class="steps">
+  <li>Sur <strong>Connexion élève</strong>, entre le <strong>code de session</strong> (ex. <code>C82THT</code>).</li>
+  <li>Choisis ton nom dans la liste de la classe (prénom + nom).</li>
+  <li>Tu arrives en <strong>salle d’attente</strong> : patiente jusqu’au lancement de l’activité.</li>
+  <li>Quand la mission est lancée, <strong>choisis ton univers</strong>, puis joue.</li>
+  <li>À la fin (ou si le professeur arrête l’activité), tu reviens en salle d’attente.</li>
+</ol>
+<div class="grid-2">
+  <figure class="figure">
+    <img src="pdf-assets/18_salle_attente.png" alt="Salle d’attente" />
+    <figcaption>Figure 8 — Salle d’attente</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="pdf-assets/10_pret.png" alt="Confirmation avant de jouer" />
+    <figcaption>Figure 9 — Prêt à entrer en mission</figcaption>
+  </figure>
+</div>
+<div class="warn">
+  <strong>Important :</strong> en session live, la navigation est verrouillée.
+  Tu restes sur la salle d’attente ou la mission. Si le professeur te déconnecte,
+  ton prénom redevient libre pour une reconnexion.
+</div>
+
+<!-- 4 -->
+<h2>4. Guide enseignant — préparer sa classe</h2>
+<ol class="steps">
+  <li>Connecte-toi en <strong>Enseignant</strong>.</li>
+  <li>Dans <strong>Espace professeur</strong>, crée ou sélectionne une classe.</li>
+  <li>Ajoute les élèves (<strong>prénom</strong> et <strong>nom</strong>) : ils apparaîtront dans le code de session.</li>
+  <li>Note le <strong>code de classe</strong> (partageable) et utilise le <strong>pilotage de session</strong> pour un code live du jour.</li>
+  <li>Consulte les <strong>stats</strong> (séances, réussites, univers) — sans notes ni classement.</li>
+</ol>
+<figure class="figure">
+  <img src="pdf-assets/11_espace_professeur.png" alt="Espace professeur" />
+  <figcaption>Figure 10 — Espace professeur : classes, élèves, accès session &amp; missions</figcaption>
+</figure>
+<div class="tip"><strong>Bonnes pratiques :</strong> prépare la liste d’élèves avant l’heure de classe. Un élève absent du roster ne pourra pas rejoindre via le code session.</div>
+
+<!-- 5 -->
+<h2 class="pagebreak">5. Guide enseignant — piloter une session live</h2>
+<ol class="steps">
+  <li>Ouvre <strong>Pilotage de session</strong>.</li>
+  <li>Clique sur <strong>Lancer une session</strong> : un nouveau code s’affiche (à écrire au tableau).</li>
+  <li>Suis le roster : connecté / déconnecté / pas encore connecté.</li>
+  <li>Choisis <strong>niveau</strong>, <strong>matière</strong>, <strong>mission</strong>, <strong>mode</strong> (cahier ou QCM).</li>
+  <li>Clique sur <strong>Lancer l’activité</strong>. Chaque élève choisit ensuite son univers.</li>
+  <li>Pour faire une pause ou changer : <strong>Arrêter l’activité</strong> renvoie les élèves en salle d’attente.</li>
+  <li><strong>Terminer la session</strong> ferme le code.</li>
+</ol>
+<div class="grid-2">
+  <figure class="figure">
+    <img src="pdf-assets/12_pilotage_session.png" alt="Pilotage" />
+    <figcaption>Figure 11 — Code de session &amp; présence</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="pdf-assets/21_pilotage_missions.png" alt="Choix de mission" />
+    <figcaption>Figure 12 — Choix de l’activité</figcaption>
+  </figure>
+</div>
+<div class="grid-2">
+  <figure class="figure">
+    <img src="pdf-assets/20_eleve_connecte.png" alt="Élève connecté" />
+    <figcaption>Figure 13 — Élève connecté dans le roster</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="pdf-assets/19_activite_lancee.png" alt="Activité lancée" />
+    <figcaption>Figure 14 — Activité en cours</figcaption>
+  </figure>
+</div>
+<table>
+  <thead><tr><th>Action</th><th>Effet côté élève</th></tr></thead>
+  <tbody>
+    <tr><td>Lancer l’activité</td><td>Passage de l’attente au choix d’univers / mission</td></tr>
+    <tr><td>Arrêter l’activité</td><td>Retour salle d’attente</td></tr>
+    <tr><td>Déconnecter un élève</td><td>Écran « déconnecté », nom à nouveau libre</td></tr>
+    <tr><td>Terminer la session</td><td>Code invalide, fin de la séance live</td></tr>
+  </tbody>
+</table>
+
+<!-- 6 -->
+<h2 class="pagebreak">6. Guide enseignant — créer une mission</h2>
+<p>Le <strong>Créateur de missions</strong> permet d’ajouter des activités multi-matières visibles ensuite dans le pilotage.</p>
+<ol class="steps">
+  <li>Depuis l’espace professeur, ouvre <strong>Créateur de missions</strong>.</li>
+  <li>Clique sur <strong>Nouvelle mission</strong> (ou <strong>Dupliquer</strong> une mission officielle).</li>
+  <li>Renseigne niveau, matière, slug (thème), titre et accroche.</li>
+  <li>Ajoute des étapes : type (narration, nombre, texte, QCM…), consigne, réponse attendue.</li>
+  <li>Prévisualise à droite, puis <strong>Enregistre</strong>.</li>
+  <li>Coche <strong>Publier</strong> pour la rendre disponible dans le sélecteur d’activité.</li>
+</ol>
+<div class="grid-2">
+  <figure class="figure">
+    <img src="pdf-assets/16_catalogue_missions.png" alt="Catalogue" />
+    <figcaption>Figure 15 — Catalogue : mes missions + officielles</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="pdf-assets/15_editeur_detail.png" alt="Éditeur" />
+    <figcaption>Figure 16 — Éditeur d’étapes + aperçu</figcaption>
+  </figure>
+</div>
+<figure class="figure">
+  <img src="pdf-assets/17_mission_publiee.png" alt="Publication" />
+  <figcaption>Figure 17 — Mission enregistrée et publiée</figcaption>
+</figure>
+<div class="info">
+  <strong>Identifiant :</strong> généré automatiquement, du type
+  <code>cm2-maths-test-lecture-01</code>. Une fois publié, il ne doit plus changer
+  (stats / « déjà faite »).
+</div>
+<div class="warn">
+  <strong>Lecture seule :</strong> les missions officielles (ex. Fractions en mission)
+  ne s’éditent pas directement. Duplique-les pour les adapter.
+</div>
+
+<!-- 7 -->
+<h2>7. Astuces, accessibilité et dépannage</h2>
+<h3>Accessibilité</h3>
+<ul>
+  <li>Bouton <strong>Écouter cette page</strong> : lecture à voix haute.</li>
+  <li>L’interface respecte autant que possible les préférences «&nbsp;réduire les animations&nbsp;».</li>
+</ul>
+<h3>Problèmes fréquents</h3>
+<table>
+  <thead><tr><th>Symptôme</th><th>Que faire</th></tr></thead>
+  <tbody>
+    <tr><td>Le code session ne marche pas</td><td>Vérifier que le professeur a bien « lancé une session » et que le code est recopié sans erreur</td></tr>
+    <tr><td>« Choisis ton nom » vide</td><td>Ajouter l’élève dans le roster de l’espace professeur</td></tr>
+    <tr><td>Nom déjà pris</td><td>Un autre appareil est connecté avec ce nom — demander au prof de déconnecter, ou attendre</td></tr>
+    <tr><td>Mission introuvable au pilotage</td><td>Publier la mission dans le créateur ; vérifier niveau / matière</td></tr>
+    <tr><td>Rien ne se synchronise</td><td>Vérifier la connexion Internet (le live nécessite le serveur)</td></tr>
+    <tr><td>Page bloquée en session</td><td>Normal : seul attente / mission sont autorisés pendant le live</td></tr>
+  </tbody>
+</table>
+
+<!-- 8 -->
+<h2 class="pagebreak">8. Rappels importants</h2>
+<ul>
+  <li>Happy Learn est pensé pour le primaire (CP → CM2).</li>
+  <li>Aujourd’hui, la mission officielle complète est <strong>CM2 maths — fractions</strong>.</li>
+  <li>Tu peux déjà créer et publier d’autres missions via le créateur.</li>
+  <li>Pas de notes, pas de classement : feedback pédagogique uniquement.</li>
+  <li>En classe, privilégie une tablette / ordinateur par élève et un vidéoprojecteur pour le code.</li>
+</ul>
+
+<div class="tip">
+  <strong>Checklist séance 45 min (exemple)</strong>
+  <ol>
+    <li>5 min — ouvrir la session, écrire le code, élèves en salle d’attente</li>
+    <li>2 min — lancer l’activité (mission + mode)</li>
+    <li>25–30 min — les élèves jouent ; tu suis la présence</li>
+    <li>5 min — arrêt d’activité / bilan oral</li>
+    <li>3 min — terminer la session ; consulter les stats plus tard</li>
+  </ol>
+</div>
+
+<footer class="note">
+  Happy Learn — Guide utilisateur v0.1 · septembre 2026.
+  Pour la documentation produit &amp; technique (architecture, feuille de route),
+  voir <em>HappyLearn_Documentation_Complete.pdf</em>.
+</footer>
+
+</body>
+</html>

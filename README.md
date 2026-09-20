@@ -4,10 +4,11 @@ Apprentissages du CP au CM2, racontés comme une mission. Application web React 
 
 **Démo en ligne :** [https://happy-learn.pages.dev](https://happy-learn.pages.dev)
 
-**Documentation complète :**
-- PDF (recommandé) : [`docs/HappyLearn_Documentation_Complete.pdf`](./docs/HappyLearn_Documentation_Complete.pdf)
-- Même contenu : [`docs/HappyLearn-Documentation.pdf`](./docs/HappyLearn-Documentation.pdf)
-- Version HTML hors-ligne (ouvrir dans le navigateur) : [`docs/HappyLearn_Documentation_offline.html`](./docs/HappyLearn_Documentation_offline.html)
+**Documentation :**
+- **Guide utilisateur (PDF)** : [`docs/HappyLearn_Guide_Utilisateur.pdf`](./docs/HappyLearn_Guide_Utilisateur.pdf) — comment utiliser l’app (élèves & enseignants)
+- Guide HTML hors-ligne : [`docs/HappyLearn_Guide_Utilisateur_offline.html`](./docs/HappyLearn_Guide_Utilisateur_offline.html)
+- **Documentation produit & technique (PDF)** : [`docs/HappyLearn_Documentation_Complete.pdf`](./docs/HappyLearn_Documentation_Complete.pdf)
+- Doc technique HTML hors-ligne : [`docs/HappyLearn_Documentation_offline.html`](./docs/HappyLearn_Documentation_offline.html)
 
 Le prototype HTML du dossier voisin `mini-produit` est la spécification produit. Ce dépôt est le logiciel.
 
