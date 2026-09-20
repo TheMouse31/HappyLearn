@@ -2,8 +2,16 @@ import { useEffect, useMemo, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "../components/Button";
 import { Shell } from "../components/Shell";
-import { gradeLabel, subjectLabel } from "../data/catalog";
-import type { ChildSession, ClasseSession, ClassStudent } from "../data/types";
+import { GRADES, SUBJECTS, gradeLabel, subjectLabel } from "../data/catalog";
+import { listThemesFor, type ProgrammeTheme } from "../data/programmeThemes";
+import type {
+  ChildSession,
+  ClasseSession,
+  ClassStudent,
+  ClassThemeCoverage,
+  GradeLevel,
+  SubjectSlug,
+} from "../data/types";
 import { formatStudentName } from "../data/types";
 import { UNIVERSES } from "../data/universes";
 import { useSession } from "../lib/session";
@@ -20,7 +28,23 @@ function formatWhen(iso: string): string {
   }
 }
 
-type TeacherTab = "eleves" | "seances";
+type TeacherTab = "eleves" | "seances" | "programme";
+
+type ThemeRowStatus = "fait" | "partiel_app" | "partiel_classe" | "a_faire";
+
+function themeStatus(doneApp: boolean, doneClass: boolean): ThemeRowStatus {
+  if (doneApp && doneClass) return "fait";
+  if (doneApp) return "partiel_app";
+  if (doneClass) return "partiel_classe";
+  return "a_faire";
+}
+
+function statusLabel(status: ThemeRowStatus): string {
+  if (status === "fait") return "Traité";
+  if (status === "partiel_app") return "Fait via l’app";
+  if (status === "partiel_classe") return "Traité en classe";
+  return "À faire";
+}
 
 export function TeacherSpaceScreen() {
   const navigate = useNavigate();
@@ -40,6 +64,9 @@ export function TeacherSpaceScreen() {
     loadClassSessions,
     loadClassAnswers,
     listClassSessionsHistory,
+    listClassMissionsDone,
+    listClassThemeCoverage,
+    setThemeCoveredInClass,
     logout,
     backend,
   } = useSession();
@@ -66,6 +93,12 @@ export function TeacherSpaceScreen() {
   const [filterSessionId, setFilterSessionId] = useState("");
   const [filterDateFrom, setFilterDateFrom] = useState("");
   const [filterDateTo, setFilterDateTo] = useState("");
+  const [progGrade, setProgGrade] = useState<GradeLevel>("cm2");
+  const [progSubject, setProgSubject] = useState<SubjectSlug>("maths");
+  const [missionsDone, setMissionsDone] = useState<string[]>([]);
+  const [themeCoverage, setThemeCoverage] = useState<ClassThemeCoverage[]>([]);
+  const [progReady, setProgReady] = useState(false);
+  const [progBusyId, setProgBusyId] = useState<string | null>(null);
 
   async function refreshRoster(classId: string) {
     setRosterReady(false);
@@ -117,6 +150,29 @@ export function TeacherSpaceScreen() {
     setFilterDateFrom("");
     setFilterDateTo("");
   }, [current?.id]);
+
+  useEffect(() => {
+    if (!current) {
+      setMissionsDone([]);
+      setThemeCoverage([]);
+      setProgReady(true);
+      return;
+    }
+    let cancelled = false;
+    setProgReady(false);
+    void Promise.all([
+      listClassMissionsDone(current.id),
+      listClassThemeCoverage(current.id),
+    ]).then(([done, coverage]) => {
+      if (cancelled) return;
+      setMissionsDone(done);
+      setThemeCoverage(coverage);
+      setProgReady(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [current?.id, listClassMissionsDone, listClassThemeCoverage]);
 
   useEffect(() => {
     if (!current) {
@@ -183,6 +239,52 @@ export function TeacherSpaceScreen() {
     () => (answersReady ? buildStudentStats(sessions, answerRows) : []),
     [answersReady, sessions, answerRows],
   );
+
+  const programmeThemes = useMemo(
+    () => listThemesFor(progGrade, progSubject),
+    [progGrade, progSubject],
+  );
+
+  const coverageByTheme = useMemo(() => {
+    const map = new Map<string, ClassThemeCoverage>();
+    for (const row of themeCoverage) map.set(row.themeId, row);
+    return map;
+  }, [themeCoverage]);
+
+  const doneMissionSet = useMemo(() => new Set(missionsDone), [missionsDone]);
+
+  const programmeRows = useMemo(() => {
+    return programmeThemes.map((theme: ProgrammeTheme) => {
+      const manual = coverageByTheme.get(theme.id);
+      const doneApp = Boolean(theme.missionId && doneMissionSet.has(theme.missionId));
+      const doneClass = Boolean(manual?.coveredInClass);
+      const status = themeStatus(doneApp, doneClass);
+      return { theme, doneApp, doneClass, status, manual };
+    });
+  }, [programmeThemes, coverageByTheme, doneMissionSet]);
+
+  const programmeProgress = useMemo(() => {
+    const total = programmeRows.length;
+    const covered = programmeRows.filter(
+      (row) => row.doneApp || row.doneClass,
+    ).length;
+    return { total, covered };
+  }, [programmeRows]);
+
+  async function toggleCoveredInClass(themeId: string, next: boolean) {
+    if (!current) return;
+    setProgBusyId(themeId);
+    try {
+      const saved = await setThemeCoveredInClass(current.id, themeId, next);
+      if (!saved) return;
+      setThemeCoverage((rows) => {
+        const others = rows.filter((item) => item.themeId !== themeId);
+        return [...others, saved];
+      });
+    } finally {
+      setProgBusyId(null);
+    }
+  }
 
   const selectedStudent = studentStats.find((item) => item.key === selectedStudentKey) ?? null;
   const studentSessions = useMemo(() => {
@@ -319,6 +421,9 @@ export function TeacherSpaceScreen() {
                 <div className="actions" style={{ marginBottom: 18 }}>
                   <Button variant="primary" type="button" onClick={() => navigate("/espace-professeur/session")}>
                     Pilotage de session
+                  </Button>
+                  <Button type="button" onClick={() => navigate("/espace-professeur/missions")}>
+                    Créateur de missions
                   </Button>
                 </div>
 
@@ -545,6 +650,15 @@ export function TeacherSpaceScreen() {
                   >
                     Séances ({sessions.length})
                   </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={tab === "programme"}
+                    className={tab === "programme" ? "is-selected" : ""}
+                    onClick={() => setTab("programme")}
+                  >
+                    Programme ({programmeProgress.covered}/{programmeProgress.total || "—"})
+                  </button>
                 </div>
 
                 {tab === "eleves" ? (
@@ -657,7 +771,7 @@ export function TeacherSpaceScreen() {
                       </div>
                     ) : null}
                   </>
-                ) : (
+                ) : tab === "seances" ? (
                   <>
                     <h2>Journal des séances</h2>
                     {sessions.length === 0 ? (
@@ -699,6 +813,121 @@ export function TeacherSpaceScreen() {
                           </tbody>
                         </table>
                       </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <h2>Couverture du programme</h2>
+                    <p className="field-help">
+                      Pour {current.nom} : vois si les thèmes sont couverts via Happy Learn (au moins un élève a
+                      terminé la mission) ou marque un thème traité directement en classe, sans passer par
+                      l’application.
+                    </p>
+                    <div className="stats-filters">
+                      <div className="field">
+                        <label htmlFor="prog-grade">Niveau</label>
+                        <select
+                          id="prog-grade"
+                          value={progGrade}
+                          onChange={(event) => setProgGrade(event.target.value as GradeLevel)}
+                        >
+                          {GRADES.map((item) => (
+                            <option key={item.slug} value={item.slug}>
+                              {item.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="field">
+                        <label htmlFor="prog-subject">Matière</label>
+                        <select
+                          id="prog-subject"
+                          value={progSubject}
+                          onChange={(event) => setProgSubject(event.target.value as SubjectSlug)}
+                        >
+                          {SUBJECTS.map((item) => (
+                            <option key={item.slug} value={item.slug}>
+                              {item.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    {!progReady ? (
+                      <p>Chargement du programme…</p>
+                    ) : programmeProgress.total === 0 ? (
+                      <p>Aucun thème pour ce couple niveau / matière.</p>
+                    ) : (
+                      <>
+                        <p className="programme-progress" aria-live="polite">
+                          <strong>
+                            {programmeProgress.covered} / {programmeProgress.total}
+                          </strong>{" "}
+                          thèmes couverts ({gradeLabel(progGrade)} · {subjectLabel(progSubject)})
+                        </p>
+                        <div
+                          className="programme-progress-bar"
+                          role="progressbar"
+                          aria-valuenow={programmeProgress.covered}
+                          aria-valuemin={0}
+                          aria-valuemax={programmeProgress.total}
+                        >
+                          <i
+                            style={{
+                              width: `${Math.round(
+                                (100 * programmeProgress.covered) /
+                                  Math.max(1, programmeProgress.total),
+                              )}%`,
+                            }}
+                          />
+                        </div>
+                        <div className="session-table-wrap">
+                          <table className="session-table programme-table">
+                            <thead>
+                              <tr>
+                                <th>Thème</th>
+                                <th>Mission app</th>
+                                <th>Fait via l’app</th>
+                                <th>Traité en classe</th>
+                                <th>Statut</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {programmeRows.map((row) => (
+                                <tr key={row.theme.id} className={`status-${row.status}`}>
+                                  <td>{row.theme.label}</td>
+                                  <td>
+                                    {row.theme.missionId ? (
+                                      <code>{row.theme.missionId}</code>
+                                    ) : (
+                                      <span className="muted">Pas encore de mission</span>
+                                    )}
+                                  </td>
+                                  <td>{row.doneApp ? "Oui" : "Non"}</td>
+                                  <td>
+                                    <label className="programme-check">
+                                      <input
+                                        type="checkbox"
+                                        checked={row.doneClass}
+                                        disabled={progBusyId === row.theme.id}
+                                        onChange={(event) =>
+                                          void toggleCoveredInClass(row.theme.id, event.target.checked)
+                                        }
+                                      />
+                                      <span>En classe</span>
+                                    </label>
+                                  </td>
+                                  <td>
+                                    <span className={`programme-status status-${row.status}`}>
+                                      {statusLabel(row.status)}
+                                    </span>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </>
                     )}
                   </>
                 )}

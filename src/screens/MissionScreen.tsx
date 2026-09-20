@@ -6,14 +6,15 @@ import { HintOverlay } from "../components/HintOverlay";
 import { Neo } from "../components/Neo";
 import { Shell } from "../components/Shell";
 import { UniverseScene } from "../components/UniverseScene";
-import { BILAN_CHOICES } from "../data/steps";
-import { defaultMissionFor, findMission } from "../data/missions";
-import type { Step } from "../data/types";
+import { BILAN_CHOICES } from "../data/missions/labels";
+import { defaultMissionFor, findMission, resolveMission } from "../data/missions";
+import type { MissionDef, Step } from "../data/types";
 import {
   advanceDelay,
   needsAnswer,
   optionLabel,
   qcmOptions,
+  sceneKeyOf,
   usesQcm,
   validateAnswer,
 } from "../engine/missionEngine";
@@ -77,9 +78,23 @@ export function MissionScreen() {
   const [kind, setKind] = useState<"ok" | "retry" | "hint" | "info">("info");
   const [hint, setHint] = useState("");
   const [showPouce, setShowPouce] = useState(false);
+  const [mission, setMission] = useState<MissionDef | null>(
+    () => findMission(missionId) ?? defaultMissionFor(grade, subject) ?? findMission("cm2-maths-fractions-01"),
+  );
 
-  const mission =
-    findMission(missionId) ?? defaultMissionFor(grade, subject) ?? findMission("cm2-maths-fractions-01");
+  useEffect(() => {
+    let cancelled = false;
+    void resolveMission(missionId).then((resolved) => {
+      if (cancelled) return;
+      setMission(
+        resolved ?? defaultMissionFor(grade, subject) ?? findMission("cm2-maths-fractions-01"),
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [missionId, grade, subject]);
+
   const steps = mission?.steps ?? [];
   const step = steps[index];
 
@@ -186,7 +201,8 @@ export function MissionScreen() {
       (current.kind === "fraction-choice" ||
         current.kind === "simplify" ||
         current.kind === "number" ||
-        current.kind === "direction")
+        current.kind === "direction" ||
+        current.kind === "choice")
     ) {
       return (
         <div className="qcm" role="group" aria-label="Propositions">
@@ -218,12 +234,12 @@ export function MissionScreen() {
     if (current.kind === "fraction-choice" || current.kind === "simplify") {
       return <FractionFields top={top} bottom={bottom} onTop={setTop} onBottom={setBottom} />;
     }
-    if (current.kind === "number") {
+    if (current.kind === "number" || current.kind === "text") {
       return (
         <div className="free-row">
           <input
-            type="number"
-            inputMode="numeric"
+            type={current.kind === "number" ? "number" : "text"}
+            inputMode={current.kind === "number" ? "numeric" : "text"}
             aria-label="Ta réponse"
             value={raw}
             onChange={(event) => setRaw(event.target.value)}
@@ -256,16 +272,16 @@ export function MissionScreen() {
       <div className="mission-layout">
         <UniverseScene
           universe={universe}
-          stepId={step.id}
+          stepId={sceneKeyOf(step)}
           progress={step.progress}
-          success={kind === "ok" || step.kind === "teaser" || step.id === "N04"}
+          success={kind === "ok" || step.kind === "teaser" || sceneKeyOf(step) === "N04"}
           selected={currentValue === "/" ? raw : currentValue}
           expected={step.expected}
           caption={copy.caption}
         />
         <section>
           <div className="progress" aria-label="Progression">
-            {Array.from({ length: 6 }, (_, i) => (
+            {Array.from({ length: Math.max(6, step.progress) }, (_, i) => (
               <i key={i} className={i < step.progress ? "on" : ""} />
             ))}
           </div>
@@ -307,7 +323,7 @@ export function MissionScreen() {
           {renderAnswer(step)}
           {hint ? <HintOverlay text={hint} universe={universe} /> : null}
           {showPouce ? (
-            <Neo pose={step.id === "N04" ? "applaudit" : "pouce"} universe={universe} className="neo-small" />
+            <Neo pose={sceneKeyOf(step) === "N04" ? "applaudit" : "pouce"} universe={universe} className="neo-small" />
           ) : null}
           <p className={`feedback ${kind}`} aria-live="polite">
             {feedback}

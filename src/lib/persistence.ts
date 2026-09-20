@@ -4,6 +4,7 @@ import type {
   ClasseSession,
   ClassRecord,
   ClassStudent,
+  ClassThemeCoverage,
   GradeLevel,
   PlayMode,
   SessionParticipant,
@@ -61,6 +62,7 @@ function sortStudents(items: ClassStudent[]): ClassStudent[] {
 
 const LOCAL_CLASSE_SESSIONS_KEY = "happy-learn-classe-sessions";
 const LOCAL_PARTICIPANTS_KEY = "happy-learn-session-participants";
+const LOCAL_THEME_COVERAGE_KEY = "happy-learn-class-theme-coverage";
 
 function readJson<T>(key: string, fallback: T): T {
   try {
@@ -138,7 +140,8 @@ export type Persistence = {
       niveau: GradeLevel;
       matiere: SubjectSlug;
       missionId: string;
-      univers: UniverseSlug;
+      /** Laissé null : l'élève choisit son univers. */
+      univers?: UniverseSlug | null;
       mode: PlayMode;
     } | null,
   ) => Promise<ClasseSession | null>;
@@ -149,6 +152,13 @@ export type Persistence = {
   kickParticipant: (participantId: string) => Promise<void>;
   listClassMissionsDone: (classId: string) => Promise<string[]>;
   listClassSessionsHistory: (classId: string) => Promise<ClasseSession[]>;
+  listClassThemeCoverage: (classId: string) => Promise<ClassThemeCoverage[]>;
+  setThemeCoveredInClass: (
+    classId: string,
+    themeId: string,
+    covered: boolean,
+    note?: string,
+  ) => Promise<ClassThemeCoverage>;
 };
 
 const SESSIONS_KEY = "mission-maths-sessions";
@@ -591,6 +601,27 @@ export const localPersistence: Persistence = {
       .map(mapLocalClasseSession)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   },
+  async listClassThemeCoverage(classId) {
+    return readJson<ClassThemeCoverage[]>(LOCAL_THEME_COVERAGE_KEY, []).filter(
+      (item) => item.classId === classId,
+    );
+  },
+  async setThemeCoveredInClass(classId, themeId, covered, note = "") {
+    const all = readJson<ClassThemeCoverage[]>(LOCAL_THEME_COVERAGE_KEY, []);
+    const now = new Date().toISOString();
+    const next: ClassThemeCoverage = {
+      classId,
+      themeId,
+      coveredInClass: covered,
+      coveredAt: covered ? now : null,
+      note: note.trim(),
+    };
+    const idx = all.findIndex((item) => item.classId === classId && item.themeId === themeId);
+    if (idx >= 0) all[idx] = next;
+    else all.push(next);
+    writeJson(LOCAL_THEME_COVERAGE_KEY, all);
+    return next;
+  },
 };
 
 export async function createPersistence(): Promise<Persistence> {
@@ -1032,6 +1063,45 @@ export async function createPersistence(): Promise<Persistence> {
       return data
         .map((row) => mapRemoteClasseSession(row as Parameters<typeof mapRemoteClasseSession>[0]))
         .filter((item): item is ClasseSession => item !== null);
+    },
+    async listClassThemeCoverage(classId) {
+      const { data, error } = await client
+        .from("classe_programme_couverture")
+        .select("class_id, theme_id, covered_in_class, covered_at, note")
+        .eq("class_id", classId);
+      if (error || !data) return localPersistence.listClassThemeCoverage(classId);
+      return data.map((row) => ({
+        classId: row.class_id as string,
+        themeId: row.theme_id as string,
+        coveredInClass: Boolean(row.covered_in_class),
+        coveredAt: (row.covered_at as string | null) ?? null,
+        note: (row.note as string) ?? "",
+      }));
+    },
+    async setThemeCoveredInClass(classId, themeId, covered, note = "") {
+      const payload = {
+        class_id: classId,
+        theme_id: themeId,
+        covered_in_class: covered,
+        covered_at: covered ? new Date().toISOString() : null,
+        note: note.trim(),
+        updated_at: new Date().toISOString(),
+      };
+      const { data, error } = await client
+        .from("classe_programme_couverture")
+        .upsert(payload, { onConflict: "class_id,theme_id" })
+        .select("class_id, theme_id, covered_in_class, covered_at, note")
+        .maybeSingle();
+      if (error || !data) {
+        return localPersistence.setThemeCoveredInClass(classId, themeId, covered, note);
+      }
+      return {
+        classId: data.class_id as string,
+        themeId: data.theme_id as string,
+        coveredInClass: Boolean(data.covered_in_class),
+        coveredAt: (data.covered_at as string | null) ?? null,
+        note: (data.note as string) ?? "",
+      };
     },
   };
 

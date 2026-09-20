@@ -1,15 +1,20 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "../components/Button";
 import { Shell } from "../components/Shell";
 import { GRADES, SUBJECTS, gradeLabel, subjectLabel } from "../data/catalog";
-import { listMissions } from "../data/missions";
-import type { GradeLevel, PlayMode, SubjectSlug, UniverseSlug } from "../data/types";
+import { listResolvedMissions } from "../data/missions";
+import type { ClassStudent, GradeLevel, MissionDef, PlayMode, SubjectSlug } from "../data/types";
 import { formatStudentName } from "../data/types";
-import { UNIVERSES } from "../data/universes";
 import { useSession } from "../lib/session";
 
-const UNIVERSE_OPTIONS = Object.values(UNIVERSES);
+type PresenceStatus = "connecte" | "deconnecte" | "absent";
+
+function presenceLabel(status: PresenceStatus): string {
+  if (status === "connecte") return "connecté";
+  if (status === "deconnecte") return "déconnecté";
+  return "pas encore connecté";
+}
 
 export function SessionControlScreen() {
   const navigate = useNavigate();
@@ -27,6 +32,7 @@ export function SessionControlScreen() {
     setClassActivity,
     kick,
     listClassMissionsDone,
+    listClassStudents,
   } = useSession();
 
   const current = classes.find((item) => item.id === activeClassId) ?? classes[0] ?? null;
@@ -34,17 +40,75 @@ export function SessionControlScreen() {
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const [doneMissions, setDoneMissions] = useState<string[]>([]);
+  const [roster, setRoster] = useState<ClassStudent[]>([]);
+  const [rosterReady, setRosterReady] = useState(false);
   const [grade, setGrade] = useState<GradeLevel>("cm2");
   const [subject, setSubject] = useState<SubjectSlug>("maths");
   const [missionId, setMissionId] = useState("cm2-maths-fractions-01");
-  const [universe, setUniverse] = useState<UniverseSlug>("football");
   const [mode, setMode] = useState<PlayMode>("qcm");
+  const [missions, setMissions] = useState<MissionDef[]>([]);
+  const [activeMissionTitle, setActiveMissionTitle] = useState<string | null>(null);
 
-  const missions = useMemo(() => listMissions(grade, subject), [grade, subject]);
+  const refreshLiveSessionRef = useRef(refreshLiveSession);
+  const listClassMissionsDoneRef = useRef(listClassMissionsDone);
+  const listClassStudentsRef = useRef(listClassStudents);
+  refreshLiveSessionRef.current = refreshLiveSession;
+  listClassMissionsDoneRef.current = listClassMissionsDone;
+  listClassStudentsRef.current = listClassStudents;
 
   useEffect(() => {
-    void refreshLiveSession();
-  }, [current?.id, refreshLiveSession]);
+    let cancelled = false;
+    void listResolvedMissions(grade, subject).then((rows) => {
+      if (!cancelled) setMissions(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [grade, subject]);
+
+  useEffect(() => {
+    const id = liveSession?.missionId;
+    if (!id) {
+      setActiveMissionTitle(null);
+      return;
+    }
+    const local = missions.find((item) => item.id === id);
+    if (local) {
+      setActiveMissionTitle(local.title);
+      return;
+    }
+    let cancelled = false;
+    void listResolvedMissions().then((rows) => {
+      if (cancelled) return;
+      setActiveMissionTitle(rows.find((item) => item.id === id)?.title ?? id);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [liveSession?.missionId, missions]);
+
+  // Ne dépend pas de l'identité de refreshLiveSession (sinon boucle de re-renders).
+  useEffect(() => {
+    void refreshLiveSessionRef.current();
+  }, [current?.id]);
+
+  useEffect(() => {
+    if (!current) {
+      setRoster([]);
+      setRosterReady(true);
+      return;
+    }
+    let cancelled = false;
+    setRosterReady(false);
+    void listClassStudentsRef.current(current.id).then((rows) => {
+      if (cancelled) return;
+      setRoster(rows);
+      setRosterReady(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [current?.id]);
 
   useEffect(() => {
     if (!current) {
@@ -52,13 +116,13 @@ export function SessionControlScreen() {
       return;
     }
     let cancelled = false;
-    void listClassMissionsDone(current.id).then((ids) => {
+    void listClassMissionsDoneRef.current(current.id).then((ids) => {
       if (!cancelled) setDoneMissions(ids);
     });
     return () => {
       cancelled = true;
     };
-  }, [current?.id, listClassMissionsDone, liveSession?.missionId]);
+  }, [current?.id, liveSession?.missionId]);
 
   useEffect(() => {
     if (missions.length === 0) return;
@@ -67,11 +131,24 @@ export function SessionControlScreen() {
     }
   }, [missions, missionId]);
 
+  const presenceRows = useMemo(() => {
+    const byEleve = new Map(liveParticipants.map((item) => [item.eleveId, item]));
+    return roster.map((student) => {
+      const participant = byEleve.get(student.id) ?? null;
+      const status: PresenceStatus = !participant
+        ? "absent"
+        : participant.statut === "connecte"
+          ? "connecte"
+          : "deconnecte";
+      return { student, participant, status };
+    });
+  }, [roster, liveParticipants]);
+
   if (role !== "enseignant" || !teacher) {
     return <Navigate to="/connexion/enseignant" replace />;
   }
 
-  const connected = liveParticipants.filter((item) => item.statut === "connecte");
+  const connectedCount = presenceRows.filter((row) => row.status === "connecte").length;
   const activityActive = Boolean(liveSession?.missionId);
 
   return (
@@ -86,7 +163,7 @@ export function SessionControlScreen() {
         <h1>Session de classe</h1>
         <p className="lead" data-listen>
           Lance une session pour {current?.nom ?? "ta classe"} : un nouveau code à chaque démarrage. Les élèves
-          rejoignent, tu lances les missions, tu vois qui est connecté.
+          rejoignent, tu lances les missions, tu vois qui est connecté. Chaque élève choisit ensuite son univers.
         </p>
 
         {backend === "local" ? (
@@ -155,48 +232,64 @@ export function SessionControlScreen() {
                   </div>
                 </div>
 
-                <section className="roster-panel" aria-label="Élèves connectés">
+                <section className="roster-panel" aria-label="Présence des élèves">
                   <h2>
-                    Élèves connectés ({connected.length}/{liveParticipants.length})
+                    Élèves ({connectedCount}/{roster.length} connectés)
                   </h2>
-                  {liveParticipants.length === 0 ? (
-                    <p className="field-help">En attente des élèves… Partage le code ci-dessus.</p>
-                  ) : (
+                  <p className="field-help">
+                    Liste complète de la classe avec le statut de connexion pour cette session.
+                  </p>
+                  {!rosterReady ? <p>Chargement de la liste…</p> : null}
+                  {rosterReady && roster.length === 0 ? (
+                    <p className="field-help">
+                      Aucun élève dans la liste. Ajoute-les d’abord dans l’espace professeur.
+                    </p>
+                  ) : null}
+                  {rosterReady && roster.length > 0 ? (
                     <ul className="roster-list">
-                      {liveParticipants.map((participant) => (
-                        <li key={participant.id}>
+                      {presenceRows.map(({ student, participant, status }) => (
+                        <li key={student.id}>
                           <div className="roster-row">
                             <strong>
-                              {formatStudentName(participant.prenom, participant.nom)}
-                              <span className="field-help" style={{ marginLeft: "0.5rem" }}>
-                                {participant.statut === "connecte" ? "· connecté" : "· déconnecté"}
+                              {formatStudentName(student.prenom, student.nom)}
+                              <span
+                                className={`presence-pill presence-${status}`}
+                                style={{ marginLeft: "0.5rem" }}
+                              >
+                                {presenceLabel(status)}
                               </span>
                             </strong>
                             <div className="roster-row-actions">
-                              <Button
-                                type="button"
-                                onClick={() => {
-                                  const label = formatStudentName(participant.prenom, participant.nom);
-                                  const ok = window.confirm(`Déconnecter ${label} ? Le nom redeviendra libre.`);
-                                  if (!ok) return;
-                                  void kick(participant.id);
-                                }}
-                              >
-                                Déconnecter
-                              </Button>
+                              {participant ? (
+                                <Button
+                                  type="button"
+                                  onClick={() => {
+                                    const label = formatStudentName(student.prenom, student.nom);
+                                    const ok = window.confirm(
+                                      `Déconnecter ${label} ? Le nom redeviendra libre.`,
+                                    );
+                                    if (!ok) return;
+                                    void kick(participant.id);
+                                  }}
+                                >
+                                  Déconnecter
+                                </Button>
+                              ) : (
+                                <span className="field-help">—</span>
+                              )}
                             </div>
                           </div>
                         </li>
                       ))}
                     </ul>
-                  )}
+                  ) : null}
                 </section>
 
                 <section className="roster-panel" aria-label="Lancer une activité">
                   <h2>Activité</h2>
                   <p className="field-help">
-                    Les élèves en salle d’attente sont poussés dans la mission. Tu peux enchaîner plusieurs exercices
-                    dans la même session.
+                    Tu choisis le parcours et le mode. Les élèves choisissent ensuite leur univers, puis démarrent la
+                    mission. Tu peux enchaîner plusieurs exercices dans la même session.
                   </p>
                   <div className="activity-grid">
                     <div className="field">
@@ -248,20 +341,6 @@ export function SessionControlScreen() {
                       </select>
                     </div>
                     <div className="field">
-                      <label htmlFor="act-univers">Univers</label>
-                      <select
-                        id="act-univers"
-                        value={universe}
-                        onChange={(event) => setUniverse(event.target.value as UniverseSlug)}
-                      >
-                        {UNIVERSE_OPTIONS.map((item) => (
-                          <option key={item.slug} value={item.slug}>
-                            {item.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="field">
                       <label htmlFor="act-mode">Mode</label>
                       <select
                         id="act-mode"
@@ -277,17 +356,20 @@ export function SessionControlScreen() {
                     <Button
                       variant="primary"
                       type="button"
-                      disabled={busy || missions.length === 0 || !missions.some((m) => m.id === missionId && m.available)}
+                      disabled={
+                        busy ||
+                        missions.length === 0 ||
+                        !missions.some((m) => m.id === missionId && m.available)
+                      }
                       onClick={() => {
                         setBusy(true);
                         void setClassActivity({
                           niveau: grade,
                           matiere: subject,
                           missionId,
-                          univers: universe,
                           mode,
                         })
-                          .then(() => listClassMissionsDone(current.id).then(setDoneMissions))
+                          .then(() => listClassMissionsDoneRef.current(current.id).then(setDoneMissions))
                           .finally(() => setBusy(false));
                       }}
                     >
@@ -309,14 +391,16 @@ export function SessionControlScreen() {
                   {activityActive && liveSession ? (
                     <p className="field-help">
                       En cours : {gradeLabel(liveSession.niveau)} · {subjectLabel(liveSession.matiere)} ·{" "}
-                      {listMissions().find((item) => item.id === liveSession.missionId)?.title ??
-                        liveSession.missionId}
+                      {activeMissionTitle ?? liveSession.missionId}{" "}
+                      · mode {liveSession.mode === "cahier" ? "cahier" : "QCM"} (univers au choix de l’élève)
                     </p>
                   ) : null}
                 </section>
               </>
             ) : (
-              <p className="field-help">Aucune session ouverte. Clique sur « Lancer une session » pour générer un code.</p>
+              <p className="field-help">
+                Aucune session ouverte. Clique sur « Lancer une session » pour générer un code.
+              </p>
             )}
           </>
         )}
