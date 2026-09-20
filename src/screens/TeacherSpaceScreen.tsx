@@ -3,6 +3,7 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "../components/Button";
 import { Shell } from "../components/Shell";
 import { GRADES, SUBJECTS, gradeLabel, subjectLabel } from "../data/catalog";
+import { findMission } from "../data/missions";
 import { listThemesFor, type ProgrammeTheme } from "../data/programmeThemes";
 import type {
   ChildSession,
@@ -15,7 +16,15 @@ import type {
 import { formatStudentName } from "../data/types";
 import { UNIVERSES } from "../data/universes";
 import { useSession } from "../lib/session";
-import { buildStudentStats, universeShortList } from "../lib/studentStats";
+import {
+  activityStatusLabel,
+  buildClassSummary,
+  buildStudentStats,
+  displaySessionStudent,
+  formatTimeOnly,
+  sessionDayKey,
+  universeShortList,
+} from "../lib/studentStats";
 
 function formatWhen(iso: string): string {
   try {
@@ -28,7 +37,7 @@ function formatWhen(iso: string): string {
   }
 }
 
-type TeacherTab = "eleves" | "seances" | "programme";
+type SuiviMode = "eleves" | "seances" | "programme";
 
 type ThemeRowStatus = "fait" | "partiel_app" | "partiel_classe" | "a_faire";
 
@@ -44,6 +53,17 @@ function statusLabel(status: ThemeRowStatus): string {
   if (status === "partiel_app") return "Fait via l’app";
   if (status === "partiel_classe") return "Traité en classe";
   return "À faire";
+}
+
+function missionTitle(missionId: string | null): string | null {
+  if (!missionId) return null;
+  return findMission(missionId)?.title ?? null;
+}
+
+function sessionResultLabel(session: ChildSession): string {
+  if (session.rewardEarned) return UNIVERSES[session.universe].rewardShort;
+  if (session.finishedAt) return "Quittée sans étoile";
+  return "En cours";
 }
 
 export function TeacherSpaceScreen() {
@@ -87,7 +107,8 @@ export function TeacherSpaceScreen() {
   const [copied, setCopied] = useState(false);
   const [busyCreate, setBusyCreate] = useState(false);
   const [createError, setCreateError] = useState("");
-  const [tab, setTab] = useState<TeacherTab>("eleves");
+  const [mode, setMode] = useState<SuiviMode>("eleves");
+  const [prepareOpen, setPrepareOpen] = useState(false);
   const [selectedStudentKey, setSelectedStudentKey] = useState<string | null>(null);
   const [filterEleveId, setFilterEleveId] = useState("");
   const [filterSessionId, setFilterSessionId] = useState("");
@@ -127,6 +148,7 @@ export function TeacherSpaceScreen() {
       setNewStudentNom("");
       setRosterError("");
       setEditingStudentId(null);
+      setPrepareOpen(false);
       return;
     }
     let cancelled = false;
@@ -137,6 +159,7 @@ export function TeacherSpaceScreen() {
         setRosterReady(true);
         setRosterError("");
         setEditingStudentId(null);
+        setPrepareOpen(rows.length === 0);
       }
     });
     return () => {
@@ -149,6 +172,7 @@ export function TeacherSpaceScreen() {
     setFilterSessionId("");
     setFilterDateFrom("");
     setFilterDateTo("");
+    setSelectedStudentKey(null);
   }, [current?.id]);
 
   useEffect(() => {
@@ -235,10 +259,17 @@ export function TeacherSpaceScreen() {
     };
   }, [sessions, loadClassAnswers]);
 
+  const rosterForStats = useMemo(() => {
+    if (!filterEleveId) return roster;
+    return roster.filter((student) => student.id === filterEleveId);
+  }, [roster, filterEleveId]);
+
   const studentStats = useMemo(
-    () => (answersReady ? buildStudentStats(sessions, answerRows) : []),
-    [answersReady, sessions, answerRows],
+    () => (answersReady ? buildStudentStats(sessions, answerRows, rosterForStats) : []),
+    [answersReady, sessions, answerRows, rosterForStats],
   );
+
+  const classSummary = useMemo(() => buildClassSummary(studentStats), [studentStats]);
 
   const programmeThemes = useMemo(
     () => listThemesFor(progGrade, progSubject),
@@ -265,11 +296,21 @@ export function TeacherSpaceScreen() {
 
   const programmeProgress = useMemo(() => {
     const total = programmeRows.length;
-    const covered = programmeRows.filter(
-      (row) => row.doneApp || row.doneClass,
-    ).length;
+    const covered = programmeRows.filter((row) => row.doneApp || row.doneClass).length;
     return { total, covered };
   }, [programmeRows]);
+
+  const journalByDay = useMemo(() => {
+    const groups = new Map<string, ChildSession[]>();
+    const sorted = [...sessions].sort((a, b) => b.startedAt.localeCompare(a.startedAt));
+    for (const session of sorted) {
+      const day = sessionDayKey(session.startedAt);
+      const list = groups.get(day) ?? [];
+      list.push(session);
+      groups.set(day, list);
+    }
+    return [...groups.entries()];
+  }, [sessions]);
 
   async function toggleCoveredInClass(themeId: string, next: boolean) {
     if (!current) return;
@@ -303,6 +344,7 @@ export function TeacherSpaceScreen() {
   if (role !== "enseignant" || !teacher) return <Navigate to="/connexion/enseignant" replace />;
 
   const showSetupHint = rosterReady && roster.length === 0;
+  const showActivityFilters = mode === "eleves" || mode === "seances";
 
   return (
     <Shell
@@ -319,20 +361,9 @@ export function TeacherSpaceScreen() {
         </Button>
       }
     >
-      <section className="teacher-space">
+      <section className="teacher-space suivi-classe">
         <span className="kicker">Suivi de classe</span>
-        <h1>Bonjour, {teacher.email}</h1>
-        <p className="lead" data-listen>
-          Crée tes classes, ajoute les élèves (prénom et nom), puis partage le code permanent. Tu peux aussi lancer une
-          session live pour piloter les missions en classe. Les enfants choisissent leur nom dans la liste. Tu suis
-          leurs missions sans note ni classement.
-        </p>
-        {showSetupHint && current ? (
-          <div className="teacher-banner" role="status">
-            <strong>Première étape :</strong> ajoute les élèves (prénom et nom) de ta classe ci-dessous, puis partage
-            le code <code>{current.code}</code>.
-          </div>
-        ) : null}
+        <p className="suivi-greeting">Connecté · {teacher.email}</p>
         {backend === "local" ? (
           <p className="field-help">
             Espace local sur cet appareil. Avec Supabase, les mêmes codes fonctionnent sur les tablettes de l’école.
@@ -400,428 +431,490 @@ export function TeacherSpaceScreen() {
               <p>Sélectionne ou crée une classe pour commencer.</p>
             ) : (
               <>
-                <div className="code-hero" aria-label={`Code de ${current.nom}`}>
-                  <span>Code · {current.nom}</span>
-                  <strong>{current.code}</strong>
-                  <div className="actions">
+                <header className="suivi-header">
+                  <div className="suivi-header-main">
+                    <h1>{current.nom}</h1>
+                    <div className="suivi-code" aria-label={`Code de ${current.nom}`}>
+                      <span className="suivi-code-label">Code</span>
+                      <strong>{current.code}</strong>
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          void navigator.clipboard.writeText(current.code).then(() => {
+                            setCopied(true);
+                            window.setTimeout(() => setCopied(false), 2000);
+                          });
+                        }}
+                      >
+                        {copied ? "Copié" : "Copier"}
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="suivi-header-actions">
                     <Button
+                      variant="primary"
                       type="button"
-                      onClick={() => {
-                        void navigator.clipboard.writeText(current.code).then(() => {
-                          setCopied(true);
-                          window.setTimeout(() => setCopied(false), 2000);
-                        });
-                      }}
+                      onClick={() => navigate("/espace-professeur/session")}
                     >
-                      {copied ? "Code copié" : "Copier le code"}
+                      Piloter une session
                     </Button>
+                    <Button type="button" onClick={() => navigate("/espace-professeur/missions")}>
+                      Créer une mission
+                    </Button>
+                    <button
+                      type="button"
+                      className="suivi-prepare-toggle"
+                      aria-expanded={prepareOpen}
+                      onClick={() => setPrepareOpen((open) => !open)}
+                    >
+                      {prepareOpen ? "Masquer la préparation" : "Gérer les élèves / renommer"}
+                    </button>
                   </div>
-                </div>
+                </header>
 
-                <div className="actions" style={{ marginBottom: 18 }}>
-                  <Button variant="primary" type="button" onClick={() => navigate("/espace-professeur/session")}>
-                    Pilotage de session
-                  </Button>
-                  <Button type="button" onClick={() => navigate("/espace-professeur/missions")}>
-                    Créateur de missions
-                  </Button>
-                </div>
+                {showSetupHint ? (
+                  <div className="teacher-banner" role="status">
+                    <strong>Première étape :</strong> ajoute les élèves (prénom et nom), puis partage le code{" "}
+                    <code>{current.code}</code>.
+                  </div>
+                ) : null}
 
-                <div className="field" style={{ maxWidth: 420 }}>
-                  <label htmlFor="nom-classe">Nom de la classe</label>
-                  <input
-                    id="nom-classe"
-                    value={nom}
-                    maxLength={40}
-                    onChange={(event) => setNom(event.target.value)}
-                    onBlur={() => {
-                      if (nom.trim() && nom.trim() !== current.nom) {
-                        void renameClass(current.id, nom.trim());
-                      }
-                    }}
-                  />
-                </div>
-
-                <section className="roster-panel" aria-label="Liste des élèves">
-                  <h2>Liste des élèves ({roster.length})</h2>
-                  <p className="field-help">
-                    Ces élèves (prénom et nom) apparaissent quand un enfant entre le code {current.code}. Tu peux les
-                    modifier à tout moment.
-                  </p>
-                  {!rosterReady ? <p>Chargement de la liste…</p> : null}
-                  {rosterReady ? (
-                    <ul className="roster-list">
-                      {roster.map((student) => (
-                        <li key={student.id}>
-                          {editingStudentId === student.id ? (
-                            <form
-                              className="roster-edit-row"
-                              onSubmit={(event) => {
-                                event.preventDefault();
-                                void renameClassStudent(student.id, editingPrenom, editingNom).then((message) => {
-                                  if (message) {
-                                    setRosterError(message);
-                                    return;
-                                  }
-                                  setEditingStudentId(null);
-                                  setRosterError("");
-                                  void refreshRoster(current.id);
-                                });
-                              }}
-                            >
-                              <input
-                                value={editingPrenom}
-                                maxLength={20}
-                                placeholder="Prénom"
-                                aria-label={`Modifier le prénom de ${formatStudentName(student.prenom, student.nom)}`}
-                                onChange={(event) => setEditingPrenom(event.target.value)}
-                              />
-                              <input
-                                value={editingNom}
-                                maxLength={40}
-                                placeholder="Nom"
-                                aria-label={`Modifier le nom de ${formatStudentName(student.prenom, student.nom)}`}
-                                onChange={(event) => setEditingNom(event.target.value)}
-                              />
-                              <Button type="submit" variant="primary">
-                                Enregistrer
-                              </Button>
-                              <Button
-                                type="button"
-                                onClick={() => {
-                                  setEditingStudentId(null);
-                                  setRosterError("");
-                                }}
-                              >
-                                Annuler
-                              </Button>
-                            </form>
-                          ) : (
-                            <div className="roster-row">
-                              <strong>{formatStudentName(student.prenom, student.nom)}</strong>
-                              <div className="roster-row-actions">
-                                <Button
-                                  type="button"
-                                  onClick={() => {
-                                    setEditingStudentId(student.id);
-                                    setEditingPrenom(student.prenom);
-                                    setEditingNom(student.nom);
-                                    setRosterError("");
-                                  }}
-                                >
-                                  Modifier
-                                </Button>
-                                <Button
-                                  type="button"
-                                  onClick={() => {
-                                    const label = formatStudentName(student.prenom, student.nom);
-                                    const ok = window.confirm(`Retirer ${label} de la liste ?`);
-                                    if (!ok) return;
-                                    void removeClassStudent(student.id).then(() => refreshRoster(current.id));
-                                  }}
-                                >
-                                  Retirer
-                                </Button>
-                              </div>
-                            </div>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
-                  {rosterReady && roster.length === 0 ? (
-                    <p className="field-help">Aucun élève pour l’instant. Ajoute prénom et nom de ta classe.</p>
-                  ) : null}
-                  <form
-                    className="roster-add"
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      setRosterError("");
-                      void addClassStudent(current.id, newStudentPrenom, newStudentNom).then((result) => {
-                        if (typeof result === "string") {
-                          setRosterError(result);
-                          return;
-                        }
-                        setNewStudentPrenom("");
-                        setNewStudentNom("");
-                        void refreshRoster(current.id);
-                      });
-                    }}
-                  >
-                    <div className="field">
-                      <label htmlFor="nouvel-eleve-prenom">Prénom</label>
+                {prepareOpen ? (
+                  <section className="suivi-prepare" aria-label="Préparer la classe">
+                    <h2>Préparer la classe</h2>
+                    <div className="field" style={{ maxWidth: 420 }}>
+                      <label htmlFor="nom-classe">Nom de la classe</label>
                       <input
-                        id="nouvel-eleve-prenom"
-                        value={newStudentPrenom}
-                        maxLength={20}
-                        placeholder="Prénom"
-                        onChange={(event) => setNewStudentPrenom(event.target.value)}
-                      />
-                    </div>
-                    <div className="field">
-                      <label htmlFor="nouvel-eleve-nom">Nom</label>
-                      <input
-                        id="nouvel-eleve-nom"
-                        value={newStudentNom}
+                        id="nom-classe"
+                        value={nom}
                         maxLength={40}
-                        placeholder="Nom"
-                        onChange={(event) => setNewStudentNom(event.target.value)}
+                        onChange={(event) => setNom(event.target.value)}
+                        onBlur={() => {
+                          if (nom.trim() && nom.trim() !== current.nom) {
+                            void renameClass(current.id, nom.trim());
+                          }
+                        }}
                       />
                     </div>
-                    <Button type="submit" variant="primary" disabled={!newStudentPrenom.trim()}>
-                      Ajouter
-                    </Button>
-                  </form>
-                  {rosterError ? (
-                    <p className="error" aria-live="polite">
-                      {rosterError}
-                    </p>
-                  ) : null}
-                </section>
 
-                <div className="stats-filters" aria-label="Filtres du suivi">
-                  <div className="field">
-                    <label htmlFor="filtre-eleve">Élève</label>
-                    <select
-                      id="filtre-eleve"
-                      value={filterEleveId}
-                      onChange={(event) => setFilterEleveId(event.target.value)}
-                    >
-                      <option value="">Tous les élèves</option>
-                      {roster.map((student) => (
-                        <option key={student.id} value={student.id}>
-                          {formatStudentName(student.prenom, student.nom)}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="roster-panel" aria-label="Liste des élèves">
+                      <h3>Liste des élèves ({roster.length})</h3>
+                      <p className="field-help">
+                        Ces élèves apparaissent quand un enfant entre le code {current.code}.
+                      </p>
+                      {!rosterReady ? <p>Chargement de la liste…</p> : null}
+                      {rosterReady ? (
+                        <ul className="roster-list">
+                          {roster.map((student) => (
+                            <li key={student.id}>
+                              {editingStudentId === student.id ? (
+                                <form
+                                  className="roster-edit-row"
+                                  onSubmit={(event) => {
+                                    event.preventDefault();
+                                    void renameClassStudent(student.id, editingPrenom, editingNom).then(
+                                      (message) => {
+                                        if (message) {
+                                          setRosterError(message);
+                                          return;
+                                        }
+                                        setEditingStudentId(null);
+                                        setRosterError("");
+                                        void refreshRoster(current.id);
+                                      },
+                                    );
+                                  }}
+                                >
+                                  <input
+                                    value={editingPrenom}
+                                    maxLength={20}
+                                    placeholder="Prénom"
+                                    aria-label={`Modifier le prénom de ${formatStudentName(student.prenom, student.nom)}`}
+                                    onChange={(event) => setEditingPrenom(event.target.value)}
+                                  />
+                                  <input
+                                    value={editingNom}
+                                    maxLength={40}
+                                    placeholder="Nom"
+                                    aria-label={`Modifier le nom de ${formatStudentName(student.prenom, student.nom)}`}
+                                    onChange={(event) => setEditingNom(event.target.value)}
+                                  />
+                                  <Button type="submit" variant="primary">
+                                    Enregistrer
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    onClick={() => {
+                                      setEditingStudentId(null);
+                                      setRosterError("");
+                                    }}
+                                  >
+                                    Annuler
+                                  </Button>
+                                </form>
+                              ) : (
+                                <div className="roster-row">
+                                  <strong>{formatStudentName(student.prenom, student.nom)}</strong>
+                                  <div className="roster-row-actions">
+                                    <Button
+                                      type="button"
+                                      onClick={() => {
+                                        setEditingStudentId(student.id);
+                                        setEditingPrenom(student.prenom);
+                                        setEditingNom(student.nom);
+                                        setRosterError("");
+                                      }}
+                                    >
+                                      Modifier
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      onClick={() => {
+                                        const label = formatStudentName(student.prenom, student.nom);
+                                        const ok = window.confirm(`Retirer ${label} de la liste ?`);
+                                        if (!ok) return;
+                                        void removeClassStudent(student.id).then(() =>
+                                          refreshRoster(current.id),
+                                        );
+                                      }}
+                                    >
+                                      Retirer
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null}
+                      {rosterReady && roster.length === 0 ? (
+                        <p className="field-help">Aucun élève pour l’instant. Ajoute prénom et nom.</p>
+                      ) : null}
+                      <form
+                        className="roster-add"
+                        onSubmit={(event) => {
+                          event.preventDefault();
+                          setRosterError("");
+                          void addClassStudent(current.id, newStudentPrenom, newStudentNom).then(
+                            (result) => {
+                              if (typeof result === "string") {
+                                setRosterError(result);
+                                return;
+                              }
+                              setNewStudentPrenom("");
+                              setNewStudentNom("");
+                              void refreshRoster(current.id);
+                            },
+                          );
+                        }}
+                      >
+                        <div className="field">
+                          <label htmlFor="nouvel-eleve-prenom">Prénom</label>
+                          <input
+                            id="nouvel-eleve-prenom"
+                            value={newStudentPrenom}
+                            maxLength={20}
+                            placeholder="Prénom"
+                            onChange={(event) => setNewStudentPrenom(event.target.value)}
+                          />
+                        </div>
+                        <div className="field">
+                          <label htmlFor="nouvel-eleve-nom">Nom</label>
+                          <input
+                            id="nouvel-eleve-nom"
+                            value={newStudentNom}
+                            maxLength={40}
+                            placeholder="Nom"
+                            onChange={(event) => setNewStudentNom(event.target.value)}
+                          />
+                        </div>
+                        <Button type="submit" variant="primary" disabled={!newStudentPrenom.trim()}>
+                          Ajouter
+                        </Button>
+                      </form>
+                      {rosterError ? (
+                        <p className="error" aria-live="polite">
+                          {rosterError}
+                        </p>
+                      ) : null}
+                    </div>
+                  </section>
+                ) : null}
+
+                <div className="suivi-summary" aria-label="Synthèse de la classe">
+                  <div className="suivi-summary-item">
+                    <span className="suivi-summary-value">
+                      {answersReady ? classSummary.activeStudents : "—"}
+                    </span>
+                    <span className="suivi-summary-label">Élèves actifs</span>
                   </div>
-                  <div className="field">
-                    <label htmlFor="filtre-session">Séance live</label>
-                    <select
-                      id="filtre-session"
-                      value={filterSessionId}
-                      onChange={(event) => setFilterSessionId(event.target.value)}
-                    >
-                      <option value="">Toutes les séances</option>
-                      {sessionHistory.map((item) => (
-                        <option key={item.id} value={item.id}>
-                          {item.code} · {formatWhen(item.createdAt)}
-                          {item.statut === "ouverte" ? " (ouverte)" : ""}
-                        </option>
-                      ))}
-                    </select>
+                  <div className="suivi-summary-item">
+                    <span className="suivi-summary-value">
+                      {answersReady
+                        ? `${classSummary.missionsCompleted}${classSummary.missionsInProgress > 0 ? ` · ${classSummary.missionsInProgress} en cours` : ""}`
+                        : "—"}
+                    </span>
+                    <span className="suivi-summary-label">Missions terminées</span>
                   </div>
-                  <div className="field">
-                    <label htmlFor="filtre-date-from">Du</label>
-                    <input
-                      id="filtre-date-from"
-                      type="date"
-                      value={filterDateFrom}
-                      onChange={(event) => setFilterDateFrom(event.target.value)}
-                    />
+                  <div className="suivi-summary-item">
+                    <span className="suivi-summary-value">
+                      {answersReady
+                        ? classSummary.avgSuccessRate === null
+                          ? "—"
+                          : `${classSummary.avgSuccessRate} %`
+                        : "—"}
+                    </span>
+                    <span className="suivi-summary-label">Réussite moyenne</span>
                   </div>
-                  <div className="field">
-                    <label htmlFor="filtre-date-to">Au</label>
-                    <input
-                      id="filtre-date-to"
-                      type="date"
-                      value={filterDateTo}
-                      onChange={(event) => setFilterDateTo(event.target.value)}
-                    />
+                  <div className="suivi-summary-item">
+                    <span className="suivi-summary-value">
+                      {progReady
+                        ? `${programmeProgress.covered}/${programmeProgress.total || "—"}`
+                        : "—"}
+                    </span>
+                    <span className="suivi-summary-label">
+                      Programme ({gradeLabel(progGrade)} · {subjectLabel(progSubject)})
+                    </span>
                   </div>
                 </div>
 
-                <div className="role-tabs teacher-tabs" role="tablist" aria-label="Vue du suivi">
+                <div className="suivi-modes" role="tablist" aria-label="Vue du suivi">
                   <button
                     type="button"
                     role="tab"
-                    aria-selected={tab === "eleves"}
-                    className={tab === "eleves" ? "is-selected" : ""}
-                    onClick={() => setTab("eleves")}
+                    aria-selected={mode === "eleves"}
+                    className={mode === "eleves" ? "is-selected" : ""}
+                    onClick={() => setMode("eleves")}
                   >
-                    Activité ({studentStats.length})
+                    Élèves ({rosterReady ? studentStats.length : "—"})
                   </button>
                   <button
                     type="button"
                     role="tab"
-                    aria-selected={tab === "seances"}
-                    className={tab === "seances" ? "is-selected" : ""}
-                    onClick={() => setTab("seances")}
+                    aria-selected={mode === "seances"}
+                    className={mode === "seances" ? "is-selected" : ""}
+                    onClick={() => setMode("seances")}
                   >
-                    Séances ({sessions.length})
+                    Journal ({sessions.length})
                   </button>
                   <button
                     type="button"
                     role="tab"
-                    aria-selected={tab === "programme"}
-                    className={tab === "programme" ? "is-selected" : ""}
-                    onClick={() => setTab("programme")}
+                    aria-selected={mode === "programme"}
+                    className={mode === "programme" ? "is-selected" : ""}
+                    onClick={() => setMode("programme")}
                   >
                     Programme ({programmeProgress.covered}/{programmeProgress.total || "—"})
                   </button>
                 </div>
 
-                {tab === "eleves" ? (
-                  <>
-                    <h2>Statistiques par élève</h2>
-                    {!answersReady ? (
-                      <p>Chargement des statistiques…</p>
+                {showActivityFilters ? (
+                  <div className="stats-filters" aria-label="Filtres du suivi">
+                    <div className="field">
+                      <label htmlFor="filtre-eleve">Élève</label>
+                      <select
+                        id="filtre-eleve"
+                        value={filterEleveId}
+                        onChange={(event) => setFilterEleveId(event.target.value)}
+                      >
+                        <option value="">Tous les élèves</option>
+                        {roster.map((student) => (
+                          <option key={student.id} value={student.id}>
+                            {formatStudentName(student.prenom, student.nom)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="field">
+                      <label htmlFor="filtre-session">Séance live</label>
+                      <select
+                        id="filtre-session"
+                        value={filterSessionId}
+                        onChange={(event) => setFilterSessionId(event.target.value)}
+                      >
+                        <option value="">Toutes les séances</option>
+                        {sessionHistory.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.code} · {formatWhen(item.createdAt)}
+                            {item.statut === "ouverte" ? " (ouverte)" : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="field">
+                      <label htmlFor="filtre-date-from">Du</label>
+                      <input
+                        id="filtre-date-from"
+                        type="date"
+                        value={filterDateFrom}
+                        onChange={(event) => setFilterDateFrom(event.target.value)}
+                      />
+                    </div>
+                    <div className="field">
+                      <label htmlFor="filtre-date-to">Au</label>
+                      <input
+                        id="filtre-date-to"
+                        type="date"
+                        value={filterDateTo}
+                        onChange={(event) => setFilterDateTo(event.target.value)}
+                      />
+                    </div>
+                  </div>
+                ) : null}
+
+                {mode === "eleves" ? (
+                  <div className="suivi-panel suivi-eleves">
+                    <h2>Élèves</h2>
+                    {!answersReady || !rosterReady ? (
+                      <p>Chargement…</p>
                     ) : studentStats.length === 0 ? (
                       <p>
-                        Aucune activité pour l’instant. Quand un élève entre le code {current.code}, choisit son nom
-                        dans la liste et joue, ses stats apparaissent ici.
+                        Ajoute des élèves dans « Gérer les élèves », puis partage le code {current.code}. Leur activité
+                        apparaîtra ici.
                       </p>
                     ) : (
-                      <div className="session-table-wrap">
-                        <table className="session-table">
-                          <thead>
-                            <tr>
-                              <th>Élève</th>
-                              <th>Séances</th>
-                              <th>Terminées</th>
-                              <th>Réussite réponses</th>
-                              <th>Univers gagnés</th>
-                              <th>Dernière activité</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {studentStats.map((student) => (
-                              <tr
-                                key={student.key}
-                                className={selectedStudentKey === student.key ? "is-selected-row" : ""}
+                      <ul className="suivi-eleve-list">
+                        {studentStats.map((student) => {
+                          const open = selectedStudentKey === student.key;
+                          return (
+                            <li key={student.key}>
+                              <button
+                                type="button"
+                                className={`suivi-eleve-row ${open ? "is-open" : ""}`}
+                                aria-expanded={open}
+                                onClick={() =>
+                                  setSelectedStudentKey((currentKey) =>
+                                    currentKey === student.key ? null : student.key,
+                                  )
+                                }
                               >
-                                <td>
-                                  <button
-                                    type="button"
-                                    className="linkish"
-                                    onClick={() =>
-                                      setSelectedStudentKey((currentKey) =>
-                                        currentKey === student.key ? null : student.key,
-                                      )
-                                    }
-                                  >
-                                    {student.prenom}
-                                  </button>
-                                </td>
-                                <td>{student.sessionsStarted}</td>
-                                <td>
-                                  {student.missionsCompleted}
-                                  {student.missionsAbandoned > 0
-                                    ? ` · ${student.missionsAbandoned} quittée${student.missionsAbandoned > 1 ? "s" : ""}`
-                                    : ""}
+                                <span className="suivi-eleve-name">{student.displayName}</span>
+                                <span
+                                  className={`suivi-activity status-${student.activityStatus}`}
+                                >
+                                  {activityStatusLabel(student.activityStatus)}
+                                </span>
+                                <span className="suivi-eleve-meta">
+                                  {student.missionsCompleted} terminée
+                                  {student.missionsCompleted > 1 ? "s" : ""}
                                   {student.missionsInProgress > 0
                                     ? ` · ${student.missionsInProgress} en cours`
                                     : ""}
-                                </td>
-                                <td>
-                                  {student.successRate === null
-                                    ? "—"
-                                    : `${student.successRate} % (${student.answersCorrect}/${student.answersTotal})`}
-                                </td>
-                                <td>{universeShortList(student.universesCompleted)}</td>
-                                <td>{formatWhen(student.lastActivityAt)}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+                                </span>
+                                <span className="suivi-eleve-rate">
+                                  {student.successRate === null ? "—" : `${student.successRate} %`}
+                                </span>
+                              </button>
+                              {open ? (
+                                <div className="suivi-eleve-detail student-detail" aria-live="polite">
+                                  <p>
+                                    Dernière activité :{" "}
+                                    {student.lastActivityAt ? formatWhen(student.lastActivityAt) : "—"}
+                                  </p>
+                                  <p>
+                                    Parcours :{" "}
+                                    {student.parcours.length > 0 ? student.parcours.join(" · ") : "—"}
+                                  </p>
+                                  <p>
+                                    Univers : {universeShortList(student.universesCompleted)}
+                                  </p>
+                                  {studentSessions.length === 0 ? (
+                                    <p className="field-help">Pas encore de séance pour cet élève.</p>
+                                  ) : (
+                                    <div className="session-table-wrap">
+                                      <table className="session-table">
+                                        <thead>
+                                          <tr>
+                                            <th>Parcours</th>
+                                            <th>Résultat</th>
+                                            <th>Quand</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {studentSessions.map((session) => (
+                                            <tr key={session.id}>
+                                              <td>
+                                                <div>
+                                                  {session.grade && session.subject
+                                                    ? `${gradeLabel(session.grade)} · ${subjectLabel(session.subject)}`
+                                                    : "—"}
+                                                </div>
+                                                <div className="muted suivi-subline">
+                                                  {UNIVERSES[session.universe].label} ·{" "}
+                                                  {session.mode === "qcm" ? "QCM" : "Cahier"}
+                                                </div>
+                                              </td>
+                                              <td>{sessionResultLabel(session)}</td>
+                                              <td>{formatWhen(session.startedAt)}</td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  )}
+                                </div>
+                              ) : null}
+                            </li>
+                          );
+                        })}
+                      </ul>
                     )}
+                  </div>
+                ) : null}
 
-                    {selectedStudent ? (
-                      <div className="student-detail" aria-live="polite">
-                        <h3>Détail · {selectedStudent.prenom}</h3>
-                        <p>
-                          Parcours :{" "}
-                          {selectedStudent.parcours.length > 0 ? selectedStudent.parcours.join(" · ") : "—"}
-                        </p>
-                        <div className="session-table-wrap">
-                          <table className="session-table">
-                            <thead>
-                              <tr>
-                                <th>Parcours</th>
-                                <th>Univers</th>
-                                <th>Mode</th>
-                                <th>Début</th>
-                                <th>Résultat</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {studentSessions.map((session) => (
-                                <tr key={session.id}>
-                                  <td>
-                                    {session.grade && session.subject
-                                      ? `${gradeLabel(session.grade)} · ${subjectLabel(session.subject)}`
-                                      : "—"}
-                                  </td>
-                                  <td>{UNIVERSES[session.universe].label}</td>
-                                  <td>{session.mode === "qcm" ? "QCM" : "Cahier"}</td>
-                                  <td>{formatWhen(session.startedAt)}</td>
-                                  <td>
-                                    {session.rewardEarned
-                                      ? UNIVERSES[session.universe].rewardShort
-                                      : session.finishedAt
-                                        ? "Quittée sans étoile"
-                                        : "En cours"}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    ) : null}
-                  </>
-                ) : tab === "seances" ? (
-                  <>
-                    <h2>Journal des séances</h2>
+                {mode === "seances" ? (
+                  <div className="suivi-panel suivi-journal">
+                    <h2>Journal</h2>
                     {sessions.length === 0 ? (
                       <p>Pas encore de séance avec ce code.</p>
                     ) : (
-                      <div className="session-table-wrap">
-                        <table className="session-table">
-                          <thead>
-                            <tr>
-                              <th>Élève</th>
-                              <th>Parcours</th>
-                              <th>Univers</th>
-                              <th>Mode</th>
-                              <th>Début</th>
-                              <th>Mission</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {sessions.map((session) => (
-                              <tr key={session.id}>
-                                <td>{formatStudentName(session.prenom, "")}</td>
-                                <td>
-                                  {session.grade && session.subject
-                                    ? `${gradeLabel(session.grade)} · ${subjectLabel(session.subject)}`
-                                    : "—"}
-                                </td>
-                                <td>{UNIVERSES[session.universe].label}</td>
-                                <td>{session.mode === "qcm" ? "QCM" : "Cahier"}</td>
-                                <td>{formatWhen(session.startedAt)}</td>
-                                <td>
-                                  {session.rewardEarned
-                                    ? UNIVERSES[session.universe].rewardShort
-                                    : session.finishedAt
-                                      ? "Quittée sans étoile"
-                                      : "En cours"}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+                      journalByDay.map(([day, daySessions]) => (
+                        <section key={day} className="suivi-day-group">
+                          <h3 className="suivi-day-title">{day}</h3>
+                          <div className="session-table-wrap">
+                            <table className="session-table suivi-journal-table">
+                              <thead>
+                                <tr>
+                                  <th>Élève</th>
+                                  <th>Parcours</th>
+                                  <th>Résultat</th>
+                                  <th>Heure</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {daySessions.map((session) => (
+                                  <tr key={session.id}>
+                                    <td>{displaySessionStudent(session, roster)}</td>
+                                    <td>
+                                      <div>
+                                        {session.grade && session.subject
+                                          ? `${gradeLabel(session.grade)} · ${subjectLabel(session.subject)}`
+                                          : "—"}
+                                      </div>
+                                      <div className="muted suivi-subline">
+                                        {UNIVERSES[session.universe].label} ·{" "}
+                                        {session.mode === "qcm" ? "QCM" : "Cahier"}
+                                      </div>
+                                    </td>
+                                    <td>{sessionResultLabel(session)}</td>
+                                    <td>{formatTimeOnly(session.startedAt)}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </section>
+                      ))
                     )}
-                  </>
-                ) : (
-                  <>
-                    <h2>Couverture du programme</h2>
+                  </div>
+                ) : null}
+
+                {mode === "programme" ? (
+                  <div className="suivi-panel suivi-programme">
+                    <h2>Programme</h2>
                     <p className="field-help">
-                      Pour {current.nom} : vois si les thèmes sont couverts via Happy Learn (au moins un élève a
-                      terminé la mission) ou marque un thème traité directement en classe, sans passer par
-                      l’application.
+                      Thèmes couverts via Happy Learn (mission terminée par au moins un élève) ou marqués traités en
+                      classe sans l’appli.
                     </p>
                     <div className="stats-filters">
                       <div className="field">
@@ -881,56 +974,78 @@ export function TeacherSpaceScreen() {
                             }}
                           />
                         </div>
+                        <ul className="programme-legend" aria-label="Légende des statuts">
+                          <li>
+                            <span className="programme-status status-fait">Traité</span>
+                          </li>
+                          <li>
+                            <span className="programme-status status-partiel_app">Fait via l’app</span>
+                          </li>
+                          <li>
+                            <span className="programme-status status-partiel_classe">Traité en classe</span>
+                          </li>
+                          <li>
+                            <span className="programme-status status-a_faire">À faire</span>
+                          </li>
+                        </ul>
                         <div className="session-table-wrap">
                           <table className="session-table programme-table">
                             <thead>
                               <tr>
                                 <th>Thème</th>
-                                <th>Mission app</th>
-                                <th>Fait via l’app</th>
-                                <th>Traité en classe</th>
+                                <th>Mission</th>
+                                <th>App</th>
+                                <th>En classe</th>
                                 <th>Statut</th>
                               </tr>
                             </thead>
                             <tbody>
-                              {programmeRows.map((row) => (
-                                <tr key={row.theme.id} className={`status-${row.status}`}>
-                                  <td>{row.theme.label}</td>
-                                  <td>
-                                    {row.theme.missionId ? (
-                                      <code>{row.theme.missionId}</code>
-                                    ) : (
-                                      <span className="muted">Pas encore de mission</span>
-                                    )}
-                                  </td>
-                                  <td>{row.doneApp ? "Oui" : "Non"}</td>
-                                  <td>
-                                    <label className="programme-check">
-                                      <input
-                                        type="checkbox"
-                                        checked={row.doneClass}
-                                        disabled={progBusyId === row.theme.id}
-                                        onChange={(event) =>
-                                          void toggleCoveredInClass(row.theme.id, event.target.checked)
-                                        }
-                                      />
-                                      <span>En classe</span>
-                                    </label>
-                                  </td>
-                                  <td>
-                                    <span className={`programme-status status-${row.status}`}>
-                                      {statusLabel(row.status)}
-                                    </span>
-                                  </td>
-                                </tr>
-                              ))}
+                              {programmeRows.map((row) => {
+                                const title = missionTitle(row.theme.missionId);
+                                return (
+                                  <tr key={row.theme.id} className={`status-${row.status}`}>
+                                    <td>{row.theme.label}</td>
+                                    <td>
+                                      {title ? (
+                                        <span>{title}</span>
+                                      ) : row.theme.missionId ? (
+                                        <span className="muted">{row.theme.missionId}</span>
+                                      ) : (
+                                        <span className="muted">Pas encore de mission</span>
+                                      )}
+                                    </td>
+                                    <td>{row.doneApp ? "Oui" : "Non"}</td>
+                                    <td>
+                                      <label className="programme-check">
+                                        <input
+                                          type="checkbox"
+                                          checked={row.doneClass}
+                                          disabled={progBusyId === row.theme.id}
+                                          onChange={(event) =>
+                                            void toggleCoveredInClass(
+                                              row.theme.id,
+                                              event.target.checked,
+                                            )
+                                          }
+                                        />
+                                        <span>En classe</span>
+                                      </label>
+                                    </td>
+                                    <td>
+                                      <span className={`programme-status status-${row.status}`}>
+                                        {statusLabel(row.status)}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
                             </tbody>
                           </table>
                         </div>
                       </>
                     )}
-                  </>
-                )}
+                  </div>
+                ) : null}
               </>
             )}
           </div>
