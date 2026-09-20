@@ -166,9 +166,10 @@
   <div class="meta">
     <p><strong>Produit :</strong> Happy Learn · SPA React / Vite / TypeScript</p>
     <p><strong>Démo :</strong> https://happy-learn.pages.dev · https://happylearn.net</p>
-    <p><strong>Date :</strong> 20 septembre 2026</p>
-    <p><strong>Périmètre :</strong> parcours élève, espace professeur, sessions live,
-      catalogue &amp; créateur de missions multi-matières</p>
+    <p><strong>Date :</strong> 20 septembre 2026 (mise à jour doc)</p>
+    <p><strong>Périmètre :</strong> parcours élève multi-niveaux, espace professeur
+      (suivi + programme), sessions live, catalogue 79 missions, créateur,
+      accessibilité (écoute + mode daltonien)</p>
   </div>
 </section>
 
@@ -197,14 +198,15 @@
 </p>
 <ul>
   <li><strong>Pour l’élève :</strong> engagement, feedback immédiat, aventure guidée par la mascotte Néo.</li>
-  <li><strong>Pour l’enseignant :</strong> classes, liste d’élèves, pilotage de session live, stats non classantes, création de missions.</li>
+  <li><strong>Pour l’enseignant :</strong> classes, roster, suivi plein écran, couverture du programme, session live, stats non classantes, création de missions.</li>
   <li><strong>Pour l’école :</strong> application web (aucun install), code de session éphémère, traces pédagogiques.</li>
 </ul>
 <div class="callout">
-  <strong>État actuel :</strong> le catalogue affiche tous les niveaux (CP–CM2) et
-  matières du primaire, mais <strong>seul le parcours CM2 mathématiques / fractions</strong>
-  est jouable de bout en bout. Le créateur de missions permet déjà d’ajouter d’autres
-  contenus multi-matières publiables dans le pilotage.
+  <strong>État actuel :</strong> <strong>79 missions officielles</strong> (Phase&nbsp;A :
+  une mission standard par thème du programme) sont jouables sur les
+  <strong>27 couples niveau × matière</strong> du primaire. Le créateur permet d’ajouter
+  d’autres contenus publiables dans le pilotage. Phase&nbsp;B (variantes facile / difficile)
+  reste à venir.
 </div>
 
 <!-- 2 -->
@@ -214,23 +216,25 @@
   <li>SPA Vite + React 19 + TypeScript strict + React Router 7</li>
   <li>Double backend : Supabase (Auth, Postgres, Realtime) ou fallback <code>localStorage</code></li>
   <li>Déploiement Cloudflare Pages (<code>happy-learn.pages.dev</code>)</li>
-  <li>Accessibilité : lecture à voix haute, <code>lang=fr</code>, <code>aria-live</code>, reduced-motion</li>
+  <li>Accessibilité : <strong>Écouter cette page</strong>, <strong>mode daltonien</strong>
+    (deutéranopie), <code>lang=fr</code>, <code>aria-live</code>, reduced-motion</li>
 </ul>
 
 <h3>2.2 Parcours élève (solo)</h3>
 <ul>
   <li>Connexion prénom (libre) ou via code de classe / session</li>
-  <li>Choix niveau + matière, présentation, univers, matériel (cahier/QCM), mission, récompense</li>
+  <li>Choix niveau + matière (27 offres ouvertes), présentation, univers, matériel (cahier/QCM), mission, récompense</li>
   <li>Moteur unique de validation (fractions, nombres, texte, choix, bilan, teaser…)</li>
   <li>4 univers narratifs + scènes animées + collection de récompenses</li>
 </ul>
 
-<h3>2.3 Espace professeur</h3>
+<h3>2.3 Espace professeur — suivi de classe</h3>
 <ul>
   <li>Auth e-mail / mot de passe (ou lien magique) ; mode local sans mot de passe</li>
   <li>Multi-classes, roster élèves (prénom + nom), code classe</li>
-  <li>Stats filtrables (élève, session, dates) sans notes ni classement</li>
-  <li>Journal des séances</li>
+  <li><strong>Suivi plein écran</strong> : modes Élèves / Séances / Programme ; liste de classes en popup</li>
+  <li><strong>Couverture programme</strong> : pastilles App / En classe / Traité / À faire par thème</li>
+  <li>Stats filtrables et journal des séances — sans notes ni classement</li>
 </ul>
 
 <h3>2.4 Sessions de classe live</h3>
@@ -244,10 +248,18 @@
 
 <h3>2.5 Catalogue &amp; créateur de missions</h3>
 <ul>
+  <li><strong>79 missions officielles</strong> Phase&nbsp;A (une par thème) embarquées en TypeScript</li>
   <li>Contrat d’IDs multi-matières : <code>{niveau}-{matière}-{slug}-{nn}</code></li>
   <li>Étapes canoniques : <code>{missionId}/{slug}</code> (ex. <code>cm2-maths-fractions-01/s01</code>)</li>
-  <li>Missions officielles en TypeScript + table Supabase <code>missions</code> (jsonb)</li>
+  <li>Table Supabase <code>missions</code> (jsonb) + cache local enseignant</li>
   <li>Éditeur in-app : création, duplication, preview, publication</li>
+</ul>
+
+<h3>2.6 Accessibilité visuelle</h3>
+<ul>
+  <li>Bouton <strong>Couleurs / Daltonien</strong> (barre publique + Shell)</li>
+  <li>Préférence <code>localStorage</code> <code>happy-learn-colorblind</code> → attribut <code>html[data-colorblind="1"]</code></li>
+  <li>Palette deutéranopie : bleu = succès, ambre hachuré = attention, gris pointillé = à faire</li>
 </ul>
 
 <!-- 3 -->
@@ -259,8 +271,8 @@
   <tbody>
     <tr>
       <td>Élève solo</td>
-      <td>Jouer la mission fractions CM2 dans 4 univers, modes cahier/QCM, gagner une récompense</td>
-      <td>Autres matières / niveaux jouables «&nbsp;officiels&nbsp;»</td>
+      <td>Jouer toute mission officielle (79) selon niveau/matière, 4 univers, cahier/QCM, récompense ; mode daltonien ; écoute</td>
+      <td>Variantes facile/difficile (Phase&nbsp;B)</td>
     </tr>
     <tr>
       <td>Élève en session live</td>
@@ -269,7 +281,7 @@
     </tr>
     <tr>
       <td>Enseignant</td>
-      <td>Gérer classes &amp; élèves, lancer une session, suivre la présence, lancer une activité, lire des stats</td>
+      <td>Classes &amp; roster, suivi Élèves/Séances/Programme, couverture App/En classe, session live, stats, créateur</td>
       <td>Export CSV/PDF, tableau de bord établissement, SSO ENT</td>
     </tr>
     <tr>
@@ -402,7 +414,7 @@
   <tbody>
     <tr><td><code>/</code>, <code>/connexion/*</code></td><td>Entrée publique &amp; auth</td></tr>
     <tr><td><code>/accueil</code> … <code>/recompense</code></td><td>Parcours élève solo</td></tr>
-    <tr><td><code>/espace-professeur</code></td><td>Pilotage classe &amp; stats</td></tr>
+    <tr><td><code>/espace-professeur</code></td><td>Suivi de classe (Élèves / Séances / Programme)</td></tr>
     <tr><td><code>/espace-professeur/session</code></td><td>Session live</td></tr>
     <tr><td><code>/espace-professeur/missions</code></td><td>Créateur / éditeur</td></tr>
     <tr><td><code>/salle-attente</code>, <code>/mission</code></td><td>Élève en session (nav verrouillée)</td></tr>
@@ -417,6 +429,7 @@
   <li><code>classe_sessions</code>, <code>session_participants</code></li>
   <li><code>sessions_enfant</code>, <code>reponses</code>, <code>collection</code></li>
   <li><code>missions</code> (document JSON d’étapes, <code>source</code> = builtin | teacher)</li>
+  <li><code>classe_programme_couverture</code> (App / En classe par thème et classe)</li>
   <li><code>etapes</code> : legacy seed, <strong>dépréciée</strong> pour le runtime</li>
 </ul>
 
@@ -445,13 +458,13 @@
 <!-- 8 -->
 <h2 class="pagebreak">8. Limites du MVP</h2>
 <ol>
-  <li>Un seul parcours officiel jouable (CM2 maths fractions).</li>
+  <li>Phase&nbsp;B (missions facile / difficile) pas encore produite — seul le standard <code>…-01</code> existe.</li>
   <li>Sessions live dégradées hors Supabase (mono-appareil localStorage).</li>
   <li>RLS / anonymat trop ouverts pour une production scolaire stricte.</li>
   <li>Pas d’export de données, pas de multi-établissements, pas de SSO ENT.</li>
   <li>Créateur : pas d’édition des animations UniverseScene par étape.</li>
   <li>Kinds avancés (matching, ordonnancement…) non exposés.</li>
-  <li>Pas de suite de tests automatisés complète des 8 parcours checklist.</li>
+  <li>Pas de suite de tests automatisés complète des parcours checklist.</li>
   <li>Pas de gestion fine des rôles (directeur, formateur, éditeur pédagogique).</li>
 </ol>
 
@@ -491,7 +504,8 @@
 
 <h3>9.2 Contenu pédagogique (priorité haute)</h3>
 <ul>
-  <li>Publier 3–5 missions officielles par matière prioritaire (maths, français) sur CE1–CM2.</li>
+  <li><strong>Fait (Phase&nbsp;A) :</strong> 79/79 thèmes couverts par une mission standard.</li>
+  <li>Phase&nbsp;B : variantes <code>…-facile-01</code> et <code>…-difficile-01</code> par thème.</li>
   <li>Bibliothèque de kinds multi-matières : texte, QCM, appariement, ordre, dictée courte.</li>
   <li>Validation éditoriale (brouillon → revue → publié) avec versioning.</li>
   <li>Packs de mission «&nbsp;séance 45&nbsp;min&nbsp;» alignés programmes.</li>
@@ -507,7 +521,8 @@
 
 <h3>9.4 Expérience élève (priorité moyenne)</h3>
 <ul>
-  <li>Accessibilité renforcée (contrastes, dys, taille texte, clavier complet).</li>
+  <li><strong>Livré :</strong> mode daltonien + écoute à voix haute.</li>
+  <li>Accessibilité renforcée (dys, taille texte, clavier complet, autres daltonismes).</li>
   <li>Mode «&nbsp;reprise&nbsp;» si coupure réseau / changement d’appareil.</li>
   <li>Différenciation : variantes d’étapes selon profil (aide renforcée).</li>
   <li>Récompenses &amp; collection enrichies sans gamification toxique (toujours sans classement).</li>
@@ -540,8 +555,8 @@
     </tr>
     <tr>
       <td><span class="badge">Vague B</span> Contenu</td>
-      <td>Catalogue multi-matières réel</td>
-      <td>Plusieurs séances prêtes à l’emploi</td>
+      <td>Phase&nbsp;A livrée (79 missions) → Phase&nbsp;B différenciation</td>
+      <td>Séances prêtes + variantes de difficulté</td>
     </tr>
     <tr>
       <td><span class="badge">Vague C</span> Pilotage</td>
@@ -570,6 +585,8 @@
   <li><code>README.md</code> — démarrage, env, déploiement</li>
   <li><code>docs/PLAN-sessions-classe-live.md</code> — plan sessions live</li>
   <li><code>docs/PARCOURS-8.md</code> — checklist parcours fractions</li>
+  <li><code>docs/SUIVI-missions-themes.md</code> — pilotage éditorial des thèmes</li>
+  <li><code>docs/PROMPT-agent-missions.md</code> — prompt agent missions</li>
   <li><code>src/data/missions/CONTRACT.md</code> — contrat d’IDs missions</li>
 </ul>
 
@@ -581,6 +598,7 @@
   <li><code>20260917_eleves_classe.sql</code></li>
   <li><code>20260918_sessions_classe_live.sql</code></li>
   <li><code>20260920_missions_catalog.sql</code></li>
+  <li><code>20260921_classe_programme_couverture.sql</code></li>
 </ol>
 
 <h3>10.3 Glossaire court</h3>
@@ -592,13 +610,15 @@
     <tr><td>Kind</td><td>Type d’interaction (continue, number, choice, text…)</td></tr>
     <tr><td>Session live</td><td>Séance de classe éphémère synchronisée en temps réel</td></tr>
     <tr><td>Builtin</td><td>Mission officielle embarquée dans le code TypeScript</td></tr>
+    <tr><td>Couverture programme</td><td>Marquage App / En classe d’un thème pour une classe</td></tr>
+    <tr><td>Mode daltonien</td><td>Palette deutéranopie + motifs sur pastilles de statut</td></tr>
   </tbody>
 </table>
 
 <footer class="page-note">
-  Document généré pour Happy Learn v0.1 — septembre 2026. Les captures proviennent
-  de l’environnement de développement et de démonstrations de sessions live.
-  Contact produit / technique : dépôt HappyLearn.
+  Document généré pour Happy Learn v0.1 — septembre 2026 (doc à jour catalogue,
+  suivi, programme, daltonien). Les captures illustrent l’environnement de
+  développement et les sessions live. Contact : dépôt HappyLearn.
 </footer>
 
 </body>
