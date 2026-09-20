@@ -320,6 +320,9 @@ export function TeacherSpaceScreen() {
                   <Button variant="primary" type="button" onClick={() => navigate("/espace-professeur/session")}>
                     Pilotage de session
                   </Button>
+                  <Button type="button" onClick={() => navigate("/espace-professeur/missions")}>
+                    Créateur de missions
+                  </Button>
                 </div>
 
                 <div className="field" style={{ maxWidth: 420 }}>

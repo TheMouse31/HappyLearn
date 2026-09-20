@@ -1,4 +1,4 @@
-import { DIRECTION_LABELS } from "../data/steps";
+import { DIRECTION_LABELS } from "../data/missions/labels";
 import type { PlayMode, Step, ValidationResult } from "../data/types";
 
 function normalize(raw: string): string {
@@ -32,16 +32,20 @@ export function validateAnswer(step: Step, raw: string): ValidationResult {
         kind: "ok",
         message:
           step.kind === "tutorial"
-            ? "Oui : tu as écrit trois quarts."
+            ? "Oui : tu as écrit la fraction correctement."
             : "Oui. Cette fraction est la bonne.",
       };
     }
-    if (step.kind === "simplify" && got === "6/12") {
-      return {
-        ok: false,
-        kind: "retry",
-        message: "C’est la même quantité, mais on cherche une fraction plus simple.",
-      };
+    if (step.kind === "simplify" && expected.includes("/") && got !== expected) {
+      // Même quantité non réduite : message générique (sans hardcoder 6/12).
+      const [eTop, eBot] = expected.split("/");
+      if (eTop && eBot && Number(frac.bottom) > Number(eBot)) {
+        return {
+          ok: false,
+          kind: "retry",
+          message: "C’est la même quantité, mais on cherche une fraction plus simple.",
+        };
+      }
     }
     return {
       ok: false,
@@ -50,57 +54,26 @@ export function validateAnswer(step: Step, raw: string): ValidationResult {
     };
   }
 
-  if (step.kind === "number") {
-    if (value === expected) {
-      const extra =
-        step.twoStep === 1
-          ? " Garde ce résultat pour l’étape suivante."
-          : "";
+  if (step.kind === "number" || step.kind === "text") {
+    if (value === normalize(expected)) {
+      const extra = step.twoStep === 1 ? " Garde ce résultat pour l’étape suivante." : "";
       return { ok: true, kind: "ok", message: `Oui.${extra}` };
-    }
-    if (step.expected === "18" && value === "6") {
-      return {
-        ok: false,
-        kind: "retry",
-        message: "6 est la valeur d’un quart. La situation en demande trois.",
-      };
-    }
-    if (step.expected === "5" && value === "4" && step.id === "M02") {
-      return {
-        ok: false,
-        kind: "retry",
-        message: "Le 4 indique le nombre de parts, pas la valeur d’une part.",
-      };
-    }
-    if (step.expected === "5" && value === "15" && step.id === "M02") {
-      return {
-        ok: false,
-        kind: "retry",
-        message: "15 représente trois quarts. Ici, tu cherches seulement un quart.",
-      };
-    }
-    if (step.expected === "15" && value === "5") {
-      return {
-        ok: false,
-        kind: "retry",
-        message: "5 est la valeur d’une part. Il en faut trois.",
-      };
     }
     return {
       ok: false,
       kind: "retry",
-      message: "Reprends le partage, une part après l’autre.",
+      message: step.kind === "text" ? "Relis la consigne et réessaie." : "Reprends le calcul, puis réessaie.",
     };
   }
 
-  if (step.kind === "direction") {
-    if (value === expected) {
-      return { ok: true, kind: "ok", message: "Oui, c’est dans l’axe." };
+  if (step.kind === "direction" || step.kind === "choice") {
+    if (value === normalize(expected)) {
+      return { ok: true, kind: "ok", message: "Oui, c’est la bonne réponse." };
     }
     return {
       ok: false,
       kind: "retry",
-      message: "Cette direction ne convient pas encore. Regarde droit devant.",
+      message: "Ce n’est pas encore la bonne réponse. Réessaie.",
     };
   }
 
@@ -137,13 +110,15 @@ export function needsAnswer(step: Step): boolean {
     step.kind === "fraction-choice" ||
     step.kind === "simplify" ||
     step.kind === "number" ||
-    step.kind === "direction"
+    step.kind === "text" ||
+    step.kind === "direction" ||
+    step.kind === "choice"
   );
 }
 
 export function usesQcm(step: Step, mode: PlayMode): boolean {
-  if (step.kind === "direction") return true;
-  if (step.kind === "tutorial") return false;
+  if (step.kind === "direction" || step.kind === "choice") return true;
+  if (step.kind === "tutorial" || step.kind === "text") return false;
   if (!needsAnswer(step)) return false;
   return mode === "qcm";
 }
@@ -154,4 +129,14 @@ export function prefersReducedMotion(): boolean {
 
 export function advanceDelay(): number {
   return prefersReducedMotion() ? 0 : 2200;
+}
+
+/** Clé visuelle pour UniverseScene (scene > slug > id). */
+export function sceneKeyOf(step: Step): string {
+  return step.scene ?? step.slug ?? step.id;
+}
+
+export function isCelebrationStep(step: Step): boolean {
+  const key = sceneKeyOf(step);
+  return step.kind === "teaser" || key === "N04" || key === "L01" || step.slug === "s14" || step.slug === "s15";
 }

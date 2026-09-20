@@ -1,10 +1,13 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "../components/Button";
+import { Choice } from "../components/Choice";
 import { Neo } from "../components/Neo";
 import { Shell } from "../components/Shell";
-import { findMission } from "../data/missions";
+import { findMission, resolveMission } from "../data/missions";
 import { gradeLabel, subjectLabel } from "../data/catalog";
+import { UNIVERSES, UNIVERSE_ORDER } from "../data/universes";
+import type { MissionDef, UniverseSlug } from "../data/types";
 import { useSession } from "../lib/session";
 
 export function StudentWaitingScreen() {
@@ -20,32 +23,38 @@ export function StudentWaitingScreen() {
     leaveClassSession,
     startMission,
     sessionId,
+    universe,
+    setUniverse,
+    mode,
   } = useSession();
+  const [busy, setBusy] = useState(false);
+  const [pickError, setPickError] = useState("");
+  const [mission, setMission] = useState<MissionDef | null>(null);
+
+  const activityReady = Boolean(liveSession?.missionId && liveSession.mode);
+  const canStart = activityReady && Boolean(universe && mode);
 
   useEffect(() => {
-    if (!lockedSession || !liveSession?.missionId || !liveSession.univers || !liveSession.mode) {
+    const id = liveSession?.missionId;
+    if (!id) {
+      setMission(null);
       return;
     }
-    if (sessionId) {
-      navigate("/mission", { replace: true });
-      return;
-    }
+    setMission(findMission(id));
     let cancelled = false;
-    void startMission().then(() => {
-      if (!cancelled) navigate("/mission", { replace: true });
+    void resolveMission(id).then((resolved) => {
+      if (!cancelled) setMission(resolved);
     });
     return () => {
       cancelled = true;
     };
-  }, [
-    lockedSession,
-    liveSession?.missionId,
-    liveSession?.univers,
-    liveSession?.mode,
-    sessionId,
-    startMission,
-    navigate,
-  ]);
+  }, [liveSession?.missionId]);
+
+  // Si la mission est déjà démarrée (reconnexion / retour), aller sur /mission.
+  useEffect(() => {
+    if (!lockedSession || !canStart || !sessionId) return;
+    navigate("/mission", { replace: true });
+  }, [lockedSession, canStart, sessionId, navigate]);
 
   if (kickedFromSession) {
     return (
@@ -83,18 +92,28 @@ export function StudentWaitingScreen() {
     return <Navigate to="/accueil" replace />;
   }
 
-  const mission = findMission(liveSession.missionId);
+  async function startChosenUniverse(slug: UniverseSlug) {
+    setPickError("");
+    setBusy(true);
+    try {
+      setUniverse(slug);
+      await startMission({ universe: slug });
+      navigate("/mission", { replace: true });
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <Shell brand="Happy Learn" stepLabel="Salle d’attente" homeTo="/salle-attente">
       <div className="split login-layout">
         <aside className="mascot-stage">
           <p className="bubble">
-            {mission
-              ? "Mission en préparation… On y va tout de suite !"
-              : "Patiente ici. Ton professeur va bientôt lancer une mission."}
+            {!activityReady
+              ? "Patiente ici. Ton professeur va bientôt lancer une mission."
+              : "Choisis ton univers pour commencer !"}
           </p>
-          <Neo pose="guide" />
+          <Neo pose={universe ? "universe" : "guide"} universe={universe} />
         </aside>
         <section>
           <span className="kicker">Session · {liveSession.code}</span>
@@ -102,15 +121,64 @@ export function StudentWaitingScreen() {
           <p className="lead" data-listen>
             Tu es connecté·e. Pendant la session, tu restes ici ou dans la mission — pas de navigation libre.
           </p>
-          {mission && liveSession.niveau && liveSession.matiere ? (
-            <p>
-              Prochaine mission : <strong>{mission.title}</strong> ({gradeLabel(liveSession.niveau)} ·{" "}
-              {subjectLabel(liveSession.matiere)})
-            </p>
-          ) : (
+
+          {!activityReady ? (
             <p className="field-help">En attente du lancement d’une activité…</p>
+          ) : (
+            <>
+              {mission && liveSession.niveau && liveSession.matiere ? (
+                <p>
+                  Mission : <strong>{mission.title}</strong> ({gradeLabel(liveSession.niveau)} ·{" "}
+                  {subjectLabel(liveSession.matiere)}
+                  {liveSession.mode ? ` · ${liveSession.mode === "cahier" ? "cahier" : "QCM"}` : ""})
+                </p>
+              ) : null}
+              <h2 style={{ fontSize: "1.2rem", marginTop: "1rem" }}>Choisis ton univers</h2>
+              <div className="choice-grid" role="group" aria-label="Univers disponibles">
+                {UNIVERSE_ORDER.map((slug) => {
+                  const def = UNIVERSES[slug];
+                  return (
+                    <Choice
+                      key={slug}
+                      selected={universe === slug}
+                      onClick={() => {
+                        if (busy) return;
+                        void startChosenUniverse(slug);
+                      }}
+                    >
+                      <span className="icon-badge" aria-hidden="true">
+                        {def.icon}
+                      </span>
+                      <span>
+                        <strong>{def.label}</strong>
+                        <small>{def.blurb}</small>
+                      </span>
+                    </Choice>
+                  );
+                })}
+              </div>
+              <p className="error" aria-live="polite">
+                {pickError}
+              </p>
+              <div className="actions">
+                <Button
+                  variant="primary"
+                  disabled={busy || !universe}
+                  onClick={() => {
+                    if (!universe) {
+                      setPickError("Choisis un univers pour continuer.");
+                      return;
+                    }
+                    void startChosenUniverse(universe);
+                  }}
+                >
+                  {busy ? "Démarrage…" : "Commencer la mission"}
+                </Button>
+              </div>
+            </>
           )}
-          <div className="actions">
+
+          <div className="actions" style={{ marginTop: "1rem" }}>
             <Button
               type="button"
               onClick={() => {

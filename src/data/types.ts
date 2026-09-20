@@ -72,6 +72,11 @@ export type MissionDef = {
   blurb: string;
   steps: Step[];
   available: boolean;
+  /** Incrémente sans changer l’id public. */
+  version?: number;
+  /** builtin = catalogue embarqué ; teacher = créée in-app. */
+  source?: "builtin" | "teacher";
+  teacherId?: string | null;
 };
 
 export type SessionStatsFilters = {
@@ -88,6 +93,8 @@ export type StepKind =
   | "simplify"
   | "number"
   | "direction"
+  | "choice"
+  | "text"
   | "method"
   | "bilan"
   | "teaser";
@@ -101,14 +108,24 @@ export type UniverseCopy = {
 };
 
 export type Step = {
+  /** Id canonique `{missionId}/{slug}` (ou legacy court pendant transition). */
   id: string;
+  /** Slug local unique dans la mission (`s01`, `intro`…). */
+  slug: string;
   kind: StepKind;
   kicker: string;
-  progress: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+  /** Progression visuelle 0..N (dérivée de l’index si besoin). */
+  progress: number;
   expected?: string;
   distractors?: string[];
   twoStep?: 1 | 2;
   copy: Record<UniverseSlug, UniverseCopy>;
+  /**
+   * Clé de scène visuelle (UniverseScene).
+   * Pour la mission fractions migrée : anciens ids (T00, M01…).
+   * Les nouvelles missions peuvent l’omettre (scène narrative générique).
+   */
+  scene?: string;
 };
 
 export type UniverseDef = {
