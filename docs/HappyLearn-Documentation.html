@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>Happy Learn — Documentation produit &amp; technique</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 18mm 16mm 20mm 16mm;
+    }
+    :root {
+      --ink: #1a2e1f;
+      --muted: #4a5c50;
+      --line: #d7e0d9;
+      --accent: #1f7a4c;
+      --bg: #f6faf7;
+      --card: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      color: var(--ink);
+      line-height: 1.45;
+      font-size: 10.5pt;
+      margin: 0;
+      background: white;
+    }
+    h1, h2, h3, h4 {
+      color: var(--ink);
+      page-break-after: avoid;
+      line-height: 1.2;
+    }
+    h1 { font-size: 22pt; margin: 0 0 8pt; }
+    h2 {
+      font-size: 14pt;
+      margin: 22pt 0 8pt;
+      padding-bottom: 4pt;
+      border-bottom: 2px solid var(--accent);
+    }
+    h3 { font-size: 12pt; margin: 14pt 0 6pt; color: var(--accent); }
+    h4 { font-size: 11pt; margin: 10pt 0 4pt; }
+    p, li { orphans: 3; widows: 3; }
+    a { color: var(--accent); }
+    .cover {
+      min-height: 240mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 24pt;
+      background: linear-gradient(160deg, #e8f5ee 0%, #ffffff 55%, #f0f7f3 100%);
+      border: 1px solid var(--line);
+      border-radius: 12pt;
+      page-break-after: always;
+    }
+    .cover .kicker {
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 9pt;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 10pt;
+    }
+    .cover h1 { font-size: 28pt; }
+    .cover .lead { font-size: 13pt; color: var(--muted); max-width: 42em; }
+    .meta {
+      margin-top: 28pt;
+      padding-top: 14pt;
+      border-top: 1px solid var(--line);
+      font-size: 10pt;
+      color: var(--muted);
+    }
+    .meta strong { color: var(--ink); }
+    .toc { page-break-after: always; }
+    .toc ol { padding-left: 1.2em; }
+    .toc li { margin: 4pt 0; }
+    .figure {
+      margin: 10pt 0 14pt;
+      page-break-inside: avoid;
+      border: 1px solid var(--line);
+      border-radius: 8pt;
+      overflow: hidden;
+      background: var(--bg);
+    }
+    .figure img {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: 145mm;
+      object-fit: contain;
+      object-position: top;
+      background: #eef3ef;
+    }
+    .figure figcaption {
+      padding: 6pt 10pt;
+      font-size: 9pt;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+      background: white;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10pt;
+    }
+    .grid-2 .figure img { max-height: 90mm; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8pt 0 12pt;
+      font-size: 9.5pt;
+      page-break-inside: avoid;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 5pt 7pt;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: var(--bg); color: var(--ink); }
+    code, .mono {
+      font-family: ui-monospace, "SF Mono", Consolas, monospace;
+      font-size: 8.5pt;
+      background: #eef5f0;
+      padding: 1pt 3pt;
+      border-radius: 3pt;
+    }
+    ul, ol { margin: 4pt 0 10pt; padding-left: 1.3em; }
+    .callout {
+      border-left: 3pt solid var(--accent);
+      background: var(--bg);
+      padding: 8pt 10pt;
+      margin: 10pt 0;
+      page-break-inside: avoid;
+    }
+    .badge {
+      display: inline-block;
+      background: var(--accent);
+      color: white;
+      font-size: 8pt;
+      font-weight: 700;
+      padding: 2pt 7pt;
+      border-radius: 999pt;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .muted { color: var(--muted); }
+    .pagebreak { page-break-before: always; }
+    footer.page-note {
+      margin-top: 18pt;
+      font-size: 8.5pt;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+<section class="cover">
+  <div class="kicker">Documentation produit &amp; technique</div>
+  <h1>Happy Learn</h1>
+  <p class="lead">
+    Apprentissages du CP au CM2 racontés comme une mission. Ce document décrit
+    l’état actuel de l’application web (version&nbsp;0.1), ses possibilités,
+    l’architecture, les écrans livrés, et la feuille de route pour passer d’un
+    MVP pédagogique à un produit professionnel utilisable en classe à grande échelle.
+  </p>
+  <div class="meta">
+    <p><strong>Produit :</strong> Happy Learn · SPA React / Vite / TypeScript</p>
+    <p><strong>Démo :</strong> https://happy-learn.pages.dev · https://happylearn.net</p>
+    <p><strong>Date :</strong> 20 septembre 2026</p>
+    <p><strong>Périmètre :</strong> parcours élève, espace professeur, sessions live,
+      catalogue &amp; créateur de missions multi-matières</p>
+  </div>
+</section>
+
+<section class="toc">
+  <h2>Sommaire</h2>
+  <ol>
+    <li>Vision produit</li>
+    <li>Ce qui a été livré</li>
+    <li>Possibilités actuelles (élèves &amp; enseignants)</li>
+    <li>Parcours illustrés (captures d’écran)</li>
+    <li>Architecture technique</li>
+    <li>Modèle de données &amp; contrat missions</li>
+    <li>Sécurité, déploiement &amp; exploitation</li>
+    <li>Limites du MVP</li>
+    <li>Axes d’amélioration &amp; feuille de route «&nbsp;produit pro&nbsp;»</li>
+    <li>Annexes</li>
+  </ol>
+</section>
+
+<!-- 1 -->
+<h2>1. Vision produit</h2>
+<p>
+  Happy Learn transforme une séance scolaire en <strong>mission narrative</strong> :
+  l’élève choisit un univers (football, rugby, équitation, espace), répond en mode
+  cahier ou QCM, et gagne une récompense visuelle sans note ni classement.
+</p>
+<ul>
+  <li><strong>Pour l’élève :</strong> engagement, feedback immédiat, aventure guidée par la mascotte Néo.</li>
+  <li><strong>Pour l’enseignant :</strong> classes, liste d’élèves, pilotage de session live, stats non classantes, création de missions.</li>
+  <li><strong>Pour l’école :</strong> application web (aucun install), code de session éphémère, traces pédagogiques.</li>
+</ul>
+<div class="callout">
+  <strong>État actuel :</strong> le catalogue affiche tous les niveaux (CP–CM2) et
+  matières du primaire, mais <strong>seul le parcours CM2 mathématiques / fractions</strong>
+  est jouable de bout en bout. Le créateur de missions permet déjà d’ajouter d’autres
+  contenus multi-matières publiables dans le pilotage.
+</div>
+
+<!-- 2 -->
+<h2>2. Ce qui a été livré</h2>
+<h3>2.1 Socle application</h3>
+<ul>
+  <li>SPA Vite + React 19 + TypeScript strict + React Router 7</li>
+  <li>Double backend : Supabase (Auth, Postgres, Realtime) ou fallback <code>localStorage</code></li>
+  <li>Déploiement Cloudflare Pages (<code>happy-learn.pages.dev</code>)</li>
+  <li>Accessibilité : lecture à voix haute, <code>lang=fr</code>, <code>aria-live</code>, reduced-motion</li>
+</ul>
+
+<h3>2.2 Parcours élève (solo)</h3>
+<ul>
+  <li>Connexion prénom (libre) ou via code de classe / session</li>
+  <li>Choix niveau + matière, présentation, univers, matériel (cahier/QCM), mission, récompense</li>
+  <li>Moteur unique de validation (fractions, nombres, texte, choix, bilan, teaser…)</li>
+  <li>4 univers narratifs + scènes animées + collection de récompenses</li>
+</ul>
+
+<h3>2.3 Espace professeur</h3>
+<ul>
+  <li>Auth e-mail / mot de passe (ou lien magique) ; mode local sans mot de passe</li>
+  <li>Multi-classes, roster élèves (prénom + nom), code classe</li>
+  <li>Stats filtrables (élève, session, dates) sans notes ni classement</li>
+  <li>Journal des séances</li>
+</ul>
+
+<h3>2.4 Sessions de classe live</h3>
+<ul>
+  <li>Session éphémère avec code à 6 caractères</li>
+  <li>Salle d’attente élève, verrouillage de navigation</li>
+  <li>Présence roster (connecté / déconnecté / pas encore connecté)</li>
+  <li>Lancement / arrêt d’activité (mission + mode) ; univers choisi par l’élève</li>
+  <li>Kick / reconnexion, retour salle d’attente à l’arrêt d’activité</li>
+</ul>
+
+<h3>2.5 Catalogue &amp; créateur de missions</h3>
+<ul>
+  <li>Contrat d’IDs multi-matières : <code>{niveau}-{matière}-{slug}-{nn}</code></li>
+  <li>Étapes canoniques : <code>{missionId}/{slug}</code> (ex. <code>cm2-maths-fractions-01/s01</code>)</li>
+  <li>Missions officielles en TypeScript + table Supabase <code>missions</code> (jsonb)</li>
+  <li>Éditeur in-app : création, duplication, preview, publication</li>
+</ul>
+
+<!-- 3 -->
+<h2 class="pagebreak">3. Possibilités actuelles</h2>
+<table>
+  <thead>
+    <tr><th>Acteur</th><th>Peut faire aujourd’hui</th><th>Pas encore</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Élève solo</td>
+      <td>Jouer la mission fractions CM2 dans 4 univers, modes cahier/QCM, gagner une récompense</td>
+      <td>Autres matières / niveaux jouables «&nbsp;officiels&nbsp;»</td>
+    </tr>
+    <tr>
+      <td>Élève en session live</td>
+      <td>Rejoindre via code, attendre, choisir son univers, jouer la mission poussée par le prof</td>
+      <td>Chat, main levée, reprise multi-appareils avancée</td>
+    </tr>
+    <tr>
+      <td>Enseignant</td>
+      <td>Gérer classes &amp; élèves, lancer une session, suivre la présence, lancer une activité, lire des stats</td>
+      <td>Export CSV/PDF, tableau de bord établissement, SSO ENT</td>
+    </tr>
+    <tr>
+      <td>Enseignant auteur</td>
+      <td>Créer / publier des missions (kinds génériques), les proposer en pilotage</td>
+      <td>Éditeur d’animations par étape, revue éditoriale, import massif</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- 4 -->
+<h2>4. Parcours illustrés</h2>
+
+<h3>4.1 Entrée dans l’application</h3>
+<div class="grid-2">
+  <figure class="figure">
+    <img src="pdf-assets/01_accueil.png" alt="Page d’accueil Happy Learn" />
+    <figcaption>Figure 1 — Page d’accueil publique</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="pdf-assets/02_connexion.png" alt="Choix de connexion" />
+    <figcaption>Figure 2 — Choix Élève / Enseignant</figcaption>
+  </figure>
+</div>
+<figure class="figure">
+  <img src="pdf-assets/03_connexion_eleve.png" alt="Connexion élève" />
+  <figcaption>Figure 3 — Connexion élève (prénom libre ou code de session)</figcaption>
+</figure>
+
+<h3>4.2 Parcours élève solo</h3>
+<div class="grid-2">
+  <figure class="figure">
+    <img src="pdf-assets/05_accueil_eleve.png" alt="Accueil élève" />
+    <figcaption>Figure 4 — Accueil élève (A00)</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="pdf-assets/06_choix_classe.png" alt="Choix niveau et matière" />
+    <figcaption>Figure 5 — Choix niveau &amp; matière</figcaption>
+  </figure>
+</div>
+<div class="grid-2">
+  <figure class="figure">
+    <img src="pdf-assets/07_presentation.png" alt="Présentation de séance" />
+    <figcaption>Figure 6 — Présentation de séance</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="pdf-assets/08_univers.png" alt="Choix d’univers" />
+    <figcaption>Figure 7 — Choix d’univers (4 thèmes)</figcaption>
+  </figure>
+</div>
+<div class="grid-2">
+  <figure class="figure">
+    <img src="pdf-assets/09_materiel.png" alt="Choix cahier ou QCM" />
+    <figcaption>Figure 8 — Matériel : cahier ou QCM</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="pdf-assets/10_pret.png" alt="Écran prêt" />
+    <figcaption>Figure 9 — Confirmation avant mission</figcaption>
+  </figure>
+</div>
+<figure class="figure">
+  <img src="pdf-assets/22_mission.png" alt="Écran de mission" />
+  <figcaption>Figure 10 — Mission en cours (scène + consigne + saisie / QCM)</figcaption>
+</figure>
+
+<h3 class="pagebreak">4.3 Sessions live (classe)</h3>
+<div class="grid-2">
+  <figure class="figure">
+    <img src="pdf-assets/12_pilotage_session.png" alt="Pilotage de session" />
+    <figcaption>Figure 11 — Pilotage : code de session &amp; activité</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="pdf-assets/18_salle_attente.png" alt="Salle d’attente élève" />
+    <figcaption>Figure 12 — Salle d’attente élève</figcaption>
+  </figure>
+</div>
+<div class="grid-2">
+  <figure class="figure">
+    <img src="pdf-assets/20_eleve_connecte.png" alt="Élève connecté dans le roster" />
+    <figcaption>Figure 13 — Présence élève côté professeur</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="pdf-assets/19_activite_lancee.png" alt="Activité lancée" />
+    <figcaption>Figure 14 — Activité lancée (mission + mode)</figcaption>
+  </figure>
+</div>
+<figure class="figure">
+  <img src="pdf-assets/21_pilotage_missions.png" alt="Sélecteur de missions en pilotage" />
+  <figcaption>Figure 15 — Sélecteur de missions (officielles + créées / publiées)</figcaption>
+</figure>
+
+<h3>4.4 Espace professeur &amp; créateur de missions</h3>
+<figure class="figure">
+  <img src="pdf-assets/11_espace_professeur.png" alt="Espace professeur" />
+  <figcaption>Figure 16 — Espace professeur : classes, roster, stats, accès créateur</figcaption>
+</figure>
+<div class="grid-2">
+  <figure class="figure">
+    <img src="pdf-assets/16_catalogue_missions.png" alt="Catalogue de missions" />
+    <figcaption>Figure 17 — Catalogue (mes missions + officielles)</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="pdf-assets/15_editeur_detail.png" alt="Éditeur de mission" />
+    <figcaption>Figure 18 — Éditeur d’étapes + aperçu joueur</figcaption>
+  </figure>
+</div>
+<figure class="figure">
+  <img src="pdf-assets/17_mission_publiee.png" alt="Mission publiée" />
+  <figcaption>Figure 19 — Publication : la mission devient disponible au pilotage</figcaption>
+</figure>
+
+<!-- 5 -->
+<h2 class="pagebreak">5. Architecture technique</h2>
+<table>
+  <thead><tr><th>Couche</th><th>Choix</th></tr></thead>
+  <tbody>
+    <tr><td>Frontend</td><td>Vite 8, React 19, TypeScript, React Router 7, CSS global</td></tr>
+    <tr><td>État applicatif</td><td><code>src/lib/session.tsx</code> (contexte React)</td></tr>
+    <tr><td>Persistance</td><td><code>Persistence</code> unifiée : Supabase ou localStorage (<code>persistence.ts</code>)</td></tr>
+    <tr><td>Realtime</td><td>Supabase Realtime sur <code>classe_sessions</code> / <code>session_participants</code></td></tr>
+    <tr><td>Moteur pédagogique</td><td><code>missionEngine.ts</code> (validation, QCM, scènes)</td></tr>
+    <tr><td>Catalogue</td><td>TS embarqué + table <code>missions</code> + cache local enseignant</td></tr>
+    <tr><td>Hébergement</td><td>Cloudflare Pages (SPA + <code>_redirects</code>)</td></tr>
+  </tbody>
+</table>
+
+<h3>5.1 Routes principales</h3>
+<table>
+  <thead><tr><th>Route</th><th>Rôle</th></tr></thead>
+  <tbody>
+    <tr><td><code>/</code>, <code>/connexion/*</code></td><td>Entrée publique &amp; auth</td></tr>
+    <tr><td><code>/accueil</code> … <code>/recompense</code></td><td>Parcours élève solo</td></tr>
+    <tr><td><code>/espace-professeur</code></td><td>Pilotage classe &amp; stats</td></tr>
+    <tr><td><code>/espace-professeur/session</code></td><td>Session live</td></tr>
+    <tr><td><code>/espace-professeur/missions</code></td><td>Créateur / éditeur</td></tr>
+    <tr><td><code>/salle-attente</code>, <code>/mission</code></td><td>Élève en session (nav verrouillée)</td></tr>
+  </tbody>
+</table>
+
+<!-- 6 -->
+<h2>6. Modèle de données &amp; contrat missions</h2>
+<h3>6.1 Tables Supabase (principales)</h3>
+<ul>
+  <li><code>classes</code>, <code>profils_enseignants</code>, <code>eleves_classe</code></li>
+  <li><code>classe_sessions</code>, <code>session_participants</code></li>
+  <li><code>sessions_enfant</code>, <code>reponses</code>, <code>collection</code></li>
+  <li><code>missions</code> (document JSON d’étapes, <code>source</code> = builtin | teacher)</li>
+  <li><code>etapes</code> : legacy seed, <strong>dépréciée</strong> pour le runtime</li>
+</ul>
+
+<h3>6.2 Identifiants standardisés</h3>
+<div class="callout">
+  <p><strong>Mission :</strong> <code>cm2-maths-fractions-01</code></p>
+  <p><strong>Étape :</strong> <code>cm2-maths-fractions-01/s01</code></p>
+  <p>Règles détaillées : <code>src/data/missions/CONTRACT.md</code></p>
+</div>
+<p>
+  Les scènes visuelles utilisent une clé <code>scene</code> (souvent l’ancien id court
+  <code>T00</code>, <code>M01</code>…) pour ne pas casser les animations tout en
+  stockant des ids canoniques dans les réponses / analytics.
+</p>
+
+<!-- 7 -->
+<h2>7. Sécurité, déploiement &amp; exploitation</h2>
+<ul>
+  <li><strong>Auth élèves :</strong> pas de compte e-mail ; prénom libre ou sélection roster.</li>
+  <li><strong>Auth enseignants :</strong> Supabase Auth (self-signup ouvert en démo).</li>
+  <li><strong>RLS :</strong> encore permissives sur certaines écritures (traces) — à resserrer.</li>
+  <li><strong>Secrets :</strong> variables <code>VITE_*</code> / <code>VITE_HL_*</code> au build ; token migrations hors dépôt.</li>
+  <li><strong>Déploiement :</strong> <code>npm run build</code> puis Cloudflare Pages / Wrangler.</li>
+</ul>
+
+<!-- 8 -->
+<h2 class="pagebreak">8. Limites du MVP</h2>
+<ol>
+  <li>Un seul parcours officiel jouable (CM2 maths fractions).</li>
+  <li>Sessions live dégradées hors Supabase (mono-appareil localStorage).</li>
+  <li>RLS / anonymat trop ouverts pour une production scolaire stricte.</li>
+  <li>Pas d’export de données, pas de multi-établissements, pas de SSO ENT.</li>
+  <li>Créateur : pas d’édition des animations UniverseScene par étape.</li>
+  <li>Kinds avancés (matching, ordonnancement…) non exposés.</li>
+  <li>Pas de suite de tests automatisés complète des 8 parcours checklist.</li>
+  <li>Pas de gestion fine des rôles (directeur, formateur, éditeur pédagogique).</li>
+</ol>
+
+<!-- 9 -->
+<h2>9. Axes d’amélioration &amp; feuille de route «&nbsp;produit pro&nbsp;»</h2>
+<p class="muted">
+  Priorisation proposée par impact pédagogique / risque / effort technique.
+  Pas d’estimation calendaire : chaque axe liste les chantiers concrets.
+</p>
+
+<h3>9.1 Fondations production (priorité haute)</h3>
+<table>
+  <thead><tr><th>Chantier</th><th>Pourquoi</th><th>Livrables</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Durcir la sécurité (RLS, auth)</td>
+      <td>Données mineurs, conformité école</td>
+      <td>Politiques par rôle ; join session signé ; rate-limit ; audit logs</td>
+    </tr>
+    <tr>
+      <td>Observabilité</td>
+      <td>Déboguer en classe réelle</td>
+      <td>Sentry / logs structurés ; métriques sessions live ; alertes Realtime</td>
+    </tr>
+    <tr>
+      <td>Environnements</td>
+      <td>Éviter de casser la démo</td>
+      <td>staging + prod ; migrations versionnées CI ; feature flags</td>
+    </tr>
+    <tr>
+      <td>Qualité</td>
+      <td>Régressions parcours</td>
+      <td>Tests e2e (élève solo, live, créateur) ; checklist <code>PARCOURS-8</code> automatisée</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>9.2 Contenu pédagogique (priorité haute)</h3>
+<ul>
+  <li>Publier 3–5 missions officielles par matière prioritaire (maths, français) sur CE1–CM2.</li>
+  <li>Bibliothèque de kinds multi-matières : texte, QCM, appariement, ordre, dictée courte.</li>
+  <li>Validation éditoriale (brouillon → revue → publié) avec versioning.</li>
+  <li>Packs de mission «&nbsp;séance 45&nbsp;min&nbsp;» alignés programmes.</li>
+</ul>
+
+<h3>9.3 Expérience enseignant (priorité haute / moyenne)</h3>
+<ul>
+  <li>Tableau de bord séance : progression live par élève (étape courante, aides utilisées).</li>
+  <li>Export CSV / PDF des traces (répondances, temps, univers) pour le cahier journal.</li>
+  <li>Modèles de session (niveau + matière + mission + mode mémorisés).</li>
+  <li>Gestion d’année scolaire, archivage, import roster (CSV / Pronote / ENT).</li>
+</ul>
+
+<h3>9.4 Expérience élève (priorité moyenne)</h3>
+<ul>
+  <li>Accessibilité renforcée (contrastes, dys, taille texte, clavier complet).</li>
+  <li>Mode «&nbsp;reprise&nbsp;» si coupure réseau / changement d’appareil.</li>
+  <li>Différenciation : variantes d’étapes selon profil (aide renforcée).</li>
+  <li>Récompenses &amp; collection enrichies sans gamification toxique (toujours sans classement).</li>
+</ul>
+
+<h3>9.5 Créateur de missions (priorité moyenne)</h3>
+<ul>
+  <li>Textes par univers (au-delà du mode «&nbsp;1 texte → 4 univers&nbsp;»).</li>
+  <li>Éditeur de scène / assets, preview joueur fidèle (iframe player).</li>
+  <li>Import / export JSON, duplication inter-classes, co-édition.</li>
+  <li>Banque d’items partagée (établissement / académie).</li>
+</ul>
+
+<h3>9.6 Offre &amp; distribution (priorité moyenne / basse)</h3>
+<ul>
+  <li>Domaine custom, branding école / éditeur.</li>
+  <li>Comptes établissement, licences, facturation.</li>
+  <li>SSO ENT / GAR, RGPD (DPA, consentements parentaux si besoin, droit à l’oubli).</li>
+  <li>Application tablette offline-first (PWA cache missions).</li>
+</ul>
+
+<h3>9.7 Roadmap synthétique</h3>
+<table>
+  <thead><tr><th>Vague</th><th>Objectif</th><th>Résultat attendu</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><span class="badge">Vague A</span> Socle pro</td>
+      <td>Sécurité + CI + e2e + staging</td>
+      <td>Déploiement fiable en classe pilote</td>
+    </tr>
+    <tr>
+      <td><span class="badge">Vague B</span> Contenu</td>
+      <td>Catalogue multi-matières réel</td>
+      <td>Plusieurs séances prêtes à l’emploi</td>
+    </tr>
+    <tr>
+      <td><span class="badge">Vague C</span> Pilotage</td>
+      <td>Live + exports + dashboard</td>
+      <td>Usage quotidien enseignant</td>
+    </tr>
+    <tr>
+      <td><span class="badge">Vague D</span> Échelle</td>
+      <td>Établissements, ENT, licences</td>
+      <td>Produit commercialisable</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>Recommandation :</strong> avant d’élargir massivement le contenu, sécuriser
+  RLS / auth et industrialiser les tests e2e des parcours live. Ensuite, enchaîner
+  contenu officiel + exports enseignant — ce sont les deux leviers qui transforment
+  la démo en outil de classe.
+</div>
+
+<!-- 10 -->
+<h2 class="pagebreak">10. Annexes</h2>
+<h3>10.1 Documents du dépôt</h3>
+<ul>
+  <li><code>README.md</code> — démarrage, env, déploiement</li>
+  <li><code>docs/PLAN-sessions-classe-live.md</code> — plan sessions live</li>
+  <li><code>docs/PARCOURS-8.md</code> — checklist parcours fractions</li>
+  <li><code>src/data/missions/CONTRACT.md</code> — contrat d’IDs missions</li>
+</ul>
+
+<h3>10.2 Migrations SQL</h3>
+<ol>
+  <li><code>20260915_init.sql</code></li>
+  <li><code>20260915_classes_enseignants.sql</code></li>
+  <li><code>20260915_happy_learn_course.sql</code></li>
+  <li><code>20260917_eleves_classe.sql</code></li>
+  <li><code>20260918_sessions_classe_live.sql</code></li>
+  <li><code>20260920_missions_catalog.sql</code></li>
+</ol>
+
+<h3>10.3 Glossaire court</h3>
+<table>
+  <thead><tr><th>Terme</th><th>Définition</th></tr></thead>
+  <tbody>
+    <tr><td>Mission</td><td>Document pédagogique ordonné d’étapes jouables</td></tr>
+    <tr><td>Univers</td><td>Habillage narratif (football, rugby, équitation, espace)</td></tr>
+    <tr><td>Kind</td><td>Type d’interaction (continue, number, choice, text…)</td></tr>
+    <tr><td>Session live</td><td>Séance de classe éphémère synchronisée en temps réel</td></tr>
+    <tr><td>Builtin</td><td>Mission officielle embarquée dans le code TypeScript</td></tr>
+  </tbody>
+</table>
+
+<footer class="page-note">
+  Document généré pour Happy Learn v0.1 — septembre 2026. Les captures proviennent
+  de l’environnement de développement et de démonstrations de sessions live.
+  Contact produit / technique : dépôt HappyLearn.
+</footer>
+
+</body>
+</html>

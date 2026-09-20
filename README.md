@@ -4,6 +4,14 @@ Apprentissages du CP au CM2, racontés comme une mission. Application web React 
 
 **Démo en ligne :** [https://happy-learn.pages.dev](https://happy-learn.pages.dev)
 
+**Documentation :**
+- **Prompt agent (fabriquer les missions)** : [`docs/PROMPT-agent-missions.md`](./docs/PROMPT-agent-missions.md)
+- **Suivi thèmes / missions** : [`docs/SUIVI-missions-themes.md`](./docs/SUIVI-missions-themes.md) · CSV [`docs/SUIVI-missions-themes.csv`](./docs/SUIVI-missions-themes.csv)
+- **Trame type** : [`docs/TRAME-mission-type.md`](./docs/TRAME-mission-type.md)
+- **Thèmes du programme par classe × matière (PDF)** : [`docs/Themes_Programme_Par_Classe_Matiere.pdf`](./docs/Themes_Programme_Par_Classe_Matiere.pdf)
+- **Guide utilisateur (PDF)** : [`docs/HappyLearn_Guide_Utilisateur.pdf`](./docs/HappyLearn_Guide_Utilisateur.pdf)
+- **Documentation produit & technique (PDF)** : [`docs/HappyLearn_Documentation_Complete.pdf`](./docs/HappyLearn_Documentation_Complete.pdf)
+
 Le prototype HTML du dossier voisin `mini-produit` est la spécification produit. Ce dépôt est le logiciel.
 
 ## Lancer en local
