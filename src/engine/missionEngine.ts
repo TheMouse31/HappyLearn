@@ -138,5 +138,5 @@ export function sceneKeyOf(step: Step): string {
 
 export function isCelebrationStep(step: Step): boolean {
   const key = sceneKeyOf(step);
-  return step.kind === "teaser" || key === "N04" || key === "L01" || step.slug === "s14" || step.slug === "s15";
+  return step.kind === "teaser" || step.kind === "method" || key === "N04" || key === "L01" || key === "Z01";
 }

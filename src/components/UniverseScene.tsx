@@ -1,5 +1,17 @@
 import type { ReactNode } from "react";
-import type { UniverseSlug } from "../data/types";
+import type { StepKind, SubjectSlug, UniverseSlug } from "../data/types";
+import {
+  CalcBoardScene,
+  DataScene,
+  FractionBarScene,
+  GeometryScene,
+  MethodBoardScene,
+  NumberLineScene,
+  PlaceValueScene,
+  ProportionScene,
+  TextBoardScene,
+  parseFrac,
+} from "./PedagogyScenes";
 
 type Props = {
   universe: UniverseSlug;
@@ -9,6 +21,10 @@ type Props = {
   selected?: string;
   expected?: string;
   caption?: string;
+  kind?: StepKind;
+  subject?: SubjectSlug;
+  statement?: string;
+  title?: string;
 };
 
 const ACTOR: Record<number, { x: number; y: number }> = {
@@ -566,130 +582,95 @@ function ShareScene({
   );
 }
 
-export function UniverseScene({ universe, stepId, progress, success, selected, expected, caption }: Props) {
-  // stepId = clé de scène (step.scene ou legacy), pas l’id canonique mission/slug.
-  const scene = stepId.includes("/") ? stepId.slice(stepId.lastIndexOf("/") + 1) : stepId;
+/** Scènes legacy de la mission fractions CM2 uniquement (pas les slugs s01…). */
+const FRACTIONS_LEGACY = new Set([
+  "T00",
+  "M01",
+  "M01B",
+  "M02",
+  "M03",
+  "M04",
+  "M05A",
+  "M05B",
+  "M06",
+  "D01",
+  "N01",
+  "N02",
+  "N03",
+  "N04",
+  "L01",
+  "B01",
+  "Z01",
+]);
 
-  if (scene === "B01" || scene === "s16") return null;
+function mathsPedagogy(expected: string | undefined, ok: boolean, statement?: string, title?: string): ReactNode {
+  const text = `${title ?? ""} ${statement ?? ""} ${expected ?? ""}`.toLowerCase();
+  if (/entre\s+\d+\s+et\s+\d+/.test(expected ?? "") || text.includes("droite") || text.includes("encadr")) {
+    return <NumberLineScene expected={expected} ok={ok} />;
+  }
+  if (parseFrac(expected) || text.includes("fraction") || text.includes("quarts") || text.includes("tiers")) {
+    return <FractionBarScene expected={expected} ok={ok} />;
+  }
+  if (
+    (expected?.includes(",") && /0,\d|\d,\d/.test(expected)) ||
+    text.includes("décimal") ||
+    text.includes("dixième") ||
+    text.includes("centième") ||
+    text.includes("millième") ||
+    text.includes("virgule")
+  ) {
+    return <PlaceValueScene expected={expected} ok={ok} decimal />;
+  }
+  if (
+    text.includes("carré") ||
+    text.includes("triangle") ||
+    text.includes("losange") ||
+    text.includes("hexagone") ||
+    text.includes("symétr") ||
+    text.includes("géométr") ||
+    text.includes("angle") ||
+    text.includes("côté")
+  ) {
+    return <GeometryScene expected={expected} ok={ok} />;
+  }
+  if (text.includes("proportion") || text.includes("coefficient") || text.includes("unitaire")) {
+    return <ProportionScene expected={expected} ok={ok} />;
+  }
+  if (text.includes("diagramme") || text.includes("probab") || text.includes("donnée") || text.includes("votes")) {
+    return <DataScene expected={expected} ok={ok} />;
+  }
+  if (
+    (expected && /^\d{1,3}(\s\d{3})+$/.test(expected.trim())) ||
+    text.includes("million") ||
+    text.includes("millier") ||
+    text.includes("numération") ||
+    text.includes("classe")
+  ) {
+    return <PlaceValueScene expected={expected} ok={ok} />;
+  }
+  return <CalcBoardScene expected={expected} ok={ok} statement={statement} />;
+}
 
-  const ok = isSolved(selected, expected, success);
-  const corridorLabel = universe === "rugby" ? "Ton couloir" : "Ta zone";
+function resolvePedagogy(props: {
+  kind?: StepKind;
+  subject?: SubjectSlug;
+  expected?: string;
+  ok: boolean;
+  statement?: string;
+  title?: string;
+  universe: UniverseSlug;
+  progress: number;
+  success?: boolean;
+  selected?: string;
+}): ReactNode {
+  const { kind, subject, expected, ok, statement, title, universe, progress, success, selected } = props;
 
-  let body: ReactNode = null;
-
-  if (scene === "T00" || scene === "s01") body = <TutorialScene />;
-  else if (scene === "M01" || scene === "s04") {
+  if (kind === "bilan") return null;
+  if (kind === "teaser") return <Celebration text="?" />;
+  if (kind === "method") return <MethodBoardScene subject={subject ?? "maths"} />;
+  if (kind === "direction") {
     if (universe === "espace") {
-      body = (
-        <ShareSpaceScene
-          count={12}
-          columns={4}
-          active={ok ? 6 : 0}
-          wait={!ok}
-          label="Douze signaux de navigation"
-          progress={progress}
-          ok={ok}
-        />
-      );
-    } else if (universe === "equitation") {
-      body = <ShareTrailScene count={12} active={ok ? 6 : 0} wait={!ok} label="Douze passages sur le sentier" />;
-    } else {
-      body = <HalfPitchScene ok={ok} corridorLabel={corridorLabel} />;
-    }
-  } else if (scene === "M01B" || scene === "s05") {
-    if (universe === "espace") {
-      body = (
-        <ShareSpaceScene count={12} columns={4} active={ok ? 12 : 6} wait={!ok} label="Douze signaux en deux groupes" progress={progress} ok={ok} />
-      );
-    } else if (universe === "equitation") {
-      body = <ShareTrailScene count={12} active={ok ? 12 : 6} wait={!ok} label="Douze passages en deux groupes" />;
-    } else {
-      body = <GroupsScene ok={ok} />;
-    }
-  } else if (scene === "M02" || scene === "s07") {
-    body = (
-      <ShareScene
-        universe={universe}
-        count={20}
-        columns={5}
-        active={ok ? 5 : 0}
-        wait={!ok}
-        ok={ok}
-        label="Vingt éléments : un quart à trouver"
-        progress={progress}
-        showPressing
-      />
-    );
-  } else if (scene === "M03" || scene === "s08") {
-    body = (
-      <ShareScene
-        universe={universe}
-        count={20}
-        columns={5}
-        active={ok ? 15 : 5}
-        wait={!ok}
-        ok={ok}
-        label="Vingt éléments : trois quarts à trouver"
-        progress={progress}
-      />
-    );
-  } else if (scene === "M04" || scene === "s09") {
-    body = (
-      <ShareScene
-        universe={universe}
-        count={18}
-        columns={6}
-        active={ok ? 12 : 0}
-        wait={!ok}
-        ok={ok}
-        label="Dix-huit éléments : deux tiers à trouver"
-        progress={progress}
-      />
-    );
-  } else if (scene === "M05A" || scene === "s10") {
-    body = (
-      <ShareScene
-        universe={universe}
-        count={24}
-        columns={6}
-        active={ok ? 18 : 0}
-        wait={!ok}
-        ok={ok}
-        label="Vingt-quatre éléments : trois quarts"
-        progress={progress}
-      />
-    );
-  } else if (scene === "M05B" || scene === "s11") {
-    body = (
-      <ShareScene
-        universe={universe}
-        count={18}
-        columns={6}
-        active={ok ? 6 : 0}
-        wait={!ok}
-        ok={ok}
-        label="Dix-huit éléments restants : un tiers"
-        progress={progress}
-        tree
-      />
-    );
-  } else if (scene === "M06" || scene === "s12") {
-    body = (
-      <ShareScene
-        universe={universe}
-        count={30}
-        columns={6}
-        active={ok ? 5 : 0}
-        wait={!ok}
-        ok={ok}
-        label="Trente repères. Le reste se calcule."
-        progress={progress}
-        tree
-      />
-    );
-  } else if (scene === "D01" || scene === "s13") {
-    if (universe === "espace") {
-      body = (
+      return (
         <SpaceShell label="Choix de l’axe final">
           <g>
             <rect x="40" y="250" width="80" height="120" rx="12" fill={selected === "gauche" ? "#ffffff33" : "#ffffff14"} />
@@ -707,8 +688,9 @@ export function UniverseScene({ universe, stepId, progress, success, selected, e
           </g>
         </SpaceShell>
       );
-    } else if (universe === "equitation") {
-      body = (
+    }
+    if (universe === "equitation") {
+      return (
         <TrailShell label="Regard dans l’axe" tree>
           <path
             d="M120 360 L180 220 L240 120"
@@ -719,19 +701,213 @@ export function UniverseScene({ universe, stepId, progress, success, selected, e
           />
         </TrailShell>
       );
-    } else {
-      body = <DirectionScene selected={selected} ok={ok} />;
     }
-  } else if (scene === "N04" || scene === "L01" || scene === "s14" || scene === "s15") {
-    body = <Celebration text="Mission réussie" />;
-  } else if (scene === "Z01" || scene === "s17") {
-    body = <Celebration text="?" />;
-  } else if (universe === "espace") {
-    body = <NarrativeSpace progress={progress} success={success} />;
-  } else if (universe === "equitation") {
-    body = <NarrativeTrail progress={progress} tree={progress >= 5} />;
+    return <DirectionScene selected={selected} ok={ok} />;
+  }
+
+  if (kind === "continue") {
+    if (universe === "espace") return <NarrativeSpace progress={progress} success={success} />;
+    if (universe === "equitation") return <NarrativeTrail progress={progress} tree={progress >= 5} />;
+    return <NarrativePitch progress={progress} />;
+  }
+
+  if (kind === "tutorial") {
+    if (parseFrac(expected)) return <FractionBarScene expected={expected} ok={ok} />;
+    if (subject === "maths") return <CalcBoardScene expected={expected} ok={ok} statement={statement} />;
+    return <TextBoardScene subject={subject ?? "francais"} expected={expected} ok={ok} title={title} />;
+  }
+
+  if (kind === "fraction-choice" || kind === "simplify") {
+    return <FractionBarScene expected={expected} ok={ok} />;
+  }
+
+  if (subject === "maths" || !subject) {
+    return mathsPedagogy(expected, ok, statement, title);
+  }
+
+  return <TextBoardScene subject={subject} expected={expected} ok={ok} title={title} />;
+}
+
+export function UniverseScene({
+  universe,
+  stepId,
+  progress,
+  success,
+  selected,
+  expected,
+  caption,
+  kind,
+  subject,
+  statement,
+  title,
+}: Props) {
+  // stepId = clé de scène (step.scene ou legacy), pas l’id canonique mission/slug.
+  const scene = stepId.includes("/") ? stepId.slice(stepId.lastIndexOf("/") + 1) : stepId;
+  const ok = isSolved(selected, expected, success);
+  const corridorLabel = universe === "rugby" ? "Ton couloir" : "Ta zone";
+
+  let body: ReactNode = null;
+
+  // --- Mission fractions CM2 : clés legacy uniquement ---
+  if (FRACTIONS_LEGACY.has(scene)) {
+    if (scene === "B01") body = null;
+    else if (scene === "T00") body = <TutorialScene />;
+    else if (scene === "M01") {
+      if (universe === "espace") {
+        body = (
+          <ShareSpaceScene
+            count={12}
+            columns={4}
+            active={ok ? 6 : 0}
+            wait={!ok}
+            label="Douze signaux de navigation"
+            progress={progress}
+            ok={ok}
+          />
+        );
+      } else if (universe === "equitation") {
+        body = <ShareTrailScene count={12} active={ok ? 6 : 0} wait={!ok} label="Douze passages sur le sentier" />;
+      } else {
+        body = <HalfPitchScene ok={ok} corridorLabel={corridorLabel} />;
+      }
+    } else if (scene === "M01B") {
+      if (universe === "espace") {
+        body = (
+          <ShareSpaceScene
+            count={12}
+            columns={4}
+            active={ok ? 12 : 6}
+            wait={!ok}
+            label="Douze signaux en deux groupes"
+            progress={progress}
+            ok={ok}
+          />
+        );
+      } else if (universe === "equitation") {
+        body = <ShareTrailScene count={12} active={ok ? 12 : 6} wait={!ok} label="Douze passages en deux groupes" />;
+      } else {
+        body = <GroupsScene ok={ok} />;
+      }
+    } else if (scene === "M02") {
+      body = (
+        <ShareScene
+          universe={universe}
+          count={20}
+          columns={5}
+          active={ok ? 5 : 0}
+          wait={!ok}
+          ok={ok}
+          label="Vingt éléments : un quart à trouver"
+          progress={progress}
+          showPressing
+        />
+      );
+    } else if (scene === "M03") {
+      body = (
+        <ShareScene
+          universe={universe}
+          count={20}
+          columns={5}
+          active={ok ? 15 : 5}
+          wait={!ok}
+          ok={ok}
+          label="Vingt éléments : trois quarts à trouver"
+          progress={progress}
+        />
+      );
+    } else if (scene === "M04") {
+      body = (
+        <ShareScene
+          universe={universe}
+          count={18}
+          columns={6}
+          active={ok ? 12 : 0}
+          wait={!ok}
+          ok={ok}
+          label="Dix-huit éléments : deux tiers à trouver"
+          progress={progress}
+        />
+      );
+    } else if (scene === "M05A") {
+      body = (
+        <ShareScene
+          universe={universe}
+          count={24}
+          columns={6}
+          active={ok ? 18 : 0}
+          wait={!ok}
+          ok={ok}
+          label="Vingt-quatre éléments : trois quarts"
+          progress={progress}
+        />
+      );
+    } else if (scene === "M05B") {
+      body = (
+        <ShareScene
+          universe={universe}
+          count={18}
+          columns={6}
+          active={ok ? 6 : 0}
+          wait={!ok}
+          ok={ok}
+          label="Dix-huit éléments restants : un tiers"
+          progress={progress}
+          tree
+        />
+      );
+    } else if (scene === "M06") {
+      body = (
+        <ShareScene
+          universe={universe}
+          count={30}
+          columns={6}
+          active={ok ? 5 : 0}
+          wait={!ok}
+          ok={ok}
+          label="Trente repères. Le reste se calcule."
+          progress={progress}
+          tree
+        />
+      );
+    } else if (scene === "D01") {
+      body = resolvePedagogy({
+        kind: "direction",
+        subject,
+        expected,
+        ok,
+        statement,
+        title,
+        universe,
+        progress,
+        success,
+        selected,
+      });
+    } else if (scene === "N04" || scene === "L01") body = <Celebration text="Mission réussie" />;
+    else if (scene === "Z01") body = <Celebration text="?" />;
+    else if (scene === "N02") {
+      if (universe === "espace") body = <NarrativeSpace progress={progress} success={success} />;
+      else if (universe === "equitation") body = <NarrativeTrail progress={progress} tree={progress >= 5} />;
+      else body = <NarrativePitch progress={progress} zones />;
+    } else {
+      // N01, N03 : narratif univers
+      if (universe === "espace") body = <NarrativeSpace progress={progress} success={success} />;
+      else if (universe === "equitation") body = <NarrativeTrail progress={progress} tree={progress >= 5} />;
+      else body = <NarrativePitch progress={progress} />;
+    }
   } else {
-    body = <NarrativePitch progress={progress} zones={scene === "N02" || scene === "s03"} />;
+    // Toutes les autres missions : illustration selon kind + matière + énoncé
+    body = resolvePedagogy({
+      kind,
+      subject,
+      expected,
+      ok,
+      statement,
+      title,
+      universe,
+      progress,
+      success,
+      selected,
+    });
   }
 
   return (

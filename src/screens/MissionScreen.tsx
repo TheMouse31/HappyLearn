@@ -274,10 +274,14 @@ export function MissionScreen() {
           universe={universe}
           stepId={sceneKeyOf(step)}
           progress={step.progress}
-          success={kind === "ok" || step.kind === "teaser" || sceneKeyOf(step) === "N04"}
+          success={kind === "ok" || step.kind === "teaser" || step.kind === "method" || sceneKeyOf(step) === "N04"}
           selected={currentValue === "/" ? raw : currentValue}
           expected={step.expected}
           caption={copy.caption}
+          kind={step.kind}
+          subject={mission?.subject ?? subject ?? undefined}
+          statement={copy.statement}
+          title={copy.title}
         />
         <section>
           <div className="progress" aria-label="Progression">
