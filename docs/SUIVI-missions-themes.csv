@@ -1,8 +1,8 @@
 theme_id,grade,subject,theme_label,priorite,statut,mission_id,fichier,difficulte_standard,difficulte_facile,difficulte_difficile,notes,updated_at
 cm2-maths-fractions-operateur,cm2,maths,Fractions — opérateur (fraction d'une quantité),1,done,cm2-maths-fractions-01,src/data/missions/cm2/maths/cm2-maths-fractions-01.ts,done,todo,todo,Mission existante modèle de trame,2026-09-20
-cm2-maths-fractions-nombres,cm2,maths,Fractions — nombres (>1 droite graduée encadrement),1,todo,,,todo,todo,todo,Compléter le spectre fractions CM2 2026,
-cm2-maths-fractions-operations,cm2,maths,Fractions — comparer additionner soustraire,1,todo,,,todo,todo,todo,,
-cm2-maths-decimaux,cm2,maths,Nombres décimaux (jusqu'aux millièmes),1,todo,,,todo,todo,todo,,
+cm2-maths-fractions-nombres,cm2,maths,Fractions — nombres (>1 droite graduée encadrement),1,done,cm2-maths-fractions-nombres-01,src/data/missions/cm2/maths/cm2-maths-fractions-nombres-01.ts,done,todo,todo,Compléter le spectre fractions CM2 2026,2026-09-20
+cm2-maths-fractions-operations,cm2,maths,Fractions — comparer additionner soustraire,1,done,cm2-maths-fractions-operations-01,src/data/missions/cm2/maths/cm2-maths-fractions-operations-01.ts,done,todo,todo,,2026-09-20
+cm2-maths-decimaux,cm2,maths,Nombres décimaux (jusqu'aux millièmes),1,done,cm2-maths-decimaux-01,src/data/missions/cm2/maths/cm2-maths-decimaux-01.ts,done,todo,todo,,2026-09-20
 cm2-maths-entiers,cm2,maths,Nombres entiers (grands nombres),2,todo,,,todo,todo,todo,,
 cm2-maths-calcul-mental,cm2,maths,Calcul mental et automatismes,2,todo,,,todo,todo,todo,,
 cm2-maths-problemes,cm2,maths,Résolution de problèmes (structures variées),2,todo,,,todo,todo,todo,,

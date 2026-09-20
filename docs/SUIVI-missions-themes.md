@@ -9,10 +9,10 @@ Prompt agent : [`PROMPT-agent-missions.md`](./PROMPT-agent-missions.md) · Trame
 | Indicateur | Valeur |
 |---|---|
 | Thèmes au total | **79** |
-| Traités (`done`) | **1** |
-| À faire (`todo`) | **78** |
+| Traités (`done`) | **4** |
+| À faire (`todo`) | **75** |
 | En cours (`in_progress`) | **0** |
-| Couverture standard | 1/79 |
+| Couverture standard | 4/79 |
 
 ### Par priorité
 
@@ -30,7 +30,7 @@ Prompt agent : [`PROMPT-agent-missions.md`](./PROMPT-agent-missions.md) · Trame
 | CE1 | 11 | 0 |
 | CE2 | 14 | 0 |
 | CM1 | 17 | 0 |
-| CM2 | 27 | 1 |
+| CM2 | 27 | 4 |
 
 ## Légende des statuts
 
@@ -48,14 +48,14 @@ Prompt agent : [`PROMPT-agent-missions.md`](./PROMPT-agent-missions.md) · Trame
 | Thème | Mission | Fichier | Facile | Difficile |
 |---|---|---|---|---|
 | Fractions — opérateur (fraction d'une quantité) | `cm2-maths-fractions-01` | `src/data/missions/cm2/maths/cm2-maths-fractions-01.ts` | todo | todo |
+| Fractions — nombres (>1 droite graduée encadrement) | `cm2-maths-fractions-nombres-01` | `src/data/missions/cm2/maths/cm2-maths-fractions-nombres-01.ts` | todo | todo |
+| Fractions — comparer additionner soustraire | `cm2-maths-fractions-operations-01` | `src/data/missions/cm2/maths/cm2-maths-fractions-operations-01.ts` | todo | todo |
+| Nombres décimaux (jusqu'aux millièmes) | `cm2-maths-decimaux-01` | `src/data/missions/cm2/maths/cm2-maths-decimaux-01.ts` | todo | todo |
 
 ## Backlog (todo) — priorité 1
 
 | ID | Classe | Matière | Thème |
 |---|---|---|---|
-| `cm2-maths-fractions-nombres` | cm2 | maths | Fractions — nombres (>1 droite graduée encadrement) |
-| `cm2-maths-fractions-operations` | cm2 | maths | Fractions — comparer additionner soustraire |
-| `cm2-maths-decimaux` | cm2 | maths | Nombres décimaux (jusqu'aux millièmes) |
 | `cm1-maths-fractions` | cm1 | maths | Fractions (dénominateur ≤20 opérateur unitaire) |
 | `cm1-maths-decimaux` | cm1 | maths | Nombres décimaux (centièmes) |
 | `ce2-maths-fractions` | ce2 | maths | Fractions d'unité / égalités (dén. ≤12) |

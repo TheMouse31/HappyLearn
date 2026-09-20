@@ -1,8 +1,16 @@
 import type { GradeLevel, MissionDef, SubjectSlug } from "../types";
+import { mission as cm2MathsDecimaux01 } from "./cm2/maths/cm2-maths-decimaux-01";
 import { mission as cm2MathsFractions01 } from "./cm2/maths/cm2-maths-fractions-01";
+import { mission as cm2MathsFractionsNombres01 } from "./cm2/maths/cm2-maths-fractions-nombres-01";
+import { mission as cm2MathsFractionsOperations01 } from "./cm2/maths/cm2-maths-fractions-operations-01";
 
 /** Missions officielles embarquées (TypeScript). */
-export const BUILTIN_MISSIONS: MissionDef[] = [cm2MathsFractions01];
+export const BUILTIN_MISSIONS: MissionDef[] = [
+  cm2MathsFractions01,
+  cm2MathsFractionsNombres01,
+  cm2MathsFractionsOperations01,
+  cm2MathsDecimaux01,
+];
 
 /** @deprecated Utiliser BUILTIN_MISSIONS ou resolveMission. */
 export const MISSIONS = BUILTIN_MISSIONS;
