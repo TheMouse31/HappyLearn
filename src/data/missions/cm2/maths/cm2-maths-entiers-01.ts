@@ -2,17 +2,13 @@ import { allUniverses, defineMission } from "../../define";
 
 export const MISSION_ID = "cm2-maths-entiers-01";
 
-/**
- * CM2 maths — Grands nombres jusqu’à 999 999 999.
- * Lire, écrire, comparer, décomposer (unités / milliers / millions).
- * Trame standard Happy Learn (Phase A).
- */
+/** CM2 / maths — Nombres entiers (grands nombres). Phase A standard. */
 export const mission = defineMission({
   id: MISSION_ID,
   grade: "cm2",
   subject: "maths",
-  title: "Grands nombres en mission",
-  blurb: "Lire, écrire, comparer et décomposer les nombres jusqu’à 999 999 999.",
+  title: "Nombres entiers (grands nombres) en mission",
+  blurb: "Une mission CM2 : Nombres entiers (grands nombres).",
   available: true,
   version: 1,
   steps: [
@@ -21,11 +17,10 @@ export const mission = defineMission({
       kicker: "Tutoriel",
       progress: 0,
       copy: allUniverses({
-        title: "Les classes de nombres",
-        statement:
-          "Un grand nombre se lit par classes de trois chiffres : unités, milliers, millions. Exemple : 12 345 678 = 12 millions + 345 milliers + 678.",
-        note: "Les espaces séparent les classes pour lire plus facilement.",
-        caption: "Unités, milliers, millions s’alignent.",
+        title: "Bienvenue : Nombres entiers (grands nombres)",
+        statement: "Dans cette mission de CM2, tu vas travailler : Nombres entiers (grands nombres). Lis bien chaque consigne, utilise l’indice si besoin, puis valide.",
+        hint: "Prends ton temps : il n’y a ni note ni classement.",
+        caption: "La mission peut commencer.",
       }),
     },
     {
@@ -35,27 +30,23 @@ export const mission = defineMission({
       copy: {
         football: {
           title: "Tu entres en jeu",
-          statement:
-            "Le tableau du stade affiche des statistiques énormes : spectateurs, distances, points cumulés. Tu dois lire chaque classe sans te tromper.",
-          caption: "De grands nombres s’affichent au tableau.",
+          statement: "Les Bleus comptent sur toi. Chaque bonne réponse fait avancer l’action sur le terrain.",
+          caption: "Tu prends ta place au milieu du terrain.",
         },
         rugby: {
           title: "Tu entres en jeu",
-          statement:
-            "Le schéma de jeu indique des totaux impressionnants. Chaque classe de trois chiffres compte pour choisir le bon couloir.",
-          caption: "De grands nombres s’affichent au sol.",
+          statement: "Tes partenaires comptent sur toi. Chaque bonne réponse ouvre un couloir.",
+          caption: "Tu prends ta place derrière tes partenaires.",
         },
         equitation: {
           title: "Le chemin du retour",
-          statement:
-            "Les bornes du sentier indiquent des distances et des totaux en très grands nombres. Tu lis classe par classe.",
-          caption: "De grands nombres apparaissent sur les bornes.",
+          statement: "Tu rentres vers l’écurie avec ton cheval. Chaque étape éclaire le sentier.",
+          caption: "L’écurie apparaît au bout du sentier.",
         },
         espace: {
           title: "Le retour vers la station",
-          statement:
-            "La console affiche des distances et des comptes en très grands nombres. Une classe mal lue décale la trajectoire.",
-          caption: "De grands nombres s’affichent.",
+          statement: "Le module doit rejoindre la station. Chaque réponse corrige la trajectoire.",
+          caption: "La station apparaît au loin.",
         },
       },
     },
@@ -65,28 +56,24 @@ export const mission = defineMission({
       progress: 0,
       copy: {
         football: {
-          title: "Maîtrise les grands nombres",
-          statement:
-            "Lis, écris, compare et décompose les nombres jusqu’aux millions pour valider les stats du match.",
-          caption: "Les classes de nombres s’allument.",
+          title: "Lis le jeu",
+          statement: "Observe, calcule et décide. Chaque étape te rapproche du but. Objectif : Nombres entiers (grands nombres).",
+          caption: "Les zones du terrain s’allument.",
         },
         rugby: {
-          title: "Maîtrise les grands nombres",
-          statement:
-            "Lis, écris, compare et décompose pour choisir le bon couloir parmi les totaux affichés.",
-          caption: "Les classes de nombres s’allument.",
+          title: "Observe la défense",
+          statement: "Lis les espaces, calcule, puis avance au bon moment. Objectif : Nombres entiers (grands nombres).",
+          caption: "Les couloirs gauche, axe et large deviennent visibles.",
         },
         equitation: {
-          title: "Maîtrise les grands nombres",
-          statement:
-            "Lis, écris, compare et décompose pour choisir la bonne allure entre les bornes.",
-          caption: "Les classes de nombres s’allument.",
+          title: "Choisis le chemin",
+          statement: "Observe les bornes, calcule, et garde une allure sûre. Objectif : Nombres entiers (grands nombres).",
+          caption: "Les principaux sentiers s’activent.",
         },
         espace: {
-          title: "Maîtrise les grands nombres",
-          statement:
-            "Lis, écris, compare et décompose pour caler la trajectoire sur les bons totaux.",
-          caption: "Les classes de nombres s’allument.",
+          title: "Rétablis la trajectoire",
+          statement: "Analyse les signaux, calcule, et prépare l’arrimage. Objectif : Nombres entiers (grands nombres).",
+          caption: "Chaque décision fait progresser le module.",
         },
       },
     },
@@ -94,52 +81,45 @@ export const mission = defineMission({
       kind: "choice",
       kicker: "Étape 1 sur 6 · Lire",
       progress: 1,
-      expected: "trois millions deux cent quarante-cinq mille",
-      distractors: [
-        "trois cent deux mille quarante-cinq",
-        "trois millions deux cent quarante-cinq",
-      ],
+      expected: "12 345 678",
+      distractors: ["12 354 678", "21 345 678"],
       copy: allUniverses({
-        title: "Lire 3 245 000",
-        statement: "Quelle lecture correspond au nombre 3 245 000 ?",
-        hint: "3 millions, puis 245 milliers, puis 0 unité → « trois millions deux cent quarante-cinq mille ».",
-        caption: "3 245 000 se lit clairement.",
+        title: "Lecture",
+        statement: "Quel nombre lit-on « douze millions trois cent quarante-cinq mille six cent soixante-dix-huit » ?",
+        hint: "12 345 678.",
+        caption: "Tu valides ta réponse.",
       }),
     },
     {
-      kind: "choice",
-      kicker: "Étape 2 sur 6 · Écrire",
+      kind: "number",
+      kicker: "Étape 2 sur 6 · Classe",
       progress: 2,
-      expected: "1 250 000",
-      distractors: ["125 000", "12 500 000"],
+      expected: "5",
+      distractors: ["2", "8"],
       copy: {
         football: {
-          title: "Écrire un total",
-          statement:
-            "Le coach annonce « un million deux cent cinquante mille ». Quelle écriture choisis-tu ?",
-          hint: "1 million + 250 milliers = 1 250 000.",
-          caption: "1 250 000 s’inscrit au tableau.",
+          title: "Millions",
+          statement: "Dans 5 432 109, chiffre des millions ?",
+          hint: "5.",
+          caption: "Les zones du terrain s’allument.",
         },
         rugby: {
-          title: "Écrire un total",
-          statement:
-            "Le schéma indique « un million deux cent cinquante mille ». Quelle écriture ?",
-          hint: "1 million + 250 milliers = 1 250 000.",
-          caption: "1 250 000 s’inscrit au sol.",
+          title: "Millions",
+          statement: "Dans 5 432 109, chiffre des millions ?",
+          hint: "5.",
+          caption: "Les couloirs gauche, axe et large deviennent visibles.",
         },
         equitation: {
-          title: "Écrire un total",
-          statement:
-            "La borne indique « un million deux cent cinquante mille ». Quelle écriture ?",
-          hint: "1 million + 250 milliers = 1 250 000.",
-          caption: "1 250 000 apparaît sur la borne.",
+          title: "Millions",
+          statement: "Dans 5 432 109, chiffre des millions ?",
+          hint: "5.",
+          caption: "Les principaux sentiers s’activent.",
         },
         espace: {
-          title: "Écrire un total",
-          statement:
-            "La console indique « un million deux cent cinquante mille ». Quelle écriture ?",
-          hint: "1 million + 250 milliers = 1 250 000.",
-          caption: "1 250 000 s’affiche.",
+          title: "Millions",
+          statement: "Dans 5 432 109, chiffre des millions ?",
+          hint: "5.",
+          caption: "Chaque décision fait progresser le module.",
         },
       },
     },
@@ -147,73 +127,91 @@ export const mission = defineMission({
       kind: "choice",
       kicker: "Étape 3 sur 6 · Comparer",
       progress: 3,
-      expected: "8 450 000",
-      distractors: ["8 045 000", "845 000"],
+      expected: "8 000 000",
+      distractors: ["800 000", "80 000 000"],
       copy: allUniverses({
-        title: "Le plus grand",
-        statement: "Parmi 845 000 ; 8 045 000 et 8 450 000, quel nombre est le plus grand ?",
-        hint: "Compare d’abord les millions : 8 millions battent 845 milliers. Puis compare 8 450 000 et 8 045 000.",
-        caption: "8 450 000 est le plus grand.",
+        title: "Huit millions",
+        statement: "Quel écriture pour huit millions ?",
+        hint: "8 000 000.",
+        caption: "Tu valides ta réponse.",
       }),
+    },
+    {
+      kind: "choice",
+      kicker: "Étape 4 sur 6 · Encadrer",
+      progress: 4,
+      expected: "entre 3 000 000 et 4 000 000",
+      distractors: ["entre 2 000 000 et 3 000 000", "entre 4 000 000 et 5 000 000"],
+      copy: {
+        football: {
+          title: "Encadre 3 250 000",
+          statement: "Entre quels millions ?",
+          hint: "entre 3 et 4 millions.",
+          caption: "Les zones du terrain s’allument.",
+        },
+        rugby: {
+          title: "Encadre 3 250 000",
+          statement: "Entre quels millions ?",
+          hint: "entre 3 et 4 millions.",
+          caption: "Les couloirs gauche, axe et large deviennent visibles.",
+        },
+        equitation: {
+          title: "Encadre 3 250 000",
+          statement: "Entre quels millions ?",
+          hint: "entre 3 et 4 millions.",
+          caption: "Les principaux sentiers s’activent.",
+        },
+        espace: {
+          title: "Encadre 3 250 000",
+          statement: "Entre quels millions ?",
+          hint: "entre 3 et 4 millions.",
+          caption: "Chaque décision fait progresser le module.",
+        },
+      },
     },
     {
       kind: "number",
-      kicker: "Étape 4 sur 6 · Chiffre des millions",
-      progress: 4,
-      expected: "5",
-      distractors: ["7", "2"],
-      copy: allUniverses({
-        title: "Rang des millions",
-        statement:
-          "Dans le nombre 725 438 619, quel chiffre est au rang des unités de million ?",
-        hint: "Classes : 725 | 438 | 619. Dans 725 millions : 7 = centaines, 2 = dizaines, 5 = unités de million.",
-        caption: "Le 5 est aux unités de million.",
-        note: "Millions = classe de gauche : centaines, dizaines, unités de million.",
-      }),
-    },
-    {
-      kind: "choice",
       kicker: "Étape 5 sur 6 · Décomposer",
       progress: 5,
-      expected: "4 millions + 320 milliers + 15",
-      distractors: ["4 millions + 32 milliers + 15", "432 millions + 15"],
+      expected: "67",
+      distractors: ["76", "607"],
       copy: allUniverses({
-        title: "Décomposition",
-        statement: "Quelle décomposition correspond à 4 320 015 ?",
-        hint: "4 | 320 | 015 → 4 millions + 320 milliers + 15.",
-        caption: "4 320 015 est décomposé.",
+        title: "Milliers",
+        statement: "Dans 2 067 450, combien de milliers dans la classe des milliers (067) ?",
+        hint: "67.",
+        caption: "Tu valides ta réponse.",
       }),
     },
     {
       kind: "choice",
-      kicker: "Étape 6 sur 6 · Ordre croissant",
+      kicker: "Étape 6 sur 6 · Ordre",
       progress: 6,
-      expected: "98 000 < 908 000 < 980 000",
-      distractors: ["908 000 < 98 000 < 980 000", "980 000 < 908 000 < 98 000"],
+      expected: "1 000 000 < 10 000 000",
+      distractors: ["10 000 000 < 1 000 000", "égaux"],
       copy: {
         football: {
-          title: "Range les totaux",
-          statement: "Range dans l’ordre croissant : 908 000 ; 98 000 ; 980 000.",
-          hint: "98 000 est le plus petit (pas de centaine de mille), puis 908 000, puis 980 000.",
-          caption: "98 000 < 908 000 < 980 000.",
+          title: "Compare",
+          statement: "Quelle comparaison est vraie ?",
+          hint: "1 million < 10 millions.",
+          caption: "Les zones du terrain s’allument.",
         },
         rugby: {
-          title: "Range les totaux",
-          statement: "Range dans l’ordre croissant : 908 000 ; 98 000 ; 980 000.",
-          hint: "Commence par le plus petit : 98 000.",
-          caption: "98 000 < 908 000 < 980 000.",
+          title: "Compare",
+          statement: "Quelle comparaison est vraie ?",
+          hint: "1 million < 10 millions.",
+          caption: "Les couloirs gauche, axe et large deviennent visibles.",
         },
         equitation: {
-          title: "Range les totaux",
-          statement: "Range dans l’ordre croissant : 908 000 ; 98 000 ; 980 000.",
-          hint: "98 000 < 908 000 < 980 000.",
-          caption: "98 000 < 908 000 < 980 000.",
+          title: "Compare",
+          statement: "Quelle comparaison est vraie ?",
+          hint: "1 million < 10 millions.",
+          caption: "Les principaux sentiers s’activent.",
         },
         espace: {
-          title: "Range les totaux",
-          statement: "Range dans l’ordre croissant : 908 000 ; 98 000 ; 980 000.",
-          hint: "98 000 < 908 000 < 980 000.",
-          caption: "98 000 < 908 000 < 980 000.",
+          title: "Compare",
+          statement: "Quelle comparaison est vraie ?",
+          hint: "1 million < 10 millions.",
+          caption: "Chaque décision fait progresser le module.",
         },
       },
     },
@@ -221,33 +219,32 @@ export const mission = defineMission({
       kind: "choice",
       kicker: "Application",
       progress: 6,
-      expected: "56 078 000",
-      distractors: ["56 780 000", "5 607 800"],
+      expected: "999 999 999",
+      distractors: ["100 000 000", "99 999 999"],
       copy: {
         football: {
-          title: "Composition finale",
-          statement:
-            "Le coach annonce « 56 millions + 78 milliers ». Quelle écriture choisis-tu ?",
-          hint: "56 millions + 78 milliers = 56 078 000.",
-          caption: "Tu valides 56 078 000.",
+          title: "Plus grand ≤ milliard-1",
+          statement: "Plus grand nombre à 9 chiffres ?",
+          hint: "999 999 999.",
+          caption: "Les zones du terrain s’allument.",
         },
         rugby: {
-          title: "Composition finale",
-          statement: "Le schéma indique 56 millions + 78 milliers. Quelle écriture ?",
-          hint: "56 078 000.",
-          caption: "Tu valides 56 078 000.",
+          title: "Plus grand ≤ milliard-1",
+          statement: "Plus grand nombre à 9 chiffres ?",
+          hint: "999 999 999.",
+          caption: "Les couloirs gauche, axe et large deviennent visibles.",
         },
         equitation: {
-          title: "Composition finale",
-          statement: "La borne indique 56 millions + 78 milliers. Quelle écriture ?",
-          hint: "56 078 000.",
-          caption: "Tu valides 56 078 000.",
+          title: "Plus grand ≤ milliard-1",
+          statement: "Plus grand nombre à 9 chiffres ?",
+          hint: "999 999 999.",
+          caption: "Les principaux sentiers s’activent.",
         },
         espace: {
-          title: "Composition finale",
-          statement: "La console indique 56 millions + 78 milliers. Quelle écriture ?",
-          hint: "56 078 000.",
-          caption: "Tu valides 56 078 000.",
+          title: "Plus grand ≤ milliard-1",
+          statement: "Plus grand nombre à 9 chiffres ?",
+          hint: "999 999 999.",
+          caption: "Chaque décision fait progresser le module.",
         },
       },
     },
@@ -257,28 +254,24 @@ export const mission = defineMission({
       progress: 6,
       copy: {
         football: {
-          title: "Totaux lus !",
-          statement:
-            "Tu as lu chaque classe sans erreur. L’équipe s’appuie sur des stats claires.",
-          caption: "Les grands nombres n’ont plus de secret.",
+          title: "But ! Victoire !",
+          statement: "Tes choix ont fait basculer le match. Les Bleus l’emportent.",
+          caption: "Félicitations : tu as fait basculer le match.",
         },
         rugby: {
-          title: "Totaux lus !",
-          statement:
-            "Tes lectures ont calé le bon couloir. La phase peut partir.",
-          caption: "Les grands nombres n’ont plus de secret.",
+          title: "Essai ! Victoire !",
+          statement: "Tes calculs ont ouvert l’intervalle. Essai transformé.",
+          caption: "Félicitations : tu as fait basculer le match.",
         },
         equitation: {
-          title: "Totaux lus !",
-          statement:
-            "Les bornes sont comprises. Le cheval avance juste.",
-          caption: "Les grands nombres n’ont plus de secret.",
+          title: "Retour à l’écurie",
+          statement: "Tu as lu chaque borne. Vous rentrez ensemble, en confiance.",
+          caption: "Franchissement réussi, retour au pas jusqu’à l’écurie.",
         },
         espace: {
-          title: "Totaux lus !",
-          statement:
-            "La trajectoire est calée sur les bons totaux. L’approche finale est stable.",
-          caption: "Les grands nombres n’ont plus de secret.",
+          title: "Arrimage réussi",
+          statement: "La trajectoire est calée. Les attaches se verrouillent.",
+          caption: "Le module est amarré. Mission réussie.",
         },
       },
     },
@@ -287,9 +280,9 @@ export const mission = defineMission({
       kicker: "Ce que tu as appris",
       progress: 6,
       copy: allUniverses({
-        title: "Je sais lire et décomposer les grands nombres",
-        statement: "On lit et on décompose un grand nombre classe par classe.",
-        note: "1. Classes de trois chiffres : millions | milliers | unités. 2. Pour comparer : même nombre de chiffres, puis chiffre à chiffre depuis la gauche. 3. Pour décomposer : séparer chaque classe (ex. 4 320 015 = 4 millions + 320 milliers + 15).",
+        title: "Je progresse sur : Nombres entiers (grands nombres)",
+        statement: "Tu as entraîné la notion pas à pas, avec des exemples et des décisions.",
+        note: "Relis les indices des étapes difficiles : ce sont de vraies méthodes à réutiliser.",
         caption: "Tu pourras réutiliser cette méthode dans une autre mission.",
       }),
     },
@@ -299,8 +292,7 @@ export const mission = defineMission({
       progress: 6,
       copy: allUniverses({
         title: "Ton bilan",
-        statement:
-          "Tu sais lire, écrire, comparer et décomposer des nombres jusqu’à 999 999 999 en utilisant les classes (unités, milliers, millions).",
+        statement: "Tu as travaillé « Nombres entiers (grands nombres) » sans note ni classement. Qu’as-tu réussi aujourd’hui ?",
         note: "Qu’as-tu préféré dans cette mission ?",
         caption: "Les réussites sont valorisées sans classement.",
       }),
@@ -312,27 +304,23 @@ export const mission = defineMission({
       copy: {
         football: {
           title: "Un nouveau défi t’attend",
-          statement:
-            "Au prochain match, tu enchaîneras des automatismes de calcul mental pour gagner du temps sur le terrain.",
-          caption: "Des calculs rapides s’allument au tableau.",
+          statement: "Au prochain match, un nouveau défi pédagogique t’attend.",
+          caption: "Un point d’interrogation apparaît sur le terrain.",
         },
         rugby: {
           title: "Un nouveau défi t’attend",
-          statement:
-            "La prochaine rencontre demandera des automatismes de calcul mental pour réagir vite.",
-          caption: "Des calculs rapides apparaissent au schéma.",
+          statement: "La prochaine rencontre apportera un nouveau défi.",
+          caption: "Un nouveau schéma apparaît au loin.",
         },
         equitation: {
           title: "Un nouveau défi t’attend",
-          statement:
-            "Sur le prochain parcours, tu accéléreras avec des automatismes de calcul mental.",
-          caption: "Des calculs rapides apparaissent sur une borne.",
+          statement: "Un nouveau chemin te conduira vers un autre défi.",
+          caption: "Une rivière apparaît au loin.",
         },
         espace: {
-          title: "Signal calcul mental",
-          statement:
-            "La console bascule vers des automatismes de calcul mental pour la prochaine mission.",
-          caption: "Des calculs rapides clignotent.",
+          title: "Un nouveau défi t’attend",
+          statement: "Un signal mystérieux annonce une prochaine mission.",
+          caption: "Un point lumineux inconnu apparaît au-delà de la station.",
         },
       },
     },

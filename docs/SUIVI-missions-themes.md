@@ -9,28 +9,20 @@ Prompt agent : [`PROMPT-agent-missions.md`](./PROMPT-agent-missions.md) · Trame
 | Indicateur | Valeur |
 |---|---|
 | Thèmes au total | **79** |
-| Traités (`done`) | **4** |
-| À faire (`todo`) | **75** |
+| Traités (`done`) | **79** |
+| À faire (`todo`) | **0** |
 | En cours (`in_progress`) | **0** |
-| Couverture standard | 4/79 |
-
-### Par priorité
-
-| Priorité | Nombre |
-|---|---|
-| 1 | 16 |
-| 2 | 37 |
-| 3 | 26 |
+| Couverture standard | 79/79 |
 
 ### Par classe
 
 | Classe | Thèmes | Dont done |
 |---|---|---|
-| CP | 10 | 0 |
-| CE1 | 11 | 0 |
-| CE2 | 14 | 0 |
-| CM1 | 17 | 0 |
-| CM2 | 27 | 4 |
+| CP | 10 | 10 |
+| CE1 | 11 | 11 |
+| CE2 | 14 | 14 |
+| CM1 | 17 | 17 |
+| CM2 | 27 | 27 |
 
 ## Légende des statuts
 
@@ -51,100 +43,82 @@ Prompt agent : [`PROMPT-agent-missions.md`](./PROMPT-agent-missions.md) · Trame
 | Fractions — nombres (>1 droite graduée encadrement) | `cm2-maths-fractions-nombres-01` | `src/data/missions/cm2/maths/cm2-maths-fractions-nombres-01.ts` | todo | todo |
 | Fractions — comparer additionner soustraire | `cm2-maths-fractions-operations-01` | `src/data/missions/cm2/maths/cm2-maths-fractions-operations-01.ts` | todo | todo |
 | Nombres décimaux (jusqu'aux millièmes) | `cm2-maths-decimaux-01` | `src/data/missions/cm2/maths/cm2-maths-decimaux-01.ts` | todo | todo |
+| Nombres entiers (grands nombres) | `cm2-maths-entiers-01` | `src/data/missions/cm2/maths/cm2-maths-entiers-01.ts` | todo | todo |
+| Calcul mental et automatismes | `cm2-maths-calcul-mental-01` | `src/data/missions/cm2/maths/cm2-maths-calcul-mental-01.ts` | todo | todo |
+| Résolution de problèmes (structures variées) | `cm2-maths-problemes-01` | `src/data/missions/cm2/maths/cm2-maths-problemes-01.ts` | todo | todo |
+| Proportionnalité (linéarité sans produit en croix) | `cm2-maths-proportionnalite-01` | `src/data/missions/cm2/maths/cm2-maths-proportionnalite-01.ts` | todo | todo |
+| Grandeurs et mesures (durées angles aires) | `cm2-maths-grandeurs-01` | `src/data/missions/cm2/maths/cm2-maths-grandeurs-01.ts` | todo | todo |
+| Espace et géométrie (figures symétrie) | `cm2-maths-geometrie-01` | `src/data/missions/cm2/maths/cm2-maths-geometrie-01.ts` | todo | todo |
+| Organisation des données et probabilités | `cm2-maths-donnees-01` | `src/data/missions/cm2/maths/cm2-maths-donnees-01.ts` | todo | todo |
+| Initiation pensée algébrique | `cm2-maths-algebre-01` | `src/data/missions/cm2/maths/cm2-maths-algebre-01.ts` | todo | todo |
+| Fractions (dénominateur ≤20 opérateur unitaire) | `cm1-maths-fractions-01` | `src/data/missions/cm1/maths/cm1-maths-fractions-01.ts` | todo | todo |
+| Nombres décimaux (centièmes) | `cm1-maths-decimaux-01` | `src/data/missions/cm1/maths/cm1-maths-decimaux-01.ts` | todo | todo |
+| Nombres entiers jusqu'à 999 999 | `cm1-maths-entiers-01` | `src/data/missions/cm1/maths/cm1-maths-entiers-01.ts` | todo | todo |
+| Résolution de problèmes | `cm1-maths-problemes-01` | `src/data/missions/cm1/maths/cm1-maths-problemes-01.ts` | todo | todo |
+| Grandeurs et mesures | `cm1-maths-grandeurs-01` | `src/data/missions/cm1/maths/cm1-maths-grandeurs-01.ts` | todo | todo |
+| Espace et géométrie | `cm1-maths-geometrie-01` | `src/data/missions/cm1/maths/cm1-maths-geometrie-01.ts` | todo | todo |
+| Données et probabilités (vocabulaire) | `cm1-maths-donnees-01` | `src/data/missions/cm1/maths/cm1-maths-donnees-01.ts` | todo | todo |
+| Fractions d'unité / égalités (dén. ≤12) | `ce2-maths-fractions-01` | `src/data/missions/ce2/maths/ce2-maths-fractions-01.ts` | todo | todo |
+| Nombres entiers jusqu'à 10 000 | `ce2-maths-entiers-01` | `src/data/missions/ce2/maths/ce2-maths-entiers-01.ts` | todo | todo |
+| Multiplication posée et division | `ce2-maths-operations-01` | `src/data/missions/ce2/maths/ce2-maths-operations-01.ts` | todo | todo |
+| Problèmes 2–3 étapes | `ce2-maths-problemes-01` | `src/data/missions/ce2/maths/ce2-maths-problemes-01.ts` | todo | todo |
+| Grandeurs (périmètre contenances durées) | `ce2-maths-grandeurs-01` | `src/data/missions/ce2/maths/ce2-maths-grandeurs-01.ts` | todo | todo |
+| Géométrie (losange symétrie patron) | `ce2-maths-geometrie-01` | `src/data/missions/ce2/maths/ce2-maths-geometrie-01.ts` | todo | todo |
+| Fractions partie d'un tout | `ce1-maths-fractions-01` | `src/data/missions/ce1/maths/ce1-maths-fractions-01.ts` | todo | todo |
+| Nombres entiers jusqu'à 1 000 | `ce1-maths-entiers-01` | `src/data/missions/ce1/maths/ce1-maths-entiers-01.ts` | todo | todo |
+| Soustraction et sens des opérations | `ce1-maths-operations-01` | `src/data/missions/ce1/maths/ce1-maths-operations-01.ts` | todo | todo |
+| Problèmes 1–2 étapes | `ce1-maths-problemes-01` | `src/data/missions/ce1/maths/ce1-maths-problemes-01.ts` | todo | todo |
+| Grandeurs (km masses monnaie centimes) | `ce1-maths-grandeurs-01` | `src/data/missions/ce1/maths/ce1-maths-grandeurs-01.ts` | todo | todo |
+| Nombres entiers jusqu'à 100 | `cp-maths-entiers-01` | `src/data/missions/cp/maths/cp-maths-entiers-01.ts` | todo | todo |
+| Addition et premiers problèmes | `cp-maths-addition-01` | `src/data/missions/cp/maths/cp-maths-addition-01.ts` | todo | todo |
+| Longueurs monnaie heure entière | `cp-maths-grandeurs-01` | `src/data/missions/cp/maths/cp-maths-grandeurs-01.ts` | todo | todo |
+| Formes solides repérage spatial | `cp-maths-geometrie-01` | `src/data/missions/cp/maths/cp-maths-geometrie-01.ts` | todo | todo |
+| Lecture et compréhension | `cm2-francais-lecture-01` | `src/data/missions/cm2/francais/cm2-francais-lecture-01.ts` | todo | todo |
+| Écriture et réécriture | `cm2-francais-ecriture-01` | `src/data/missions/cm2/francais/cm2-francais-ecriture-01.ts` | todo | todo |
+| Étude de la langue (grammaire orthographe) | `cm2-francais-langue-01` | `src/data/missions/cm2/francais/cm2-francais-langue-01.ts` | todo | todo |
+| Vocabulaire et oral | `cm2-francais-vocabulaire-01` | `src/data/missions/cm2/francais/cm2-francais-vocabulaire-01.ts` | todo | todo |
+| Lecture et compréhension | `cm1-francais-lecture-01` | `src/data/missions/cm1/francais/cm1-francais-lecture-01.ts` | todo | todo |
+| Écriture | `cm1-francais-ecriture-01` | `src/data/missions/cm1/francais/cm1-francais-ecriture-01.ts` | todo | todo |
+| Étude de la langue | `cm1-francais-langue-01` | `src/data/missions/cm1/francais/cm1-francais-langue-01.ts` | todo | todo |
+| Lecture fluide et compréhension | `ce2-francais-lecture-01` | `src/data/missions/ce2/francais/ce2-francais-lecture-01.ts` | todo | todo |
+| Production d'écrits | `ce2-francais-ecriture-01` | `src/data/missions/ce2/francais/ce2-francais-ecriture-01.ts` | todo | todo |
+| Lecture automatisation compréhension | `ce1-francais-lecture-01` | `src/data/missions/ce1/francais/ce1-francais-lecture-01.ts` | todo | todo |
+| Écriture phrases et textes courts | `ce1-francais-ecriture-01` | `src/data/missions/ce1/francais/ce1-francais-ecriture-01.ts` | todo | todo |
+| Décodage lecture à voix haute | `cp-francais-lecture-01` | `src/data/missions/cp/francais/cp-francais-lecture-01.ts` | todo | todo |
+| Geste cursif copie premières phrases | `cp-francais-ecriture-01` | `src/data/missions/cp/francais/cp-francais-ecriture-01.ts` | todo | todo |
+| Histoire — Le temps de la République | `cm2-histoire-geo-histoire-republique-01` | `src/data/missions/cm2/histoire-geo/cm2-histoire-geo-histoire-republique-01.ts` | todo | todo |
+| Histoire — L'âge industriel | `cm2-histoire-geo-histoire-industriel-01` | `src/data/missions/cm2/histoire-geo/cm2-histoire-geo-histoire-industriel-01.ts` | todo | todo |
+| Histoire — Guerres mondiales à l'UE | `cm2-histoire-geo-histoire-guerres-ue-01` | `src/data/missions/cm2/histoire-geo/cm2-histoire-geo-histoire-guerres-ue-01.ts` | todo | todo |
+| Géographie — Se déplacer | `cm2-histoire-geo-geo-deplacer-01` | `src/data/missions/cm2/histoire-geo/cm2-histoire-geo-geo-deplacer-01.ts` | todo | todo |
+| Géographie — Communiquer (internet) | `cm2-histoire-geo-geo-communiquer-01` | `src/data/missions/cm2/histoire-geo/cm2-histoire-geo-geo-communiquer-01.ts` | todo | todo |
+| Géographie — Mieux habiter | `cm2-histoire-geo-geo-habiter-01` | `src/data/missions/cm2/histoire-geo/cm2-histoire-geo-geo-habiter-01.ts` | todo | todo |
+| Histoire — Et avant la France | `cm1-histoire-geo-histoire-avant-france-01` | `src/data/missions/cm1/histoire-geo/cm1-histoire-geo-histoire-avant-france-01.ts` | todo | todo |
+| Histoire — Le temps des rois | `cm1-histoire-geo-histoire-rois-01` | `src/data/missions/cm1/histoire-geo/cm1-histoire-geo-histoire-rois-01.ts` | todo | todo |
+| Histoire — Révolution et Empire | `cm1-histoire-geo-histoire-revolution-01` | `src/data/missions/cm1/histoire-geo/cm1-histoire-geo-histoire-revolution-01.ts` | todo | todo |
+| Sciences — Matière | `cm2-sciences-matiere-01` | `src/data/missions/cm2/sciences/cm2-sciences-matiere-01.ts` | todo | todo |
+| Sciences — Vivant | `cm2-sciences-vivant-01` | `src/data/missions/cm2/sciences/cm2-sciences-vivant-01.ts` | todo | todo |
+| Sciences — Énergie / objets techniques | `cm2-sciences-energie-01` | `src/data/missions/cm2/sciences/cm2-sciences-energie-01.ts` | todo | todo |
+| Sciences — Matière | `cm1-sciences-matiere-01` | `src/data/missions/cm1/sciences/cm1-sciences-matiere-01.ts` | todo | todo |
+| Sciences — Vivant | `cm1-sciences-vivant-01` | `src/data/missions/cm1/sciences/cm1-sciences-vivant-01.ts` | todo | todo |
+| Questionner le monde — Vivant | `ce2-questionner-le-monde-qdm-vivant-01` | `src/data/missions/ce2/questionner-le-monde/ce2-questionner-le-monde-qdm-vivant-01.ts` | todo | todo |
+| Questionner le monde — Matière | `ce2-questionner-le-monde-qdm-matiere-01` | `src/data/missions/ce2/questionner-le-monde/ce2-questionner-le-monde-qdm-matiere-01.ts` | todo | todo |
+| Questionner le monde — Objets techniques | `ce2-questionner-le-monde-qdm-objets-01` | `src/data/missions/ce2/questionner-le-monde/ce2-questionner-le-monde-qdm-objets-01.ts` | todo | todo |
+| Questionner le monde — Espace et temps | `ce2-questionner-le-monde-qdm-espace-temps-01` | `src/data/missions/ce2/questionner-le-monde/ce2-questionner-le-monde-qdm-espace-temps-01.ts` | todo | todo |
+| Questionner le monde — Vivant | `ce1-questionner-le-monde-qdm-vivant-01` | `src/data/missions/ce1/questionner-le-monde/ce1-questionner-le-monde-qdm-vivant-01.ts` | todo | todo |
+| Questionner le monde — Matière et objets | `ce1-questionner-le-monde-qdm-matiere-objets-01` | `src/data/missions/ce1/questionner-le-monde/ce1-questionner-le-monde-qdm-matiere-objets-01.ts` | todo | todo |
+| Questionner le monde — Vivant matière objets | `cp-questionner-le-monde-qdm-vivant-matiere-01` | `src/data/missions/cp/questionner-le-monde/cp-questionner-le-monde-qdm-vivant-matiere-01.ts` | todo | todo |
+| Questionner le monde — Espace et temps | `cp-questionner-le-monde-qdm-espace-temps-01` | `src/data/missions/cp/questionner-le-monde/cp-questionner-le-monde-qdm-espace-temps-01.ts` | todo | todo |
+| EMC — Règle droit jugement engagement | `cm2-emc-vivre-ensemble-01` | `src/data/missions/cm2/emc/cm2-emc-vivre-ensemble-01.ts` | todo | todo |
+| EMC — Sensibilité règle engagement | `cm1-emc-vivre-ensemble-01` | `src/data/missions/cm1/emc/cm1-emc-vivre-ensemble-01.ts` | todo | todo |
+| EMC — Vivre ensemble | `ce2-emc-vivre-ensemble-01` | `src/data/missions/ce2/emc/ce2-emc-vivre-ensemble-01.ts` | todo | todo |
+| EMC — Vivre ensemble | `ce1-emc-vivre-ensemble-01` | `src/data/missions/ce1/emc/ce1-emc-vivre-ensemble-01.ts` | todo | todo |
+| EMC — Émotions règles coopération | `cp-emc-vivre-ensemble-01` | `src/data/missions/cp/emc/cp-emc-vivre-ensemble-01.ts` | todo | todo |
+| Anglais — Oral A1+ thèmes quotidiens | `cm2-anglais-oral-01` | `src/data/missions/cm2/anglais/cm2-anglais-oral-01.ts` | todo | todo |
+| Anglais — Oral thèmes soi classe | `cm1-anglais-oral-01` | `src/data/missions/cm1/anglais/cm1-anglais-oral-01.ts` | todo | todo |
+| Anglais — Oral A1 | `ce2-anglais-oral-01` | `src/data/missions/ce2/anglais/ce2-anglais-oral-01.ts` | todo | todo |
+| Anglais — Oral A1 | `ce1-anglais-oral-01` | `src/data/missions/ce1/anglais/ce1-anglais-oral-01.ts` | todo | todo |
+| Anglais — Éveil oral A1 | `cp-anglais-oral-01` | `src/data/missions/cp/anglais/cp-anglais-oral-01.ts` | todo | todo |
 
-## Backlog (todo) — priorité 1
+## Backlog
 
-| ID | Classe | Matière | Thème |
-|---|---|---|---|
-| `cm1-maths-fractions` | cm1 | maths | Fractions (dénominateur ≤20 opérateur unitaire) |
-| `cm1-maths-decimaux` | cm1 | maths | Nombres décimaux (centièmes) |
-| `ce2-maths-fractions` | ce2 | maths | Fractions d'unité / égalités (dén. ≤12) |
-| `ce1-maths-fractions` | ce1 | maths | Fractions partie d'un tout |
-| `cp-maths-entiers` | cp | maths | Nombres entiers jusqu'à 100 |
-| `cp-maths-addition` | cp | maths | Addition et premiers problèmes |
-| `cm2-francais-lecture` | cm2 | francais | Lecture et compréhension |
-| `cm1-francais-lecture` | cm1 | francais | Lecture et compréhension |
-| `ce2-francais-lecture` | ce2 | francais | Lecture fluide et compréhension |
-| `ce1-francais-lecture` | ce1 | francais | Lecture automatisation compréhension |
-| `cp-francais-lecture` | cp | francais | Décodage lecture à voix haute |
-| `cp-francais-ecriture` | cp | francais | Geste cursif copie premières phrases |
-
-## Backlog — priorités 2 et 3
-
-<details><summary>Afficher la liste complète</summary>
-
-| Prio | ID | Classe | Matière | Thème |
-|---|---|---|---|---|
-| 2 | `cm2-maths-entiers` | cm2 | maths | Nombres entiers (grands nombres) |
-| 2 | `cm2-maths-calcul-mental` | cm2 | maths | Calcul mental et automatismes |
-| 2 | `cm2-maths-problemes` | cm2 | maths | Résolution de problèmes (structures variées) |
-| 2 | `cm2-maths-proportionnalite` | cm2 | maths | Proportionnalité (linéarité sans produit en croix) |
-| 2 | `cm2-maths-grandeurs` | cm2 | maths | Grandeurs et mesures (durées angles aires) |
-| 2 | `cm2-maths-geometrie` | cm2 | maths | Espace et géométrie (figures symétrie) |
-| 3 | `cm2-maths-donnees` | cm2 | maths | Organisation des données et probabilités |
-| 3 | `cm2-maths-algebre` | cm2 | maths | Initiation pensée algébrique |
-| 2 | `cm1-maths-entiers` | cm1 | maths | Nombres entiers jusqu'à 999 999 |
-| 2 | `cm1-maths-problemes` | cm1 | maths | Résolution de problèmes |
-| 2 | `cm1-maths-grandeurs` | cm1 | maths | Grandeurs et mesures |
-| 2 | `cm1-maths-geometrie` | cm1 | maths | Espace et géométrie |
-| 3 | `cm1-maths-donnees` | cm1 | maths | Données et probabilités (vocabulaire) |
-| 2 | `ce2-maths-entiers` | ce2 | maths | Nombres entiers jusqu'à 10 000 |
-| 2 | `ce2-maths-operations` | ce2 | maths | Multiplication posée et division |
-| 2 | `ce2-maths-problemes` | ce2 | maths | Problèmes 2–3 étapes |
-| 2 | `ce2-maths-grandeurs` | ce2 | maths | Grandeurs (périmètre contenances durées) |
-| 3 | `ce2-maths-geometrie` | ce2 | maths | Géométrie (losange symétrie patron) |
-| 2 | `ce1-maths-entiers` | ce1 | maths | Nombres entiers jusqu'à 1 000 |
-| 2 | `ce1-maths-operations` | ce1 | maths | Soustraction et sens des opérations |
-| 2 | `ce1-maths-problemes` | ce1 | maths | Problèmes 1–2 étapes |
-| 3 | `ce1-maths-grandeurs` | ce1 | maths | Grandeurs (km masses monnaie centimes) |
-| 2 | `cp-maths-grandeurs` | cp | maths | Longueurs monnaie heure entière |
-| 3 | `cp-maths-geometrie` | cp | maths | Formes solides repérage spatial |
-| 2 | `cm2-francais-ecriture` | cm2 | francais | Écriture et réécriture |
-| 2 | `cm2-francais-langue` | cm2 | francais | Étude de la langue (grammaire orthographe) |
-| 3 | `cm2-francais-vocabulaire` | cm2 | francais | Vocabulaire et oral |
-| 2 | `cm1-francais-ecriture` | cm1 | francais | Écriture |
-| 2 | `cm1-francais-langue` | cm1 | francais | Étude de la langue |
-| 2 | `ce2-francais-ecriture` | ce2 | francais | Production d'écrits |
-| 2 | `ce1-francais-ecriture` | ce1 | francais | Écriture phrases et textes courts |
-| 2 | `cm2-histoire-republique` | cm2 | histoire-geo | Histoire — Le temps de la République |
-| 3 | `cm2-histoire-industriel` | cm2 | histoire-geo | Histoire — L'âge industriel |
-| 3 | `cm2-histoire-guerres-ue` | cm2 | histoire-geo | Histoire — Guerres mondiales à l'UE |
-| 2 | `cm2-geo-deplacer` | cm2 | histoire-geo | Géographie — Se déplacer |
-| 3 | `cm2-geo-communiquer` | cm2 | histoire-geo | Géographie — Communiquer (internet) |
-| 3 | `cm2-geo-habiter` | cm2 | histoire-geo | Géographie — Mieux habiter |
-| 2 | `cm1-histoire-avant-france` | cm1 | histoire-geo | Histoire — Et avant la France |
-| 3 | `cm1-histoire-rois` | cm1 | histoire-geo | Histoire — Le temps des rois |
-| 3 | `cm1-histoire-revolution` | cm1 | histoire-geo | Histoire — Révolution et Empire |
-| 2 | `cm2-sciences-matiere` | cm2 | sciences | Sciences — Matière |
-| 2 | `cm2-sciences-vivant` | cm2 | sciences | Sciences — Vivant |
-| 3 | `cm2-sciences-energie` | cm2 | sciences | Sciences — Énergie / objets techniques |
-| 2 | `cm1-sciences-matiere` | cm1 | sciences | Sciences — Matière |
-| 2 | `cm1-sciences-vivant` | cm1 | sciences | Sciences — Vivant |
-| 2 | `ce2-qdm-vivant` | ce2 | questionner-le-monde | Questionner le monde — Vivant |
-| 2 | `ce2-qdm-matiere` | ce2 | questionner-le-monde | Questionner le monde — Matière |
-| 3 | `ce2-qdm-objets` | ce2 | questionner-le-monde | Questionner le monde — Objets techniques |
-| 3 | `ce2-qdm-espace-temps` | ce2 | questionner-le-monde | Questionner le monde — Espace et temps |
-| 2 | `ce1-qdm-vivant` | ce1 | questionner-le-monde | Questionner le monde — Vivant |
-| 3 | `ce1-qdm-matiere-objets` | ce1 | questionner-le-monde | Questionner le monde — Matière et objets |
-| 2 | `cp-qdm-vivant-matiere` | cp | questionner-le-monde | Questionner le monde — Vivant matière objets |
-| 3 | `cp-qdm-espace-temps` | cp | questionner-le-monde | Questionner le monde — Espace et temps |
-| 2 | `cm2-emc-vivre-ensemble` | cm2 | emc | EMC — Règle droit jugement engagement |
-| 2 | `cm1-emc-vivre-ensemble` | cm1 | emc | EMC — Sensibilité règle engagement |
-| 3 | `ce2-emc-vivre-ensemble` | ce2 | emc | EMC — Vivre ensemble |
-| 3 | `ce1-emc-vivre-ensemble` | ce1 | emc | EMC — Vivre ensemble |
-| 3 | `cp-emc-vivre-ensemble` | cp | emc | EMC — Émotions règles coopération |
-| 3 | `cm2-anglais-oral` | cm2 | anglais | Anglais — Oral A1+ thèmes quotidiens |
-| 3 | `cm1-anglais-oral` | cm1 | anglais | Anglais — Oral thèmes soi classe |
-| 3 | `ce2-anglais-oral` | ce2 | anglais | Anglais — Oral A1 |
-| 3 | `ce1-anglais-oral` | ce1 | anglais | Anglais — Oral A1 |
-| 3 | `cp-anglais-oral` | cp | anglais | Anglais — Éveil oral A1 |
-
-</details>
-
-## Comment mettre à jour
-
-1. Passer `statut` à `in_progress` quand tu commences un thème.
-2. À la fin : `statut=done`, renseigner `mission_id`, `fichier`, `updated_at`.
-3. Phase B : passer `difficulte_facile` / `difficulte_difficile` à `done` quand les variantes existent.
-4. Resynchroniser ce `.md` (compteurs) après modification du CSV — ou laisser l’agent le régénérer.
-
+Tous les thèmes Phase A standard sont traités (`todo` = 0). Phase B (facile / difficile) reste ouverte.

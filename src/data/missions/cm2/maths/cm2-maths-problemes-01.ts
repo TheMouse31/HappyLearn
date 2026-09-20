@@ -2,32 +2,25 @@ import { allUniverses, defineMission } from "../../define";
 
 export const MISSION_ID = "cm2-maths-problemes-01";
 
-/**
- * CM2 maths — Résolution de problèmes (1–2 étapes).
- * Structures variées, nombres raisonnables pour le CM2.
- * Trame standard Happy Learn (Phase A).
- */
+/** CM2 / maths — Résolution de problèmes (structures variées). Phase A standard. */
 export const mission = defineMission({
   id: MISSION_ID,
   grade: "cm2",
   subject: "maths",
-  title: "Problèmes en mission",
-  blurb: "Résoudre des problèmes en une ou deux étapes avec des nombres de CM2.",
+  title: "Résolution de problèmes (structures variées)…",
+  blurb: "Une mission CM2 : Résolution de problèmes (structures variées).",
   available: true,
   version: 1,
   steps: [
     {
-      kind: "tutorial",
+      kind: "continue",
       kicker: "Tutoriel",
       progress: 0,
-      expected: "chercher",
       copy: allUniverses({
-        title: "Lire avant de calculer",
-        statement:
-          "Pour résoudre un problème, on lit la question, on repère les données utiles, puis on choisit l’opération. Recopie le mot « chercher » pour continuer.",
-        note: "Données → question → opération(s) → réponse avec unité quand c’est utile.",
-        hint: "Le mot à recopier est : chercher.",
-        caption: "La méthode de résolution s’affiche.",
+        title: "Bienvenue : Résolution de problèmes (structures variées)",
+        statement: "Dans cette mission de CM2, tu vas travailler : Résolution de problèmes (structures variées). Lis bien chaque consigne, utilise l’indice si besoin, puis valide.",
+        hint: "Prends ton temps : il n’y a ni note ni classement.",
+        caption: "La mission peut commencer.",
       }),
     },
     {
@@ -37,27 +30,23 @@ export const mission = defineMission({
       copy: {
         football: {
           title: "Tu entres en jeu",
-          statement:
-            "Le coach pose des situations concrètes : points, distances, effectifs. Tu dois choisir la bonne opération, parfois en deux temps.",
-          caption: "Des situations-problèmes s’affichent au tableau.",
+          statement: "Les Bleus comptent sur toi. Chaque bonne réponse fait avancer l’action sur le terrain.",
+          caption: "Tu prends ta place au milieu du terrain.",
         },
         rugby: {
           title: "Tu entres en jeu",
-          statement:
-            "Le schéma pose des situations de terrain. Tu relies données et question, parfois en deux étapes.",
-          caption: "Des situations-problèmes s’affichent au sol.",
+          statement: "Tes partenaires comptent sur toi. Chaque bonne réponse ouvre un couloir.",
+          caption: "Tu prends ta place derrière tes partenaires.",
         },
         equitation: {
           title: "Le chemin du retour",
-          statement:
-            "Les bornes racontent des situations du parcours. Tu cherches la réponse en une ou deux opérations.",
-          caption: "Des situations-problèmes apparaissent sur les bornes.",
+          statement: "Tu rentres vers l’écurie avec ton cheval. Chaque étape éclaire le sentier.",
+          caption: "L’écurie apparaît au bout du sentier.",
         },
         espace: {
           title: "Le retour vers la station",
-          statement:
-            "La console propose des situations de navigation. Tu enchaînes une ou deux opérations pour répondre.",
-          caption: "Des situations-problèmes s’affichent.",
+          statement: "Le module doit rejoindre la station. Chaque réponse corrige la trajectoire.",
+          caption: "La station apparaît au loin.",
         },
       },
     },
@@ -67,195 +56,195 @@ export const mission = defineMission({
       progress: 0,
       copy: {
         football: {
-          title: "Résous juste",
-          statement:
-            "Identifie la question, sélectionne les données, calcule en une ou deux étapes, puis vérifie que la réponse a du sens.",
-          caption: "La méthode de résolution s’allume.",
+          title: "Lis le jeu",
+          statement: "Observe, calcule et décide. Chaque étape te rapproche du but. Objectif : Résolution de problèmes (structures variées).",
+          caption: "Les zones du terrain s’allument.",
         },
         rugby: {
-          title: "Résous juste",
-          statement:
-            "Lis la question, choisis les opérations utiles, calcule en une ou deux étapes.",
-          caption: "La méthode de résolution s’allume.",
+          title: "Observe la défense",
+          statement: "Lis les espaces, calcule, puis avance au bon moment. Objectif : Résolution de problèmes (structures variées).",
+          caption: "Les couloirs gauche, axe et large deviennent visibles.",
         },
         equitation: {
-          title: "Résous juste",
-          statement:
-            "Relie données et question, puis calcule en une ou deux étapes pour avancer.",
-          caption: "La méthode de résolution s’allume.",
+          title: "Choisis le chemin",
+          statement: "Observe les bornes, calcule, et garde une allure sûre. Objectif : Résolution de problèmes (structures variées).",
+          caption: "Les principaux sentiers s’activent.",
         },
         espace: {
-          title: "Résous juste",
-          statement:
-            "Repère la question et les données, puis calcule en une ou deux étapes.",
-          caption: "La méthode de résolution s’allume.",
+          title: "Rétablis la trajectoire",
+          statement: "Analyse les signaux, calcule, et prépare l’arrimage. Objectif : Résolution de problèmes (structures variées).",
+          caption: "Chaque décision fait progresser le module.",
         },
       },
     },
     {
       kind: "number",
-      kicker: "Étape 1 sur 6 · Addition",
+      kicker: "Étape 1 sur 6 · 1 étape",
       progress: 1,
-      expected: "48",
-      distractors: ["38", "58"],
+      expected: "28",
+      distractors: ["24", "32"],
       copy: allUniverses({
-        title: "Total de points",
-        statement:
-          "Une équipe marque 27 points puis 21 points. Combien de points a-t-elle marqués en tout ?",
-        hint: "Tu additionnes : 27 + 21 = 48.",
-        caption: "Le total est 48 points.",
+        title: "Total",
+        statement: "Une équipe a 15 points, puis en marque 13. Quel total ?",
+        hint: "15 + 13 = 28.",
+        caption: "Tu valides ta réponse.",
       }),
     },
     {
       kind: "number",
-      kicker: "Étape 2 sur 6 · Soustraction",
+      kicker: "Étape 2 sur 6 · Reste",
       progress: 2,
-      expected: "35",
-      distractors: ["45", "25"],
+      expected: "17",
+      distractors: ["15", "19"],
       copy: {
         football: {
-          title: "Ce qu’il reste",
-          statement:
-            "Un parcours mesure 80 m. L’équipe en a déjà parcouru 45 m. Combien de mètres restent-ils ?",
-          hint: "80 − 45 = 35.",
-          caption: "Il reste 35 m.",
+          title: "Reste",
+          statement: "Sur 40 ballons, 23 sont utilisés. Combien restent ?",
+          hint: "40 − 23 = 17.",
+          caption: "Les zones du terrain s’allument.",
         },
         rugby: {
-          title: "Ce qu’il reste",
-          statement:
-            "Un couloir mesure 80 m. L’équipe en a déjà gagné 45 m. Combien de mètres restent-ils ?",
-          hint: "80 − 45 = 35.",
-          caption: "Il reste 35 m.",
+          title: "Reste",
+          statement: "Sur 40 ballons, 23 sont utilisés. Combien restent ?",
+          hint: "40 − 23 = 17.",
+          caption: "Les couloirs gauche, axe et large deviennent visibles.",
         },
         equitation: {
-          title: "Ce qu’il reste",
-          statement:
-            "Un tronçon mesure 80 m. Le cheval en a déjà parcouru 45 m. Combien de mètres restent-ils ?",
-          hint: "80 − 45 = 35.",
-          caption: "Il reste 35 m.",
+          title: "Reste",
+          statement: "Sur 40 ballons, 23 sont utilisés. Combien restent ?",
+          hint: "40 − 23 = 17.",
+          caption: "Les principaux sentiers s’activent.",
         },
         espace: {
-          title: "Ce qu’il reste",
-          statement:
-            "Un segment mesure 80 unités. Le module en a déjà parcouru 45. Combien restent-ils ?",
-          hint: "80 − 45 = 35.",
-          caption: "Il reste 35.",
+          title: "Reste",
+          statement: "Sur 40 ballons, 23 sont utilisés. Combien restent ?",
+          hint: "40 − 23 = 17.",
+          caption: "Chaque décision fait progresser le module.",
         },
       },
     },
     {
       kind: "number",
-      kicker: "Étape 3 sur 6 · Multiplication",
+      kicker: "Étape 3 sur 6 · 2 étapes",
       progress: 3,
-      expected: "96",
-      distractors: ["86", "106"],
+      expected: "26",
+      distractors: ["24", "30"],
       copy: allUniverses({
-        title: "Plusieurs groupes",
-        statement:
-          "Il y a 8 équipes de 12 élèves. Combien d’élèves y a-t-il en tout ?",
-        hint: "8 × 12 : 8 × 10 = 80 et 8 × 2 = 16 → 96.",
-        caption: "Il y a 96 élèves.",
+        title: "Chaîne",
+        statement: "Tu gagnes 20, puis 10, puis tu perds 4. Combien as-tu ?",
+        hint: "20 + 10 − 4 = 26.",
+        caption: "Tu valides ta réponse.",
       }),
-    },
-    {
-      kind: "number",
-      kicker: "Étape 4 sur 6 · Division",
-      progress: 4,
-      expected: "15",
-      distractors: ["14", "16"],
-      copy: allUniverses({
-        title: "Partage équitable",
-        statement:
-          "On partage 90 ballons en 6 lots égaux. Combien de ballons y a-t-il dans chaque lot ?",
-        hint: "90 ÷ 6 = 15.",
-        caption: "Chaque lot a 15 ballons.",
-      }),
-    },
-    {
-      kind: "number",
-      kicker: "Étape 5 sur 6 · Deux étapes",
-      progress: 5,
-      expected: "70",
-      distractors: ["60", "80"],
-      copy: allUniverses({
-        title: "Achat puis reste",
-        statement:
-          "Léa a 100 €. Elle achète 2 articles à 15 € chacun. Combien lui reste-t-il ?",
-        hint: "D’abord 2 × 15 = 30, puis 100 − 30 = 70.",
-        caption: "Il lui reste 70 €.",
-      }),
-    },
-    {
-      kind: "number",
-      kicker: "Étape 6 sur 6 · Deux étapes",
-      progress: 6,
-      expected: "240",
-      distractors: ["180", "300"],
-      copy: {
-        football: {
-          title: "Courses cumulées",
-          statement:
-            "Trois joueurs parcourent chacun 50 m, puis l’équipe ajoute encore 90 m. Quelle distance totale a été parcourue ?",
-          hint: "3 × 50 = 150, puis 150 + 90 = 240.",
-          caption: "La distance totale est 240 m.",
-        },
-        rugby: {
-          title: "Avancées cumulées",
-          statement:
-            "Trois joueurs avancent chacun de 50 m, puis l’équipe ajoute encore 90 m. Quelle distance totale ?",
-          hint: "3 × 50 = 150, puis 150 + 90 = 240.",
-          caption: "La distance totale est 240 m.",
-        },
-        equitation: {
-          title: "Distances cumulées",
-          statement:
-            "Trois tronçons de 50 m, puis un tronçon de 90 m. Quelle distance totale ?",
-          hint: "3 × 50 = 150, puis 150 + 90 = 240.",
-          caption: "La distance totale est 240 m.",
-        },
-        espace: {
-          title: "Segments cumulés",
-          statement:
-            "Trois segments de 50 unités, puis un segment de 90. Quelle distance totale ?",
-          hint: "3 × 50 = 150, puis 150 + 90 = 240.",
-          caption: "La distance totale est 240.",
-        },
-      },
     },
     {
       kind: "choice",
+      kicker: "Étape 4 sur 6 · Choisir l’opération",
+      progress: 4,
+      expected: "multiplication",
+      distractors: ["addition", "soustraction"],
+      copy: {
+        football: {
+          title: "Sens",
+          statement: "4 sacs de 6 balles : quelle opération pour le total ?",
+          hint: "multiplication.",
+          caption: "Les zones du terrain s’allument.",
+        },
+        rugby: {
+          title: "Sens",
+          statement: "4 sacs de 6 balles : quelle opération pour le total ?",
+          hint: "multiplication.",
+          caption: "Les couloirs gauche, axe et large deviennent visibles.",
+        },
+        equitation: {
+          title: "Sens",
+          statement: "4 sacs de 6 balles : quelle opération pour le total ?",
+          hint: "multiplication.",
+          caption: "Les principaux sentiers s’activent.",
+        },
+        espace: {
+          title: "Sens",
+          statement: "4 sacs de 6 balles : quelle opération pour le total ?",
+          hint: "multiplication.",
+          caption: "Chaque décision fait progresser le module.",
+        },
+      },
+    },
+    {
+      kind: "number",
+      kicker: "Étape 5 sur 6 · Produit",
+      progress: 5,
+      expected: "24",
+      distractors: ["20", "28"],
+      copy: allUniverses({
+        title: "4 × 6",
+        statement: "4 sacs de 6 balles. Combien de balles ?",
+        hint: "24.",
+        caption: "Tu valides ta réponse.",
+      }),
+    },
+    {
+      kind: "number",
+      kicker: "Étape 6 sur 6 · Partage",
+      progress: 6,
+      expected: "9",
+      distractors: ["8", "10"],
+      copy: {
+        football: {
+          title: "Partage",
+          statement: "36 objets partagés en 4 groupes égaux. Combien par groupe ?",
+          hint: "36 ÷ 4 = 9.",
+          caption: "Les zones du terrain s’allument.",
+        },
+        rugby: {
+          title: "Partage",
+          statement: "36 objets partagés en 4 groupes égaux. Combien par groupe ?",
+          hint: "36 ÷ 4 = 9.",
+          caption: "Les couloirs gauche, axe et large deviennent visibles.",
+        },
+        equitation: {
+          title: "Partage",
+          statement: "36 objets partagés en 4 groupes égaux. Combien par groupe ?",
+          hint: "36 ÷ 4 = 9.",
+          caption: "Les principaux sentiers s’activent.",
+        },
+        espace: {
+          title: "Partage",
+          statement: "36 objets partagés en 4 groupes égaux. Combien par groupe ?",
+          hint: "36 ÷ 4 = 9.",
+          caption: "Chaque décision fait progresser le module.",
+        },
+      },
+    },
+    {
+      kind: "number",
       kicker: "Application",
       progress: 6,
-      expected: "125",
-      distractors: ["100", "175"],
+      expected: "45",
+      distractors: ["40", "50"],
       copy: {
         football: {
           title: "Problème final",
-          statement:
-            "Un club a 200 maillots. Il en donne 3 lots de 25. Combien de maillots reste-t-il ?",
-          hint: "3 × 25 = 75, puis 200 − 75 = 125.",
-          caption: "Tu valides 125.",
+          statement: "3 paquets de 12, plus 9. Combien en tout ?",
+          hint: "3×12 + 9 = 45.",
+          caption: "Les zones du terrain s’allument.",
         },
         rugby: {
           title: "Problème final",
-          statement:
-            "Un club a 200 maillots. Il en donne 3 lots de 25. Combien reste-t-il ?",
-          hint: "3 × 25 = 75 ; 200 − 75 = 125.",
-          caption: "Tu valides 125.",
+          statement: "3 paquets de 12, plus 9. Combien en tout ?",
+          hint: "3×12 + 9 = 45.",
+          caption: "Les couloirs gauche, axe et large deviennent visibles.",
         },
         equitation: {
           title: "Problème final",
-          statement:
-            "Un club a 200 maillots. Il en donne 3 lots de 25. Combien reste-t-il ?",
-          hint: "3 × 25 = 75 ; 200 − 75 = 125.",
-          caption: "Tu valides 125.",
+          statement: "3 paquets de 12, plus 9. Combien en tout ?",
+          hint: "3×12 + 9 = 45.",
+          caption: "Les principaux sentiers s’activent.",
         },
         espace: {
           title: "Problème final",
-          statement:
-            "Un stock de 200 modules envoie 3 lots de 25. Combien reste-t-il ?",
-          hint: "3 × 25 = 75 ; 200 − 75 = 125.",
-          caption: "Tu valides 125.",
+          statement: "3 paquets de 12, plus 9. Combien en tout ?",
+          hint: "3×12 + 9 = 45.",
+          caption: "Chaque décision fait progresser le module.",
         },
       },
     },
@@ -265,28 +254,24 @@ export const mission = defineMission({
       progress: 6,
       copy: {
         football: {
-          title: "Problèmes résolus !",
-          statement:
-            "Tu as choisi les bonnes opérations, parfois en deux temps. L’équipe peut décider sereinement.",
-          caption: "La méthode de résolution est solide.",
+          title: "But ! Victoire !",
+          statement: "Tes choix ont fait basculer le match. Les Bleus l’emportent.",
+          caption: "Félicitations : tu as fait basculer le match.",
         },
         rugby: {
-          title: "Problèmes résolus !",
-          statement:
-            "Tes lectures et calculs ont calé chaque situation. La phase reste claire.",
-          caption: "La méthode de résolution est solide.",
+          title: "Essai ! Victoire !",
+          statement: "Tes calculs ont ouvert l’intervalle. Essai transformé.",
+          caption: "Félicitations : tu as fait basculer le match.",
         },
         equitation: {
-          title: "Problèmes résolus !",
-          statement:
-            "Les situations du parcours sont comprises. Tu avances avec méthode.",
-          caption: "La méthode de résolution est solide.",
+          title: "Retour à l’écurie",
+          statement: "Tu as lu chaque borne. Vous rentrez ensemble, en confiance.",
+          caption: "Franchissement réussi, retour au pas jusqu’à l’écurie.",
         },
         espace: {
-          title: "Problèmes résolus !",
-          statement:
-            "Les situations de navigation sont traitées. La trajectoire reste fiable.",
-          caption: "La méthode de résolution est solide.",
+          title: "Arrimage réussi",
+          statement: "La trajectoire est calée. Les attaches se verrouillent.",
+          caption: "Le module est amarré. Mission réussie.",
         },
       },
     },
@@ -295,9 +280,9 @@ export const mission = defineMission({
       kicker: "Ce que tu as appris",
       progress: 6,
       copy: allUniverses({
-        title: "Je sais résoudre un problème",
-        statement: "On lit la question avant de calculer.",
-        note: "1. Lire la question et souligner les données utiles. 2. Choisir l’opération (ou les deux étapes). 3. Calculer, puis vérifier que la réponse répond bien à la question.",
+        title: "Je progresse sur : Résolution de problèmes (structures variées)",
+        statement: "Tu as entraîné la notion pas à pas, avec des exemples et des décisions.",
+        note: "Relis les indices des étapes difficiles : ce sont de vraies méthodes à réutiliser.",
         caption: "Tu pourras réutiliser cette méthode dans une autre mission.",
       }),
     },
@@ -307,8 +292,7 @@ export const mission = defineMission({
       progress: 6,
       copy: allUniverses({
         title: "Ton bilan",
-        statement:
-          "Tu sais résoudre des problèmes en une ou deux étapes : addition, soustraction, multiplication, division et enchaînements simples.",
+        statement: "Tu as travaillé « Résolution de problèmes (structures variées) » sans note ni classement. Qu’as-tu réussi aujourd’hui ?",
         note: "Qu’as-tu préféré dans cette mission ?",
         caption: "Les réussites sont valorisées sans classement.",
       }),
@@ -320,27 +304,23 @@ export const mission = defineMission({
       copy: {
         football: {
           title: "Un nouveau défi t’attend",
-          statement:
-            "Au prochain match, tu approfondiras d’autres notions de maths pour enrichir ton jeu.",
-          caption: "Une nouvelle mission se prépare.",
+          statement: "Au prochain match, un nouveau défi pédagogique t’attend.",
+          caption: "Un point d’interrogation apparaît sur le terrain.",
         },
         rugby: {
           title: "Un nouveau défi t’attend",
-          statement:
-            "La prochaine rencontre ouvrira une autre piste de maths pour progresser.",
-          caption: "Une nouvelle mission se prépare.",
+          statement: "La prochaine rencontre apportera un nouveau défi.",
+          caption: "Un nouveau schéma apparaît au loin.",
         },
         equitation: {
           title: "Un nouveau défi t’attend",
-          statement:
-            "Sur le prochain parcours, une autre notion de maths t’attend.",
-          caption: "Une nouvelle mission se prépare.",
+          statement: "Un nouveau chemin te conduira vers un autre défi.",
+          caption: "Une rivière apparaît au loin.",
         },
         espace: {
-          title: "Signal suite",
-          statement:
-            "La console annonce une prochaine mission de maths pour continuer l’aventure.",
-          caption: "Une nouvelle mission clignote.",
+          title: "Un nouveau défi t’attend",
+          statement: "Un signal mystérieux annonce une prochaine mission.",
+          caption: "Un point lumineux inconnu apparaît au-delà de la station.",
         },
       },
     },
