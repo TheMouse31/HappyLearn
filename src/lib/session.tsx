@@ -195,8 +195,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setPersistence(store);
       setCollection(saved);
       if (teacherAccount) {
-        const list = await store.listClasses(teacherAccount.id);
+        let list = await store.listClasses(teacherAccount.id);
         if (cancelled) return;
+        if (list.length === 0) {
+          const created = await store.createClass(teacherAccount.id, "Ma classe");
+          list = [created];
+        }
         setTeacher(teacherAccount);
         setClasses(list);
         const savedActive = loadActiveClassId();

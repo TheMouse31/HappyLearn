@@ -86,16 +86,17 @@ export async function fetchRemoteMissions(filters?: {
   teacherId?: string | null;
   includeDrafts?: boolean;
 }): Promise<MissionDef[]> {
+  const local = readLocalTeacherMissions().filter((item) => {
+    if (filters?.grade && item.grade !== filters.grade) return false;
+    if (filters?.subject && item.subject !== filters.subject) return false;
+    if (filters?.teacherId && item.teacherId !== filters.teacherId) return false;
+    if (!filters?.includeDrafts && !item.available) return false;
+    return true;
+  });
+
   const client = getSupabase();
-  if (!client) {
-    return readLocalTeacherMissions().filter((item) => {
-      if (filters?.grade && item.grade !== filters.grade) return false;
-      if (filters?.subject && item.subject !== filters.subject) return false;
-      if (filters?.teacherId && item.teacherId !== filters.teacherId) return false;
-      if (!filters?.includeDrafts && !item.available) return false;
-      return true;
-    });
-  }
+  if (!client) return local;
+
   let query = client
     .from("missions")
     .select("id, grade, subject, title, blurb, available, steps, version, source, teacher_id")
@@ -105,16 +106,11 @@ export async function fetchRemoteMissions(filters?: {
   if (filters?.teacherId) query = query.eq("teacher_id", filters.teacherId);
   if (!filters?.includeDrafts) query = query.eq("available", true);
   const { data, error } = await query;
-  if (error || !data) {
-    return readLocalTeacherMissions().filter((item) => {
-      if (filters?.grade && item.grade !== filters.grade) return false;
-      if (filters?.subject && item.subject !== filters.subject) return false;
-      if (filters?.teacherId && item.teacherId !== filters.teacherId) return false;
-      if (!filters?.includeDrafts && !item.available) return false;
-      return true;
-    });
-  }
-  return data.map((row) => mapRemoteMission(row as MissionRow)).filter((item): item is MissionDef => item !== null);
+  if (error || !data) return local;
+  const remote = data
+    .map((row) => mapRemoteMission(row as MissionRow))
+    .filter((item): item is MissionDef => item !== null);
+  return mergeMissions(remote, local);
 }
 
 export async function resolveMission(id: string | null | undefined): Promise<MissionDef | null> {

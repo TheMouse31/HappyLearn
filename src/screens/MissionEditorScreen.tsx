@@ -10,6 +10,7 @@ import {
   deleteTeacherMission,
   listEditableCatalog,
   ordinalStepSlug,
+  parseMissionId,
   resolveMission,
   saveTeacherMission,
   suggestNextMissionId,
@@ -101,15 +102,11 @@ function missionToDrafts(mission: MissionDef): {
   available: boolean;
   steps: DraftStep[];
 } {
-  const parts = mission.id.split("-");
-  const nn = parts[parts.length - 1] ?? "01";
-  const withoutNn = mission.id.slice(0, -(nn.length + 1));
-  const prefix = `${mission.grade}-${mission.subject}-`;
-  const slug = withoutNn.startsWith(prefix) ? withoutNn.slice(prefix.length) : "mission";
+  const parsed = parseMissionId(mission.id);
   return {
     grade: mission.grade,
     subject: mission.subject,
-    slug,
+    slug: parsed?.slug ?? "mission",
     title: mission.title,
     blurb: mission.blurb,
     available: mission.available,

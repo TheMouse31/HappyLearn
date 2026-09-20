@@ -10,12 +10,12 @@
  *     ex. cm2-maths-fractions-01/s01
  */
 
-import { isGradeLevel, isSubjectSlug } from "../catalog";
+import { GRADES, SUBJECTS, isGradeLevel, isSubjectSlug } from "../catalog";
 import type { GradeLevel, SubjectSlug } from "../types";
 
-const MISSION_ID_RE =
-  /^(cp|ce1|ce2|cm1|cm2)-([a-z0-9-]+)-([a-z0-9]+(?:-[a-z0-9]+)*)-(\d{2})$/;
 const STEP_SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const GRADE_PREFIXES = GRADES.map((item) => item.slug).sort((a, b) => b.length - a.length);
+const SUBJECT_PREFIXES = SUBJECTS.map((item) => item.slug).sort((a, b) => b.length - a.length);
 
 export type ParsedMissionId = {
   grade: GradeLevel;
@@ -40,15 +40,17 @@ export function buildMissionId(
 }
 
 export function parseMissionId(id: string): ParsedMissionId | null {
-  const match = MISSION_ID_RE.exec(id);
-  if (!match) return null;
-  const grade = match[1];
-  const subject = match[2];
-  const slug = match[3];
-  const nn = match[4];
-  if (!grade || !subject || !slug || !nn) return null;
-  if (!isGradeLevel(grade) || !isSubjectSlug(subject)) return null;
-  return { grade, subject, slug, nn };
+  const grade = GRADE_PREFIXES.find((item) => id.startsWith(`${item}-`));
+  if (!grade || !isGradeLevel(grade)) return null;
+  const afterGrade = id.slice(grade.length + 1);
+  const subject = SUBJECT_PREFIXES.find((item) => afterGrade.startsWith(`${item}-`));
+  if (!subject || !isSubjectSlug(subject)) return null;
+  const afterSubject = afterGrade.slice(subject.length + 1);
+  const nnMatch = /-(\d{2})$/.exec(afterSubject);
+  if (!nnMatch) return null;
+  const slug = afterSubject.slice(0, -(nnMatch[0].length));
+  if (!slug || !STEP_SLUG_RE.test(slug)) return null;
+  return { grade, subject, slug, nn: nnMatch[1]! };
 }
 
 export function isValidMissionId(id: string): boolean {
