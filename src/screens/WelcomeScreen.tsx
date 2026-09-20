@@ -14,11 +14,13 @@ export function WelcomeScreen() {
   const playable = isCoursePlayable(grade, subject);
   const courseLabel =
     grade && subject ? `${gradeLabel(grade)} · ${subjectLabel(subject)}` : null;
+  const nextLabel = playable ? "Continuer la mission" : "Choisir ma classe";
+  const nextTo = playable ? "/seance" : "/classe";
 
   return (
     <Shell
       brand="Happy Learn"
-      stepLabel="Accueil élève"
+      stepLabel="À toi de jouer"
       homeTo="/accueil"
       extra={
         <Button
@@ -30,36 +32,34 @@ export function WelcomeScreen() {
         </Button>
       }
     >
-      <section className="intro">
-        <span className="kicker">Happy Learn</span>
+      <section className="intro student-home">
+        <span className="kicker">Prochaine étape</span>
         <h1>Salut {displayName} !</h1>
         <p className="lead" data-listen>
-          Ici tu prépares ta mission : classe, matière, univers. Néo t’accompagne à chaque étape.
+          {playable
+            ? `Ta mission ${courseLabel} t’attend. Choisis ton univers et c’est parti.`
+            : "Indique ta classe et ta matière, puis pars en mission avec Néo."}
         </p>
-        {classCode ? <p>Tu es dans la classe {classCode}.</p> : <p>Tu joues à la maison, sans code classe.</p>}
-        {courseLabel ? (
-          <p>
-            Parcours actuel : <strong>{courseLabel}</strong>
-            {playable ? "" : " (bientôt disponible)"}
-          </p>
+        {classCode ? (
+          <p className="student-home-meta">Classe {classCode}</p>
         ) : (
-          <p>Indique ensuite ton niveau (CP à CM2) et ta matière.</p>
+          <p className="student-home-meta">Mode maison — sans code classe</p>
         )}
-        <div className="mascot-stage">
-          <p className="bubble">Bonjour {displayName} ! Je serai ton guide pendant tes missions.</p>
-          <Neo pose="guide" />
-        </div>
-        <div className="actions">
-          <Button
-            variant="primary"
-            onClick={() => navigate(playable ? "/seance" : "/classe")}
-          >
-            Continuer la mission
-          </Button>
-          <Button onClick={() => navigate("/classe")}>
-            {courseLabel ? "Changer de classe / matière" : "Choisir classe et matière"}
-          </Button>
-          {!classCode ? <Button onClick={() => navigate("/prenom")}>Changer de prénom</Button> : null}
+        <div className="student-next">
+          <div className="mascot-stage">
+            <p className="bubble">
+              {playable ? "On y va ?" : `Bonjour ${displayName} ! Je serai ton guide.`}
+            </p>
+            <Neo pose="guide" />
+          </div>
+          <div className="actions student-next-actions">
+            <Button variant="primary" onClick={() => navigate(nextTo)}>
+              {nextLabel}
+            </Button>
+            {courseLabel ? (
+              <Button onClick={() => navigate("/classe")}>Changer de classe / matière</Button>
+            ) : null}
+          </div>
         </div>
       </section>
     </Shell>

@@ -67,14 +67,14 @@ export function Shell({
               <span className="brand-mark" aria-hidden="true">
                 ✦
               </span>
-              {brand}
+              <span className="brand-word">{brand}</span>
             </span>
           ) : (
             <Link to={brandTo} className="brand brand-link" aria-label={`${brand} — accueil`}>
               <span className="brand-mark" aria-hidden="true">
                 ✦
               </span>
-              {brand}
+              <span className="brand-word">{brand}</span>
             </Link>
           )}
         </div>

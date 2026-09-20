@@ -10,23 +10,23 @@ export function HomePage() {
     role === "eleve" ? "/accueil" : role === "enseignant" ? "/espace-professeur" : null;
 
   return (
-    <PublicLayout>
-      <section className="home-hero">
-        <div className="home-hero-copy">
-          <p className="home-brand">Happy Learn</p>
-          <h1>Les apprentissages du primaire, racontés comme une mission</h1>
-          <p className="lead" data-listen>
-            Du CP au CM2, toutes les matières. Les élèves progressent avec Néo dans une aventure. Les professeurs suivent
-            la classe, sans note ni classement.
+    <PublicLayout fullBleed>
+      <section className="hl-hero" aria-labelledby="hl-hero-title">
+        <div className="hl-hero-glow" aria-hidden="true" />
+        <div className="hl-hero-copy">
+          <p className="hl-hero-brand">Happy Learn</p>
+          <h1 id="hl-hero-title">Apprendre comme une mission</h1>
+          <p className="hl-hero-lead" data-listen>
+            Du CP au CM2, avec Néo. Sans note, sans classement — juste progresser.
           </p>
           {continueTo ? (
-            <div className="actions home-actions">
-              <button type="button" className="primary" onClick={() => navigate(continueTo)}>
-                Continuer
+            <div className="hl-hero-cta">
+              <button type="button" className="primary hl-cta" onClick={() => navigate(continueTo)}>
+                Continuer ma session
               </button>
               <button
                 type="button"
-                className="text-link"
+                className="ghost-btn"
                 onClick={() => {
                   void logout().then(() => navigate("/connexion"));
                 }}
@@ -35,41 +35,47 @@ export function HomePage() {
               </button>
             </div>
           ) : (
-            <div className="role-card-grid" role="group" aria-label="Qui es-tu ?">
-              <Link className="role-card" to="/connexion/eleve">
-                <span className="role-card-label">Je suis un élève</span>
-                <span className="role-card-hint">Prénom · école ou maison · pas d’e-mail</span>
+            <div className="hl-hero-cta" role="group" aria-label="Qui es-tu ?">
+              <Link className="primary hl-cta" to="/connexion/eleve">
+                Je suis élève
               </Link>
-              <Link className="role-card role-card-teacher" to="/connexion/enseignant">
-                <span className="role-card-label">Je suis professeur</span>
-                <span className="role-card-hint">E-mail · classes · suivi des élèves</span>
+              <Link className="ghost-btn hl-cta-secondary" to="/connexion/enseignant">
+                Je suis professeur
               </Link>
             </div>
           )}
-          <p className="home-note">
-            Premier parcours disponible aujourd’hui : mathématiques CM2. D’autres matières arrivent.
-          </p>
         </div>
-        <aside className="mascot-stage home-mascot">
-          <p className="bubble">Prêt pour une mission ? Choisis qui tu es pour commencer.</p>
-          <Neo pose="guide" />
+        <aside className="hl-hero-visual" aria-hidden="true">
+          <div className="hl-hero-neo">
+            <Neo pose="guide" />
+          </div>
         </aside>
       </section>
 
-      <section className="home-how" id="comment-ca-marche">
+      <section className="hl-how" id="comment-ca-marche">
+        <p className="hl-section-kicker">Simple comme 1, 2, 3</p>
         <h2>Comment ça marche</h2>
-        <ol className="how-steps">
+        <ol className="hl-how-steps">
           <li>
-            <strong>Choisis qui tu es</strong>
+            <span className="hl-how-num" aria-hidden="true">
+              1
+            </span>
+            <strong>Choisis ton rôle</strong>
             <span>Élève avec un prénom, ou professeur avec un e-mail.</span>
           </li>
           <li>
-            <strong>Pars en mission avec Néo</strong>
-            <span>Univers, indices et progression à ton rythme.</span>
+            <span className="hl-how-num" aria-hidden="true">
+              2
+            </span>
+            <strong>Pars en mission</strong>
+            <span>Univers, indices et étapes claires — Néo t’accompagne.</span>
           </li>
           <li>
-            <strong>Le prof suit la classe</strong>
-            <span>Code classe, séances et réussites — sans classement.</span>
+            <span className="hl-how-num" aria-hidden="true">
+              3
+            </span>
+            <strong>Le prof pilote</strong>
+            <span>Session live, suivi et programme — sans classement.</span>
           </li>
         </ol>
       </section>

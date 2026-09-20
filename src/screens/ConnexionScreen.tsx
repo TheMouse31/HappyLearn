@@ -21,7 +21,7 @@ export function ConnexionScreen() {
         <span className="kicker">Connexion</span>
         <h1>Qui es-tu ?</h1>
         <p className="lead" data-listen>
-          Les élèves n’utilisent pas d’e-mail. Les professeurs se connectent avec un e-mail.
+          Une seule question pour démarrer. Les élèves n’ont pas besoin d’e-mail.
         </p>
         <div className="role-card-grid" role="group" aria-label="Qui es-tu ?">
           <Link className="role-card" to="/connexion/eleve">

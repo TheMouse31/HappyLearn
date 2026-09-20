@@ -6,23 +6,25 @@ import { useSession } from "../lib/session";
 
 type Props = {
   children: ReactNode;
+  /** Edge-to-edge hero pages (home). */
+  fullBleed?: boolean;
 };
 
-export function PublicLayout({ children }: Props) {
+export function PublicLayout({ children, fullBleed = false }: Props) {
   const navigate = useNavigate();
   const { role } = useSession();
   const continueTo =
     role === "eleve" ? "/accueil" : role === "enseignant" ? "/espace-professeur" : null;
 
   return (
-    <div className="app-shell public-shell">
+    <div className={`app-shell public-shell${fullBleed ? " is-bleed" : ""}`}>
       <ListenButton />
       <header className="topbar public-topbar">
         <Link to="/" className="brand brand-link" aria-label="Happy Learn — accueil">
           <span className="brand-mark" aria-hidden="true">
             ✦
           </span>
-          Happy Learn
+          <span className="brand-word">Happy Learn</span>
         </Link>
         <nav className="public-nav" aria-label="Navigation principale">
           <a className="nav-text-link" href="#comment-ca-marche">
@@ -40,7 +42,7 @@ export function PublicLayout({ children }: Props) {
           )}
         </nav>
       </header>
-      <div className="window public-window">{children}</div>
+      <div className={`window public-window${fullBleed ? " is-bleed" : ""}`}>{children}</div>
     </div>
   );
 }
