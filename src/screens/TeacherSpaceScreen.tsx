@@ -108,7 +108,7 @@ export function TeacherSpaceScreen() {
   const [busyCreate, setBusyCreate] = useState(false);
   const [createError, setCreateError] = useState("");
   const [mode, setMode] = useState<SuiviMode>("eleves");
-  const [prepareOpen, setPrepareOpen] = useState(false);
+  const [prepareOpen, setPrepareOpen] = useState(true);
   const [selectedStudentKey, setSelectedStudentKey] = useState<string | null>(null);
   const [filterEleveId, setFilterEleveId] = useState("");
   const [filterSessionId, setFilterSessionId] = useState("");
