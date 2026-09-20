@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { isGradeLevel, isSubjectSlug } from "../data/catalog";
-import { defaultMissionFor, findMission } from "../data/missions";
+import { defaultMissionFor, findMission, resolveMission } from "../data/missions";
 import type {
   AppRole,
   ClasseSession,
@@ -830,7 +830,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         if (override?.universe) setUniverse(override.universe);
         if (!persistence || !prenom || !chosenUniverse || !mode) return;
         const mission =
-          findMission(missionId) ??
+          (await resolveMission(missionId)) ??
           defaultMissionFor(grade, subject) ??
           findMission("cm2-maths-fractions-01");
         const id = await persistence.startSession(prenom, chosenUniverse, mode, classCode || null, {

@@ -4,10 +4,10 @@ import { Button } from "../components/Button";
 import { Choice } from "../components/Choice";
 import { Neo } from "../components/Neo";
 import { Shell } from "../components/Shell";
-import { findMission } from "../data/missions";
+import { findMission, resolveMission } from "../data/missions";
 import { gradeLabel, subjectLabel } from "../data/catalog";
 import { UNIVERSES, UNIVERSE_ORDER } from "../data/universes";
-import type { UniverseSlug } from "../data/types";
+import type { MissionDef, UniverseSlug } from "../data/types";
 import { useSession } from "../lib/session";
 
 export function StudentWaitingScreen() {
@@ -29,9 +29,26 @@ export function StudentWaitingScreen() {
   } = useSession();
   const [busy, setBusy] = useState(false);
   const [pickError, setPickError] = useState("");
+  const [mission, setMission] = useState<MissionDef | null>(null);
 
   const activityReady = Boolean(liveSession?.missionId && liveSession.mode);
   const canStart = activityReady && Boolean(universe && mode);
+
+  useEffect(() => {
+    const id = liveSession?.missionId;
+    if (!id) {
+      setMission(null);
+      return;
+    }
+    setMission(findMission(id));
+    let cancelled = false;
+    void resolveMission(id).then((resolved) => {
+      if (!cancelled) setMission(resolved);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [liveSession?.missionId]);
 
   // Si la mission est déjà démarrée (reconnexion / retour), aller sur /mission.
   useEffect(() => {
@@ -74,8 +91,6 @@ export function StudentWaitingScreen() {
   if (!lockedSession || !liveSession || !liveParticipant) {
     return <Navigate to="/accueil" replace />;
   }
-
-  const mission = findMission(liveSession.missionId);
 
   async function startChosenUniverse(slug: UniverseSlug) {
     setPickError("");

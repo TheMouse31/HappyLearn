@@ -567,15 +567,18 @@ function ShareScene({
 }
 
 export function UniverseScene({ universe, stepId, progress, success, selected, expected, caption }: Props) {
-  if (stepId === "B01") return null;
+  // stepId = clé de scène (step.scene ou legacy), pas l’id canonique mission/slug.
+  const scene = stepId.includes("/") ? stepId.slice(stepId.lastIndexOf("/") + 1) : stepId;
+
+  if (scene === "B01" || scene === "s16") return null;
 
   const ok = isSolved(selected, expected, success);
   const corridorLabel = universe === "rugby" ? "Ton couloir" : "Ta zone";
 
   let body: ReactNode = null;
 
-  if (stepId === "T00") body = <TutorialScene />;
-  else if (stepId === "M01") {
+  if (scene === "T00" || scene === "s01") body = <TutorialScene />;
+  else if (scene === "M01" || scene === "s04") {
     if (universe === "espace") {
       body = (
         <ShareSpaceScene
@@ -593,7 +596,7 @@ export function UniverseScene({ universe, stepId, progress, success, selected, e
     } else {
       body = <HalfPitchScene ok={ok} corridorLabel={corridorLabel} />;
     }
-  } else if (stepId === "M01B") {
+  } else if (scene === "M01B" || scene === "s05") {
     if (universe === "espace") {
       body = (
         <ShareSpaceScene count={12} columns={4} active={ok ? 12 : 6} wait={!ok} label="Douze signaux en deux groupes" progress={progress} ok={ok} />
@@ -603,7 +606,7 @@ export function UniverseScene({ universe, stepId, progress, success, selected, e
     } else {
       body = <GroupsScene ok={ok} />;
     }
-  } else if (stepId === "M02") {
+  } else if (scene === "M02" || scene === "s07") {
     body = (
       <ShareScene
         universe={universe}
@@ -617,7 +620,7 @@ export function UniverseScene({ universe, stepId, progress, success, selected, e
         showPressing
       />
     );
-  } else if (stepId === "M03") {
+  } else if (scene === "M03" || scene === "s08") {
     body = (
       <ShareScene
         universe={universe}
@@ -630,7 +633,7 @@ export function UniverseScene({ universe, stepId, progress, success, selected, e
         progress={progress}
       />
     );
-  } else if (stepId === "M04") {
+  } else if (scene === "M04" || scene === "s09") {
     body = (
       <ShareScene
         universe={universe}
@@ -643,7 +646,7 @@ export function UniverseScene({ universe, stepId, progress, success, selected, e
         progress={progress}
       />
     );
-  } else if (stepId === "M05A") {
+  } else if (scene === "M05A" || scene === "s10") {
     body = (
       <ShareScene
         universe={universe}
@@ -656,7 +659,7 @@ export function UniverseScene({ universe, stepId, progress, success, selected, e
         progress={progress}
       />
     );
-  } else if (stepId === "M05B") {
+  } else if (scene === "M05B" || scene === "s11") {
     body = (
       <ShareScene
         universe={universe}
@@ -670,8 +673,7 @@ export function UniverseScene({ universe, stepId, progress, success, selected, e
         tree
       />
     );
-  } else if (stepId === "M06") {
-    // Pas de fuite 10/5/15 : on montre 30 points, on n’allume que le reste après succès.
+  } else if (scene === "M06" || scene === "s12") {
     body = (
       <ShareScene
         universe={universe}
@@ -685,7 +687,7 @@ export function UniverseScene({ universe, stepId, progress, success, selected, e
         tree
       />
     );
-  } else if (stepId === "D01") {
+  } else if (scene === "D01" || scene === "s13") {
     if (universe === "espace") {
       body = (
         <SpaceShell label="Choix de l’axe final">
@@ -720,16 +722,16 @@ export function UniverseScene({ universe, stepId, progress, success, selected, e
     } else {
       body = <DirectionScene selected={selected} ok={ok} />;
     }
-  } else if (stepId === "N04" || stepId === "L01") {
+  } else if (scene === "N04" || scene === "L01" || scene === "s14" || scene === "s15") {
     body = <Celebration text="Mission réussie" />;
-  } else if (stepId === "Z01") {
+  } else if (scene === "Z01" || scene === "s17") {
     body = <Celebration text="?" />;
   } else if (universe === "espace") {
     body = <NarrativeSpace progress={progress} success={success} />;
   } else if (universe === "equitation") {
     body = <NarrativeTrail progress={progress} tree={progress >= 5} />;
   } else {
-    body = <NarrativePitch progress={progress} zones={stepId === "N02"} />;
+    body = <NarrativePitch progress={progress} zones={scene === "N02" || scene === "s03"} />;
   }
 
   return (

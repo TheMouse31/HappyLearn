@@ -3,8 +3,8 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "../components/Button";
 import { Shell } from "../components/Shell";
 import { GRADES, SUBJECTS, gradeLabel, subjectLabel } from "../data/catalog";
-import { listMissions } from "../data/missions";
-import type { ClassStudent, GradeLevel, PlayMode, SubjectSlug } from "../data/types";
+import { listResolvedMissions } from "../data/missions";
+import type { ClassStudent, GradeLevel, MissionDef, PlayMode, SubjectSlug } from "../data/types";
 import { formatStudentName } from "../data/types";
 import { useSession } from "../lib/session";
 
@@ -46,6 +46,8 @@ export function SessionControlScreen() {
   const [subject, setSubject] = useState<SubjectSlug>("maths");
   const [missionId, setMissionId] = useState("cm2-maths-fractions-01");
   const [mode, setMode] = useState<PlayMode>("qcm");
+  const [missions, setMissions] = useState<MissionDef[]>([]);
+  const [activeMissionTitle, setActiveMissionTitle] = useState<string | null>(null);
 
   const refreshLiveSessionRef = useRef(refreshLiveSession);
   const listClassMissionsDoneRef = useRef(listClassMissionsDone);
@@ -54,7 +56,36 @@ export function SessionControlScreen() {
   listClassMissionsDoneRef.current = listClassMissionsDone;
   listClassStudentsRef.current = listClassStudents;
 
-  const missions = useMemo(() => listMissions(grade, subject), [grade, subject]);
+  useEffect(() => {
+    let cancelled = false;
+    void listResolvedMissions(grade, subject).then((rows) => {
+      if (!cancelled) setMissions(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [grade, subject]);
+
+  useEffect(() => {
+    const id = liveSession?.missionId;
+    if (!id) {
+      setActiveMissionTitle(null);
+      return;
+    }
+    const local = missions.find((item) => item.id === id);
+    if (local) {
+      setActiveMissionTitle(local.title);
+      return;
+    }
+    let cancelled = false;
+    void listResolvedMissions().then((rows) => {
+      if (cancelled) return;
+      setActiveMissionTitle(rows.find((item) => item.id === id)?.title ?? id);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [liveSession?.missionId, missions]);
 
   // Ne dépend pas de l'identité de refreshLiveSession (sinon boucle de re-renders).
   useEffect(() => {
@@ -360,8 +391,7 @@ export function SessionControlScreen() {
                   {activityActive && liveSession ? (
                     <p className="field-help">
                       En cours : {gradeLabel(liveSession.niveau)} · {subjectLabel(liveSession.matiere)} ·{" "}
-                      {listMissions().find((item) => item.id === liveSession.missionId)?.title ??
-                        liveSession.missionId}{" "}
+                      {activeMissionTitle ?? liveSession.missionId}{" "}
                       · mode {liveSession.mode === "cahier" ? "cahier" : "QCM"} (univers au choix de l’élève)
                     </p>
                   ) : null}

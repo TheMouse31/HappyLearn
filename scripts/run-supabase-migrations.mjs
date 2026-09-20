@@ -25,6 +25,7 @@ const files = [
   "supabase/migrations/20260915_happy_learn_course.sql",
   "supabase/migrations/20260917_eleves_classe.sql",
   "supabase/migrations/20260918_sessions_classe_live.sql",
+  "supabase/migrations/20260920_missions_catalog.sql",
   "supabase/seed.sql",
 ];
 
@@ -79,6 +80,7 @@ const verifySql = [
   "select column_name from information_schema.columns where table_name = 'classe_sessions' order by 1",
   "select column_name from information_schema.columns where table_name = 'session_participants' order by 1",
   "select column_name from information_schema.columns where table_name = 'sessions_enfant' and column_name in ('class_id','classe_session_id','eleve_id','mission_id') order by 1",
+  "select column_name from information_schema.columns where table_name = 'missions' order by 1",
 ].join(";\n");
 
 const res = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/query`, {
