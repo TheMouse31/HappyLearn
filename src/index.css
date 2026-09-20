@@ -963,6 +963,13 @@ p {
   border-color: #c47a12;
 }
 
+/* Keep sticky nav CTAs clear on the new home */
+.public-shell.is-bleed .listen {
+  top: auto;
+  bottom: 22px;
+  right: 22px;
+}
+
 .method-box {
   padding: 16px 16px 16px 18px;
   border: 1px solid #d7cda9;
