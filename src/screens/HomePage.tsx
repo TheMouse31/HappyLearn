@@ -82,7 +82,7 @@ function NewFrontHomeBody() {
     role === "eleve" ? "/accueil" : role === "enseignant" ? "/espace-professeur" : null;
 
   return (
-    <>
+    <div className="hl-home">
       <section className="hl-hero" aria-labelledby="hl-hero-title">
         <div className="hl-hero-glow" aria-hidden="true" />
         <div className="hl-hero-copy">
@@ -125,8 +125,10 @@ function NewFrontHomeBody() {
       </section>
 
       <section className="hl-how" id="comment-ca-marche">
-        <p className="hl-section-kicker">Simple comme 1, 2, 3</p>
-        <h2>Comment ça marche</h2>
+        <div className="hl-how-head">
+          <p className="hl-section-kicker">Simple comme 1, 2, 3</p>
+          <h2>Comment ça marche</h2>
+        </div>
         <ol className="hl-how-steps">
           <li>
             <span className="hl-how-num" aria-hidden="true">
@@ -151,7 +153,7 @@ function NewFrontHomeBody() {
           </li>
         </ol>
       </section>
-    </>
+    </div>
   );
 }
 
