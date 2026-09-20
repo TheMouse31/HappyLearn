@@ -709,7 +709,7 @@ export function TeacherSpaceScreen() {
                 </div>
 
                 {showActivityFilters ? (
-                  <div className="stats-filters" aria-label="Filtres du suivi">
+                  <div className="stats-filters suivi-filters-full" aria-label="Filtres du suivi">
                     <div className="field">
                       <label htmlFor="filtre-eleve">Élève</label>
                       <select
@@ -764,7 +764,10 @@ export function TeacherSpaceScreen() {
 
                 {mode === "eleves" ? (
                   <div className="suivi-panel suivi-eleves">
-                    <h2>Élèves</h2>
+                    <div className="suivi-panel-head">
+                      <h2>Élèves</h2>
+                      <p className="field-help">Clique un nom pour voir le détail de ses séances.</p>
+                    </div>
                     {!answersReady || !rosterReady ? (
                       <p>Chargement…</p>
                     ) : studentStats.length === 0 ? (
@@ -773,150 +776,191 @@ export function TeacherSpaceScreen() {
                         apparaîtra ici.
                       </p>
                     ) : (
-                      <ul className="suivi-eleve-list">
-                        {studentStats.map((student) => {
-                          const open = selectedStudentKey === student.key;
-                          return (
-                            <li key={student.key}>
-                              <button
-                                type="button"
-                                className={`suivi-eleve-row ${open ? "is-open" : ""}`}
-                                aria-expanded={open}
-                                onClick={() =>
-                                  setSelectedStudentKey((currentKey) =>
-                                    currentKey === student.key ? null : student.key,
-                                  )
-                                }
-                              >
-                                <span className="suivi-eleve-name">{student.displayName}</span>
-                                <span
-                                  className={`suivi-activity status-${student.activityStatus}`}
+                      <div className="suivi-fullbleed">
+                        <div className="suivi-eleve-cols" aria-hidden="true">
+                          <span>Élève</span>
+                          <span>Statut</span>
+                          <span>Missions</span>
+                          <span>Réussite</span>
+                        </div>
+                        <ul className="suivi-eleve-list">
+                          {studentStats.map((student) => {
+                            const open = selectedStudentKey === student.key;
+                            return (
+                              <li key={student.key} className={open ? "is-open" : ""}>
+                                <button
+                                  type="button"
+                                  className={`suivi-eleve-row ${open ? "is-open" : ""}`}
+                                  aria-expanded={open}
+                                  onClick={() =>
+                                    setSelectedStudentKey((currentKey) =>
+                                      currentKey === student.key ? null : student.key,
+                                    )
+                                  }
                                 >
-                                  {activityStatusLabel(student.activityStatus)}
-                                </span>
-                                <span className="suivi-eleve-meta">
-                                  {student.missionsCompleted} terminée
-                                  {student.missionsCompleted > 1 ? "s" : ""}
-                                  {student.missionsInProgress > 0
-                                    ? ` · ${student.missionsInProgress} en cours`
-                                    : ""}
-                                </span>
-                                <span className="suivi-eleve-rate">
-                                  {student.successRate === null ? "—" : `${student.successRate} %`}
-                                </span>
-                              </button>
-                              {open ? (
-                                <div className="suivi-eleve-detail student-detail" aria-live="polite">
-                                  <p>
-                                    Dernière activité :{" "}
-                                    {student.lastActivityAt ? formatWhen(student.lastActivityAt) : "—"}
-                                  </p>
-                                  <p>
-                                    Parcours :{" "}
-                                    {student.parcours.length > 0 ? student.parcours.join(" · ") : "—"}
-                                  </p>
-                                  <p>
-                                    Univers : {universeShortList(student.universesCompleted)}
-                                  </p>
-                                  {studentSessions.length === 0 ? (
-                                    <p className="field-help">Pas encore de séance pour cet élève.</p>
-                                  ) : (
-                                    <div className="session-table-wrap">
-                                      <table className="session-table">
-                                        <thead>
-                                          <tr>
-                                            <th>Parcours</th>
-                                            <th>Résultat</th>
-                                            <th>Quand</th>
-                                          </tr>
-                                        </thead>
-                                        <tbody>
-                                          {studentSessions.map((session) => (
-                                            <tr key={session.id}>
-                                              <td>
-                                                <div>
-                                                  {session.grade && session.subject
-                                                    ? `${gradeLabel(session.grade)} · ${subjectLabel(session.subject)}`
-                                                    : "—"}
-                                                </div>
-                                                <div className="muted suivi-subline">
-                                                  {UNIVERSES[session.universe].label} ·{" "}
-                                                  {session.mode === "qcm" ? "QCM" : "Cahier"}
-                                                </div>
-                                              </td>
-                                              <td>{sessionResultLabel(session)}</td>
-                                              <td>{formatWhen(session.startedAt)}</td>
-                                            </tr>
-                                          ))}
-                                        </tbody>
-                                      </table>
+                                  <span className="suivi-eleve-name">
+                                    <span className="suivi-chevron" aria-hidden="true">
+                                      {open ? "▾" : "▸"}
+                                    </span>
+                                    {student.displayName}
+                                  </span>
+                                  <span
+                                    className={`suivi-activity status-${student.activityStatus}`}
+                                  >
+                                    {activityStatusLabel(student.activityStatus)}
+                                  </span>
+                                  <span className="suivi-eleve-meta">
+                                    <strong>{student.missionsCompleted}</strong> terminée
+                                    {student.missionsCompleted > 1 ? "s" : ""}
+                                    {student.missionsInProgress > 0
+                                      ? ` · ${student.missionsInProgress} en cours`
+                                      : ""}
+                                  </span>
+                                  <span className="suivi-eleve-rate">
+                                    {student.successRate === null
+                                      ? "—"
+                                      : `${student.successRate} %`}
+                                  </span>
+                                </button>
+                                {open ? (
+                                  <div className="suivi-eleve-detail" aria-live="polite">
+                                    <div className="suivi-detail-grid">
+                                      <div>
+                                        <span className="suivi-detail-label">Dernière activité</span>
+                                        <strong>
+                                          {student.lastActivityAt
+                                            ? formatWhen(student.lastActivityAt)
+                                            : "—"}
+                                        </strong>
+                                      </div>
+                                      <div>
+                                        <span className="suivi-detail-label">Parcours</span>
+                                        <strong>
+                                          {student.parcours.length > 0
+                                            ? student.parcours.join(" · ")
+                                            : "—"}
+                                        </strong>
+                                      </div>
+                                      <div>
+                                        <span className="suivi-detail-label">Univers</span>
+                                        <strong>
+                                          {universeShortList(student.universesCompleted)}
+                                        </strong>
+                                      </div>
                                     </div>
-                                  )}
-                                </div>
-                              ) : null}
-                            </li>
-                          );
-                        })}
-                      </ul>
+                                    {studentSessions.length === 0 ? (
+                                      <p className="field-help">Pas encore de séance pour cet élève.</p>
+                                    ) : (
+                                      <div className="session-table-wrap suivi-table-full">
+                                        <table className="session-table">
+                                          <thead>
+                                            <tr>
+                                              <th>Parcours</th>
+                                              <th>Résultat</th>
+                                              <th>Quand</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            {studentSessions.map((session) => (
+                                              <tr key={session.id}>
+                                                <td>
+                                                  <div>
+                                                    {session.grade && session.subject
+                                                      ? `${gradeLabel(session.grade)} · ${subjectLabel(session.subject)}`
+                                                      : "—"}
+                                                  </div>
+                                                  <div className="muted suivi-subline">
+                                                    {UNIVERSES[session.universe].label} ·{" "}
+                                                    {session.mode === "qcm" ? "QCM" : "Cahier"}
+                                                  </div>
+                                                </td>
+                                                <td>{sessionResultLabel(session)}</td>
+                                                <td>{formatWhen(session.startedAt)}</td>
+                                              </tr>
+                                            ))}
+                                          </tbody>
+                                        </table>
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : null}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
                     )}
                   </div>
                 ) : null}
 
                 {mode === "seances" ? (
                   <div className="suivi-panel suivi-journal">
-                    <h2>Journal</h2>
+                    <div className="suivi-panel-head">
+                      <h2>Journal</h2>
+                      <p className="field-help">Toutes les séances de la classe, regroupées par jour.</p>
+                    </div>
                     {sessions.length === 0 ? (
                       <p>Pas encore de séance avec ce code.</p>
                     ) : (
-                      journalByDay.map(([day, daySessions]) => (
-                        <section key={day} className="suivi-day-group">
-                          <h3 className="suivi-day-title">{day}</h3>
-                          <div className="session-table-wrap">
-                            <table className="session-table suivi-journal-table">
-                              <thead>
-                                <tr>
-                                  <th>Élève</th>
-                                  <th>Parcours</th>
-                                  <th>Résultat</th>
-                                  <th>Heure</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {daySessions.map((session) => (
-                                  <tr key={session.id}>
-                                    <td>{displaySessionStudent(session, roster)}</td>
-                                    <td>
-                                      <div>
-                                        {session.grade && session.subject
-                                          ? `${gradeLabel(session.grade)} · ${subjectLabel(session.subject)}`
-                                          : "—"}
-                                      </div>
-                                      <div className="muted suivi-subline">
-                                        {UNIVERSES[session.universe].label} ·{" "}
-                                        {session.mode === "qcm" ? "QCM" : "Cahier"}
-                                      </div>
-                                    </td>
-                                    <td>{sessionResultLabel(session)}</td>
-                                    <td>{formatTimeOnly(session.startedAt)}</td>
+                      <div className="suivi-fullbleed">
+                        {journalByDay.map(([day, daySessions]) => (
+                          <section key={day} className="suivi-day-group">
+                            <h3 className="suivi-day-title">{day}</h3>
+                            <div className="session-table-wrap suivi-table-full">
+                              <table className="session-table suivi-journal-table">
+                                <colgroup>
+                                  <col className="col-eleve" />
+                                  <col className="col-parcours" />
+                                  <col className="col-resultat" />
+                                  <col className="col-heure" />
+                                </colgroup>
+                                <thead>
+                                  <tr>
+                                    <th>Élève</th>
+                                    <th>Parcours</th>
+                                    <th>Résultat</th>
+                                    <th>Heure</th>
                                   </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        </section>
-                      ))
+                                </thead>
+                                <tbody>
+                                  {daySessions.map((session) => (
+                                    <tr key={session.id}>
+                                      <td>{displaySessionStudent(session, roster)}</td>
+                                      <td>
+                                        <div>
+                                          {session.grade && session.subject
+                                            ? `${gradeLabel(session.grade)} · ${subjectLabel(session.subject)}`
+                                            : "—"}
+                                        </div>
+                                        <div className="muted suivi-subline">
+                                          {UNIVERSES[session.universe].label} ·{" "}
+                                          {session.mode === "qcm" ? "QCM" : "Cahier"}
+                                        </div>
+                                      </td>
+                                      <td>{sessionResultLabel(session)}</td>
+                                      <td>{formatTimeOnly(session.startedAt)}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </section>
+                        ))}
+                      </div>
                     )}
                   </div>
                 ) : null}
 
                 {mode === "programme" ? (
                   <div className="suivi-panel suivi-programme">
-                    <h2>Programme</h2>
-                    <p className="field-help">
-                      Thèmes couverts via Happy Learn (mission terminée par au moins un élève) ou marqués traités en
-                      classe sans l’appli.
-                    </p>
-                    <div className="stats-filters">
+                    <div className="suivi-panel-head">
+                      <h2>Programme</h2>
+                      <p className="field-help">
+                        Coche « En classe » si tu as traité le thème sans passer par l’appli. La colonne App se remplit
+                        toute seule quand un élève termine la mission.
+                      </p>
+                    </div>
+                    <div className="stats-filters suivi-filters-full">
                       <div className="field">
                         <label htmlFor="prog-grade">Niveau</label>
                         <select
@@ -951,98 +995,98 @@ export function TeacherSpaceScreen() {
                     ) : programmeProgress.total === 0 ? (
                       <p>Aucun thème pour ce couple niveau / matière.</p>
                     ) : (
-                      <>
-                        <p className="programme-progress" aria-live="polite">
-                          <strong>
-                            {programmeProgress.covered} / {programmeProgress.total}
-                          </strong>{" "}
-                          thèmes couverts ({gradeLabel(progGrade)} · {subjectLabel(progSubject)})
-                        </p>
-                        <div
-                          className="programme-progress-bar"
-                          role="progressbar"
-                          aria-valuenow={programmeProgress.covered}
-                          aria-valuemin={0}
-                          aria-valuemax={programmeProgress.total}
-                        >
-                          <i
-                            style={{
-                              width: `${Math.round(
-                                (100 * programmeProgress.covered) /
-                                  Math.max(1, programmeProgress.total),
-                              )}%`,
-                            }}
-                          />
+                      <div className="suivi-fullbleed">
+                        <div className="programme-toolbar">
+                          <p className="programme-progress" aria-live="polite">
+                            <strong>
+                              {programmeProgress.covered} / {programmeProgress.total}
+                            </strong>{" "}
+                            thèmes couverts ({gradeLabel(progGrade)} · {subjectLabel(progSubject)})
+                          </p>
+                          <div
+                            className="programme-progress-bar"
+                            role="progressbar"
+                            aria-valuenow={programmeProgress.covered}
+                            aria-valuemin={0}
+                            aria-valuemax={programmeProgress.total}
+                          >
+                            <i
+                              style={{
+                                width: `${Math.round(
+                                  (100 * programmeProgress.covered) /
+                                    Math.max(1, programmeProgress.total),
+                                )}%`,
+                              }}
+                            />
+                          </div>
+                          <ul className="programme-legend" aria-label="Légende des statuts">
+                            <li>
+                              <span className="programme-status status-fait">Traité</span>
+                            </li>
+                            <li>
+                              <span className="programme-status status-partiel_app">Fait via l’app</span>
+                            </li>
+                            <li>
+                              <span className="programme-status status-partiel_classe">Traité en classe</span>
+                            </li>
+                            <li>
+                              <span className="programme-status status-a_faire">À faire</span>
+                            </li>
+                          </ul>
                         </div>
-                        <ul className="programme-legend" aria-label="Légende des statuts">
-                          <li>
-                            <span className="programme-status status-fait">Traité</span>
-                          </li>
-                          <li>
-                            <span className="programme-status status-partiel_app">Fait via l’app</span>
-                          </li>
-                          <li>
-                            <span className="programme-status status-partiel_classe">Traité en classe</span>
-                          </li>
-                          <li>
-                            <span className="programme-status status-a_faire">À faire</span>
-                          </li>
+                        <div className="suivi-theme-cols" aria-hidden="true">
+                          <span>Thème</span>
+                          <span>Mission</span>
+                          <span>App</span>
+                          <span>En classe</span>
+                          <span>Statut</span>
+                        </div>
+                        <ul className="suivi-theme-list">
+                          {programmeRows.map((row) => {
+                            const title = missionTitle(row.theme.missionId);
+                            return (
+                              <li
+                                key={row.theme.id}
+                                className={`suivi-theme-row status-${row.status}`}
+                              >
+                                <div className="suivi-theme-label">
+                                  <strong>{row.theme.label}</strong>
+                                </div>
+                                <div className="suivi-theme-mission">
+                                  {title ? (
+                                    <span>{title}</span>
+                                  ) : (
+                                    <span className="muted">Pas encore de mission</span>
+                                  )}
+                                </div>
+                                <div className="suivi-theme-app">
+                                  <span className={row.doneApp ? "is-yes" : "is-no"}>
+                                    {row.doneApp ? "Oui" : "Non"}
+                                  </span>
+                                </div>
+                                <div className="suivi-theme-class">
+                                  <label className="programme-check">
+                                    <input
+                                      type="checkbox"
+                                      checked={row.doneClass}
+                                      disabled={progBusyId === row.theme.id}
+                                      onChange={(event) =>
+                                        void toggleCoveredInClass(row.theme.id, event.target.checked)
+                                      }
+                                    />
+                                    <span>En classe</span>
+                                  </label>
+                                </div>
+                                <div className="suivi-theme-status">
+                                  <span className={`programme-status status-${row.status}`}>
+                                    {statusLabel(row.status)}
+                                  </span>
+                                </div>
+                              </li>
+                            );
+                          })}
                         </ul>
-                        <div className="session-table-wrap">
-                          <table className="session-table programme-table">
-                            <thead>
-                              <tr>
-                                <th>Thème</th>
-                                <th>Mission</th>
-                                <th>App</th>
-                                <th>En classe</th>
-                                <th>Statut</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {programmeRows.map((row) => {
-                                const title = missionTitle(row.theme.missionId);
-                                return (
-                                  <tr key={row.theme.id} className={`status-${row.status}`}>
-                                    <td>{row.theme.label}</td>
-                                    <td>
-                                      {title ? (
-                                        <span>{title}</span>
-                                      ) : row.theme.missionId ? (
-                                        <span className="muted">{row.theme.missionId}</span>
-                                      ) : (
-                                        <span className="muted">Pas encore de mission</span>
-                                      )}
-                                    </td>
-                                    <td>{row.doneApp ? "Oui" : "Non"}</td>
-                                    <td>
-                                      <label className="programme-check">
-                                        <input
-                                          type="checkbox"
-                                          checked={row.doneClass}
-                                          disabled={progBusyId === row.theme.id}
-                                          onChange={(event) =>
-                                            void toggleCoveredInClass(
-                                              row.theme.id,
-                                              event.target.checked,
-                                            )
-                                          }
-                                        />
-                                        <span>En classe</span>
-                                      </label>
-                                    </td>
-                                    <td>
-                                      <span className={`programme-status status-${row.status}`}>
-                                        {statusLabel(row.status)}
-                                      </span>
-                                    </td>
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                          </table>
-                        </div>
-                      </>
+                      </div>
                     )}
                   </div>
                 ) : null}
