@@ -984,7 +984,80 @@ p {
 
 .teacher-tabs {
   margin: 20px 0 8px;
-  max-width: 420px;
+  max-width: 560px;
+}
+
+.muted {
+  color: #5a7266;
+}
+
+.programme-progress {
+  margin: 12px 0 8px;
+  font-size: 1.05rem;
+}
+
+.programme-progress-bar {
+  height: 10px;
+  margin: 0 0 16px;
+  border-radius: 999px;
+  background: #e3f3ea;
+  overflow: hidden;
+}
+
+.programme-progress-bar > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #1bbf6a, #0f6a45);
+  transition: width 0.25s ease;
+}
+
+.programme-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--tap);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.programme-check input {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: #0f6a45;
+}
+
+.programme-status {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.programme-status.status-fait {
+  background: #d8ffe8;
+  color: #0b5a38;
+}
+
+.programme-status.status-partiel_app {
+  background: #e7f3ff;
+  color: #0b4a7a;
+}
+
+.programme-status.status-partiel_classe {
+  background: #fff3d6;
+  color: #7a5200;
+}
+
+.programme-status.status-a_faire {
+  background: #f0f3f1;
+  color: #4a5c52;
+}
+
+.programme-table tr.status-fait td:first-child {
+  font-weight: 600;
 }
 
 .student-detail {

@@ -26,6 +26,15 @@ export type ClassRecord = {
   code: string;
 };
 
+/** Couverture d’un thème du programme pour une classe (hors appli). */
+export type ClassThemeCoverage = {
+  classId: string;
+  themeId: string;
+  coveredInClass: boolean;
+  coveredAt: string | null;
+  note: string;
+};
+
 export type ClassStudent = {
   id: string;
   classId: string;

@@ -6,6 +6,7 @@ import type {
   ClasseSession,
   ClassRecord,
   ClassStudent,
+  ClassThemeCoverage,
   GradeLevel,
   PlayMode,
   SessionParticipant,
@@ -120,6 +121,13 @@ type SessionState = {
   loadClassAnswers: (sessionIds: string[]) => ReturnType<Persistence["listAnswersBySessionIds"]>;
   listClassMissionsDone: (classId: string) => Promise<string[]>;
   listClassSessionsHistory: (classId: string) => Promise<ClasseSession[]>;
+  listClassThemeCoverage: (classId: string) => Promise<ClassThemeCoverage[]>;
+  setThemeCoveredInClass: (
+    classId: string,
+    themeId: string,
+    covered: boolean,
+    note?: string,
+  ) => Promise<ClassThemeCoverage | null>;
   activeClassId: string | null;
   setActiveClassId: (classId: string) => void;
   startMission: (override?: { universe?: UniverseSlug }) => Promise<void>;
@@ -823,6 +831,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       listClassSessionsHistory: async (classId) => {
         const store = persistence ?? localPersistence;
         return store.listClassSessionsHistory(classId);
+      },
+      listClassThemeCoverage: async (classId) => {
+        const store = persistence ?? localPersistence;
+        return store.listClassThemeCoverage(classId);
+      },
+      setThemeCoveredInClass: async (classId, themeId, covered, note) => {
+        const store = persistence ?? localPersistence;
+        return store.setThemeCoveredInClass(classId, themeId, covered, note);
       },
       activeClassId,
       setActiveClassId: (classId) => {
