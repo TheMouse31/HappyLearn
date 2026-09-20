@@ -4,6 +4,8 @@ Apprentissages du CP au CM2, racontés comme une mission. Application web React 
 
 **Démo en ligne :** [https://happy-learn.pages.dev](https://happy-learn.pages.dev)
 
+**Documentation complète (PDF) :** [`docs/HappyLearn-Documentation.pdf`](./docs/HappyLearn-Documentation.pdf) — vision produit, parcours illustrés, architecture, limites MVP et feuille de route « produit pro ». Source HTML : [`docs/HappyLearn-Documentation.html`](./docs/HappyLearn-Documentation.html).
+
 Le prototype HTML du dossier voisin `mini-produit` est la spécification produit. Ce dépôt est le logiciel.
 
 ## Lancer en local
