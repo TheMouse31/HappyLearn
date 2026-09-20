@@ -865,9 +865,10 @@ p {
 
 .listen {
   position: fixed;
-  top: 12px;
-  right: 12px;
-  z-index: 40;
+  top: auto;
+  bottom: 16px;
+  right: 16px;
+  z-index: 50;
   min-height: 46px;
   max-width: min(200px, calc(100vw - 24px));
   border-radius: 999px;
@@ -1018,20 +1019,19 @@ p {
 @media (max-width: 620px) {
   .qcm, .two-steps, .collection, .scene-split, .corridors, .scene-groups { grid-template-columns: 1fr; }
   .listen {
-    top: 8px;
-    bottom: auto;
-    right: 8px;
+    top: auto;
+    bottom: 12px;
+    right: 12px;
     padding: 8px 10px;
     min-height: 40px;
     font-size: 0.82rem;
-    max-width: 42vw;
+    max-width: 48vw;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   .topbar {
     flex-wrap: wrap;
-    padding-right: 118px;
   }
   .scene { min-height: 240px; }
 }
@@ -2530,6 +2530,23 @@ button.text-link {
   }
 }
 
+
+/* —— Bascule Classic / NewFront —— */
+.skin-toggle.is-newfront {
+  border-color: #0f8f78;
+  background: #dff7f0;
+  color: #0b2420;
+}
+
+.skin-toggle.is-classic {
+  border-color: var(--line);
+}
+
+@media (max-width: 620px) {
+  .skin-toggle-label {
+    display: none;
+  }
+}
 
 /* —— Mode daltonien (deutéranopie : bleu = succès, ambre = attention) —— */
 .colorblind-toggle.is-on {

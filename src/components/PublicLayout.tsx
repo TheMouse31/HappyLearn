@@ -2,32 +2,39 @@ import { Link, useNavigate } from "react-router-dom";
 import type { ReactNode } from "react";
 import { ColorblindToggle } from "./ColorblindToggle";
 import { ListenButton } from "./ListenButton";
+import { SkinToggle } from "./SkinToggle";
 import { useSession } from "../lib/session";
+import { useSkin } from "../lib/useSkin";
 
 type Props = {
   children: ReactNode;
+  /** Edge-to-edge hero pages (NewFront home). */
+  fullBleed?: boolean;
 };
 
-export function PublicLayout({ children }: Props) {
+export function PublicLayout({ children, fullBleed = false }: Props) {
   const navigate = useNavigate();
+  const skin = useSkin();
   const { role } = useSession();
   const continueTo =
     role === "eleve" ? "/accueil" : role === "enseignant" ? "/espace-professeur" : null;
+  const bleed = fullBleed && skin === "newfront";
 
   return (
-    <div className="app-shell public-shell">
+    <div className={`app-shell public-shell${bleed ? " is-bleed" : ""}`}>
       <ListenButton />
       <header className="topbar public-topbar">
         <Link to="/" className="brand brand-link" aria-label="Happy Learn — accueil">
           <span className="brand-mark" aria-hidden="true">
             ✦
           </span>
-          Happy Learn
+          <span className="brand-word">Happy Learn</span>
         </Link>
         <nav className="public-nav" aria-label="Navigation principale">
           <a className="nav-text-link" href="#comment-ca-marche">
             Comment ça marche
           </a>
+          <SkinToggle />
           <ColorblindToggle />
           {continueTo ? (
             <button type="button" className="primary nav-cta" onClick={() => navigate(continueTo)}>
@@ -40,7 +47,7 @@ export function PublicLayout({ children }: Props) {
           )}
         </nav>
       </header>
-      <div className="window public-window">{children}</div>
+      <div className={`window public-window${bleed ? " is-bleed" : ""}`}>{children}</div>
     </div>
   );
 }

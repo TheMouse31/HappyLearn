@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { ColorblindToggle } from "./ColorblindToggle";
 import { ListenButton } from "./ListenButton";
 import { SetupSteps } from "./SetupSteps";
+import { SkinToggle } from "./SkinToggle";
 import { useSession } from "../lib/session";
 
 type Props = {
@@ -67,19 +68,20 @@ export function Shell({
               <span className="brand-mark" aria-hidden="true">
                 ✦
               </span>
-              {brand}
+              <span className="brand-word">{brand}</span>
             </span>
           ) : (
             <Link to={brandTo} className="brand brand-link" aria-label={`${brand} — accueil`}>
               <span className="brand-mark" aria-hidden="true">
                 ✦
               </span>
-              {brand}
+              <span className="brand-word">{brand}</span>
             </Link>
           )}
         </div>
         <div className="topbar-end">
           {stepLabel ? <div className="step-pill">{stepLabel}</div> : null}
+          <SkinToggle />
           <ColorblindToggle />
           {!hideNav ? (
             <button type="button" className="nav-icon-btn home-btn" onClick={goHome} aria-label="Accueil">
