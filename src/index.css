@@ -877,6 +877,11 @@ p {
   box-shadow: 0 8px 20px #15382c22;
 }
 
+.listen.is-on {
+  background: #ffe8c8;
+  border-color: #c47a12;
+}
+
 .method-box {
   padding: 16px 16px 16px 18px;
   border: 1px solid #d7cda9;
