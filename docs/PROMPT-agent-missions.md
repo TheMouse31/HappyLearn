@@ -1,5 +1,9 @@
 # Prompt agent — Fabrication des missions Happy Learn
 
+> **État septembre 2026 :** Phase&nbsp;A terminée (**79/79** thèmes `done` —
+> une mission standard `…-01` par thème). Ce prompt sert désormais surtout à la
+> **Phase&nbsp;B** (variantes `…-facile-01` / `…-difficile-01`) ou à des thèmes ajoutés.
+
 Copie-colle ce prompt à un autre agent Cursor (ou Cloud Agent) pour qu’il produise les missions.
 
 ---
