@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import type { ReactNode } from "react";
-import { ColorblindToggle } from "./ColorblindToggle";
+import { ColorsMenu } from "./ColorsMenu";
 import { ListenButton } from "./ListenButton";
 import { SkinToggle } from "./SkinToggle";
 import { useSession } from "../lib/session";
@@ -22,7 +22,6 @@ export function PublicLayout({ children, fullBleed = false }: Props) {
 
   return (
     <div className={`app-shell public-shell${bleed ? " is-bleed" : ""}`}>
-      <ListenButton />
       <header className="topbar public-topbar">
         <Link to="/" className="brand brand-link" aria-label="Happy Learn — accueil">
           <span className="brand-mark" aria-hidden="true">
@@ -35,7 +34,8 @@ export function PublicLayout({ children, fullBleed = false }: Props) {
             Comment ça marche
           </a>
           <SkinToggle />
-          <ColorblindToggle />
+          <ColorsMenu />
+          <ListenButton />
           {continueTo ? (
             <button type="button" className="primary nav-cta" onClick={() => navigate(continueTo)}>
               Continuer

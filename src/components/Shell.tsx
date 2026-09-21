@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import type { ReactNode } from "react";
-import { ColorblindToggle } from "./ColorblindToggle";
+import { ColorsMenu } from "./ColorsMenu";
 import { ListenButton } from "./ListenButton";
 import { SetupSteps } from "./SetupSteps";
 import { SkinToggle } from "./SkinToggle";
@@ -55,7 +55,6 @@ export function Shell({
 
   return (
     <div className="app-shell">
-      <ListenButton />
       <header className="topbar">
         <div className="topbar-start">
           {backTo && !hideNav ? (
@@ -82,7 +81,8 @@ export function Shell({
         <div className="topbar-end">
           {stepLabel ? <div className="step-pill">{stepLabel}</div> : null}
           <SkinToggle />
-          <ColorblindToggle />
+          <ColorsMenu />
+          <ListenButton />
           {!hideNav ? (
             <button type="button" className="nav-icon-btn home-btn" onClick={goHome} aria-label="Accueil">
               <span aria-hidden="true">⌂</span>

@@ -1,7 +1,12 @@
 import { canSpeak, stopSpeech, subscribeSpeech, toggleSpeech } from "../lib/speech";
 import { useEffect, useState } from "react";
 
-export function ListenButton() {
+type Props = {
+  /** Place the control in the topbar instead of floating. */
+  variant?: "float" | "nav";
+};
+
+export function ListenButton({ variant = "nav" }: Props) {
   const [on, setOn] = useState(false);
   const [supported, setSupported] = useState(false);
   const [hint, setHint] = useState("");
@@ -20,13 +25,20 @@ export function ListenButton() {
 
   if (!supported) return null;
 
+  const label = on ? "Arrêter" : hint || "Écouter";
+  const fullLabel = on ? "Arrêter la lecture" : hint || "Écouter cette page";
+
   return (
     <button
       type="button"
-      className={`listen ${on ? "is-on" : ""}`}
+      className={
+        variant === "nav"
+          ? `nav-icon-btn listen-nav ${on ? "is-on" : ""}`
+          : `listen ${on ? "is-on" : ""}`
+      }
       aria-pressed={on}
-      aria-label="Lire à voix haute les textes de cette page"
-      title={hint || undefined}
+      aria-label={fullLabel}
+      title={hint || fullLabel}
       onClick={() => {
         const started = toggleSpeech();
         if (!started && !on) {
@@ -37,7 +49,8 @@ export function ListenButton() {
         }
       }}
     >
-      {on ? "Arrêter la lecture" : hint || "Écouter cette page"}
+      <span aria-hidden="true">{on ? "■" : "▶"}</span>
+      <span className="listen-nav-label">{label}</span>
     </button>
   );
 }

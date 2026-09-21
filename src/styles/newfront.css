@@ -3202,3 +3202,16 @@ html[data-skin="newfront"] .public-shell.is-bleed .listen{
     display: none;
   }
 }
+
+/* Theme accent on NewFront hero when user picked a color */
+html[data-skin="newfront"][data-theme-color] .hl-hero-glow{
+  background:
+    radial-gradient(ellipse 55% 60% at 78% 55%, color-mix(in srgb, var(--action) 55%, transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 45% at 18% 30%, #ffd4a855 0%, transparent 65%),
+    linear-gradient(160deg, color-mix(in srgb, var(--action) 75%, #0b2420) 0%, var(--action) 42%, color-mix(in srgb, var(--action) 55%, #1a8fb5) 100%);
+}
+
+html[data-skin="newfront"] .listen-nav.is-on{
+  border-color: #c47a12;
+  background: #fff3df;
+}
