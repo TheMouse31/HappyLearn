@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "../components/Button";
 import { Shell } from "../components/Shell";
+import { UniverseScene } from "../components/UniverseScene";
 import { GRADES, SUBJECTS, gradeLabel, subjectLabel } from "../data/catalog";
 import {
   EDITOR_KINDS,
@@ -15,7 +16,17 @@ import {
   saveTeacherMission,
   suggestNextMissionId,
 } from "../data/missions/index";
-import type { GradeLevel, MissionDef, Step, StepKind, SubjectSlug, UniverseCopy } from "../data/types";
+import type {
+  GradeLevel,
+  MissionDef,
+  Step,
+  StepKind,
+  SubjectSlug,
+  UniverseCopy,
+  UniverseSlug,
+} from "../data/types";
+import { UNIVERSE_ORDER, UNIVERSES } from "../data/universes";
+import { sceneKeyOf } from "../engine/missionEngine";
 import { SCENE_OPTIONS } from "../lib/illustrations";
 import { useSession } from "../lib/session";
 
@@ -143,7 +154,8 @@ export function MissionEditorScreen() {
   const [available, setAvailable] = useState(false);
   const [steps, setSteps] = useState<DraftStep[]>([emptyStep(0)]);
   const [selectedStep, setSelectedStep] = useState(0);
-  const [previewIndex, setPreviewIndex] = useState(0);
+  const [previewUniverse, setPreviewUniverse] = useState<UniverseSlug>("football");
+  const [previewSuccess, setPreviewSuccess] = useState(false);
 
   async function refreshCatalog() {
     const rows = await listAdminCatalog();
@@ -185,7 +197,14 @@ export function MissionEditorScreen() {
     () => (missionId ? draftToSteps(missionId, steps) : []),
     [missionId, steps],
   );
-  const previewStep = previewSteps[previewIndex] ?? previewSteps[0] ?? null;
+  const previewStep = previewSteps[selectedStep] ?? previewSteps[0] ?? null;
+  const previewSceneKey = previewStep ? sceneKeyOf(previewStep) : "";
+  const selectedSceneOption =
+    SCENE_OPTIONS.find((item) => item.value === (currentDraft?.scene ?? "")) ?? SCENE_OPTIONS[0];
+
+  useEffect(() => {
+    setPreviewSuccess(false);
+  }, [selectedStep]);
 
   const filteredCatalog = useMemo(() => {
     const q = filter.trim().toLowerCase();
@@ -210,7 +229,6 @@ export function MissionEditorScreen() {
     setAvailable(draft.available);
     setSteps(draft.steps.length ? draft.steps : [emptyStep(0)]);
     setSelectedStep(0);
-    setPreviewIndex(0);
     setEditingId(asReadOnly ? null : mission.id);
     setReadOnly(asReadOnly);
     setBuiltinOverride(mission.source !== "teacher");
@@ -231,7 +249,6 @@ export function MissionEditorScreen() {
     setAvailable(false);
     setSteps([emptyStep(0)]);
     setSelectedStep(0);
-    setPreviewIndex(0);
     setMode("edit");
     setMessage("");
     setError("");
@@ -251,7 +268,6 @@ export function MissionEditorScreen() {
     setAvailable(false);
     setSteps(draft.steps);
     setSelectedStep(0);
-    setPreviewIndex(0);
     setMode("edit");
     setMessage("");
     setError("");
@@ -633,21 +649,45 @@ export function MissionEditorScreen() {
                     onChange={(event) => updateStep(selectedStep, { caption: event.target.value })}
                   />
                 </div>
-                <div className="field">
-                  <label htmlFor="step-scene">Illustration animée (scène)</label>
-                  <select
-                    id="step-scene"
-                    value={currentDraft.scene}
-                    disabled={readOnly}
-                    onChange={(event) => updateStep(selectedStep, { scene: event.target.value })}
-                  >
-                    {SCENE_OPTIONS.map((option) => (
-                      <option key={option.value || "auto"} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
+
+                <div className="mission-illust-block">
+                  <div className="mission-illust-head">
+                    <h3>Illustration de l’étape</h3>
+                    <p className="field-help">
+                      Choisis la scène animée affichée à l’élève. Aperçu à droite (univers + réussite).
+                    </p>
+                  </div>
+                  <div className="mission-scene-grid" role="listbox" aria-label="Illustrations disponibles">
+                    {SCENE_OPTIONS.map((option) => {
+                      const selected = (currentDraft.scene || "") === option.value;
+                      return (
+                        <button
+                          key={option.value || "auto"}
+                          type="button"
+                          role="option"
+                          aria-selected={selected}
+                          className={`mission-scene-card${selected ? " is-selected" : ""}`}
+                          disabled={readOnly}
+                          onClick={() => updateStep(selectedStep, { scene: option.value })}
+                        >
+                          <strong>{option.label}</strong>
+                          <span>{option.blurb}</span>
+                          {option.value ? <small>{option.value}</small> : <small>auto</small>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="mission-scene-current">
+                    Sélection : <strong>{selectedSceneOption?.label}</strong>
+                    {previewSceneKey ? (
+                      <>
+                        {" "}
+                        · clé jouée : <code>{previewSceneKey}</code>
+                      </>
+                    ) : null}
+                  </p>
                 </div>
+
                 {currentDraft.kind === "number" ||
                 currentDraft.kind === "text" ||
                 currentDraft.kind === "choice" ||
@@ -683,13 +723,66 @@ export function MissionEditorScreen() {
             ) : null}
           </div>
 
-          <aside className="mission-preview" aria-label="Aperçu joueur">
-            <h2>Aperçu</h2>
+          <aside className="mission-preview" aria-label="Aperçu illustration">
+            <div className="mission-preview-head">
+              <h2>Aperçu illustration</h2>
+              <p className="field-help">
+                Étape {selectedStep + 1}/{Math.max(steps.length, 1)}
+                {previewStep ? ` · ${previewStep.kind}` : ""}
+              </p>
+            </div>
+
+            <div className="mission-preview-universes" role="group" aria-label="Univers d’aperçu">
+              {UNIVERSE_ORDER.map((slug) => (
+                <button
+                  key={slug}
+                  type="button"
+                  className={previewUniverse === slug ? "is-selected" : ""}
+                  onClick={() => setPreviewUniverse(slug)}
+                >
+                  {UNIVERSES[slug].label}
+                </button>
+              ))}
+            </div>
+
+            <label className="mission-preview-success">
+              <input
+                type="checkbox"
+                checked={previewSuccess}
+                onChange={(event) => setPreviewSuccess(event.target.checked)}
+              />
+              Montrer l’état réussi (animation)
+            </label>
+
             {previewStep ? (
               <>
+                <div className="mission-preview-stage">
+                  <UniverseScene
+                    universe={previewUniverse}
+                    stepId={previewSceneKey}
+                    progress={previewStep.progress}
+                    success={previewSuccess}
+                    selected={previewSuccess ? previewStep.expected : undefined}
+                    expected={previewStep.expected}
+                    caption={
+                      previewStep.copy[previewUniverse]?.caption ?? previewStep.copy.football.caption
+                    }
+                    kind={previewStep.kind}
+                    subject={subject}
+                    statement={
+                      previewStep.copy[previewUniverse]?.statement ??
+                      previewStep.copy.football.statement
+                    }
+                    title={
+                      previewStep.copy[previewUniverse]?.title ?? previewStep.copy.football.title
+                    }
+                  />
+                </div>
                 <span className="kicker">{previewStep.kicker}</span>
-                <h3>{previewStep.copy.football.title}</h3>
-                <p>{previewStep.copy.football.statement}</p>
+                <h3>{previewStep.copy[previewUniverse]?.title ?? previewStep.copy.football.title}</h3>
+                <p>
+                  {previewStep.copy[previewUniverse]?.statement ?? previewStep.copy.football.statement}
+                </p>
                 {previewStep.expected ? (
                   <p className="field-help">
                     Attendu : {previewStep.expected}
@@ -699,29 +792,30 @@ export function MissionEditorScreen() {
                   </p>
                 ) : null}
                 <p className="field-help">
-                  Id canonique : {previewStep.id} · kind : {previewStep.kind}
+                  Scène : <code>{previewSceneKey || "—"}</code>
+                  {currentDraft?.scene ? "" : " (automatique)"}
                 </p>
                 <div className="actions">
                   <Button
                     type="button"
-                    disabled={previewIndex <= 0}
-                    onClick={() => setPreviewIndex((value) => Math.max(0, value - 1))}
+                    disabled={selectedStep <= 0}
+                    onClick={() => setSelectedStep((value) => Math.max(0, value - 1))}
                   >
-                    Précédente
+                    Étape précédente
                   </Button>
                   <Button
                     type="button"
-                    disabled={previewIndex >= previewSteps.length - 1}
+                    disabled={selectedStep >= steps.length - 1}
                     onClick={() =>
-                      setPreviewIndex((value) => Math.min(previewSteps.length - 1, value + 1))
+                      setSelectedStep((value) => Math.min(steps.length - 1, value + 1))
                     }
                   >
-                    Suivante
+                    Étape suivante
                   </Button>
                 </div>
               </>
             ) : (
-              <p className="field-help">Ajoute une étape pour prévisualiser.</p>
+              <p className="field-help">Ajoute une étape pour voir l’illustration.</p>
             )}
           </aside>
         </div>

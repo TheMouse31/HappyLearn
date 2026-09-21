@@ -72,23 +72,23 @@ export const ILLUSTRATION_FIELDS: {
 ];
 
 /** Scènes animées sélectionnables dans le créateur de missions. */
-export const SCENE_OPTIONS: { value: string; label: string }[] = [
-  { value: "", label: "Automatique (selon l’étape)" },
-  { value: "T00", label: "Tutoriel fraction (T00)" },
-  { value: "M01", label: "Fraction interactive (M01)" },
-  { value: "M01B", label: "Simplifier (M01B)" },
-  { value: "M02", label: "Nombre / parts (M02)" },
-  { value: "M03", label: "Nombre / parts (M03)" },
-  { value: "M04", label: "Nombre / parts (M04)" },
-  { value: "M05A", label: "Deux étapes A (M05A)" },
-  { value: "M05B", label: "Deux étapes B (M05B)" },
-  { value: "M06", label: "Complément (M06)" },
-  { value: "D01", label: "Direction (D01)" },
-  { value: "N02", label: "Narration tokens (N02)" },
-  { value: "N04", label: "Célébration (N04)" },
-  { value: "L01", label: "Méthode (L01)" },
-  { value: "Z01", label: "Teaser (Z01)" },
-  { value: "B01", label: "Bilan (B01)" },
+export const SCENE_OPTIONS: { value: string; label: string; blurb: string }[] = [
+  { value: "", label: "Automatique", blurb: "Selon le type d’étape et la matière" },
+  { value: "T00", label: "Tutoriel fraction", blurb: "Tableau de parts animé" },
+  { value: "M01", label: "Partage / moitié", blurb: "Terrain, sentier ou signaux" },
+  { value: "M01B", label: "Simplifier", blurb: "Parts qui se regroupent" },
+  { value: "M02", label: "Nombre — parts", blurb: "Grille de jetons animés" },
+  { value: "M03", label: "Nombre — parts 2", blurb: "Grille de jetons animés" },
+  { value: "M04", label: "Nombre — parts 3", blurb: "Grille de jetons animés" },
+  { value: "M05A", label: "Deux étapes A", blurb: "Progression en deux temps" },
+  { value: "M05B", label: "Deux étapes B", blurb: "Suite de la progression" },
+  { value: "M06", label: "Complément", blurb: "Jetons / salles restantes" },
+  { value: "D01", label: "Direction", blurb: "Choix gauche / axe / droite" },
+  { value: "N02", label: "Narration tokens", blurb: "Jetons qui clignent" },
+  { value: "N04", label: "Célébration", blurb: "Animation de réussite" },
+  { value: "L01", label: "Méthode", blurb: "Carte méthode" },
+  { value: "Z01", label: "Teaser", blurb: "Mystère / suite" },
+  { value: "B01", label: "Bilan", blurb: "Sans illustration dédiée" },
 ];
 
 export function loadIllustrationOverrides(): IllustrationOverrides {
