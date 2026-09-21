@@ -3064,8 +3064,8 @@ html[data-colorblind="1"] .home-btn {
 }
 
 .pilot-code-value {
-  font-size: clamp(2rem, 6vw, 3rem);
-  letter-spacing: 0.22em;
+  font-size: clamp(2rem, 6vw, 2.75rem);
+  letter-spacing: 0.14em;
   line-height: 1.1;
   font-weight: 900;
   color: var(--ink);
