@@ -166,10 +166,10 @@
   <div class="meta">
     <p><strong>Produit :</strong> Happy Learn · SPA React / Vite / TypeScript</p>
     <p><strong>Démo :</strong> https://happy-learn.pages.dev · https://happylearn.net</p>
-    <p><strong>Date :</strong> 20 septembre 2026 (mise à jour doc)</p>
+    <p><strong>Date :</strong> 21 septembre 2026 (mise à jour doc)</p>
     <p><strong>Périmètre :</strong> parcours élève multi-niveaux, espace professeur
       (suivi + programme), sessions live, catalogue 79 missions, créateur,
-      accessibilité (écoute + mode daltonien)</p>
+      interfaces Classic / NewFront, accessibilité (écoute + panneau Couleurs)</p>
   </div>
 </section>
 
@@ -216,8 +216,9 @@
   <li>SPA Vite + React 19 + TypeScript strict + React Router 7</li>
   <li>Double backend : Supabase (Auth, Postgres, Realtime) ou fallback <code>localStorage</code></li>
   <li>Déploiement Cloudflare Pages (<code>happy-learn.pages.dev</code>)</li>
-  <li>Accessibilité : <strong>Écouter cette page</strong>, <strong>mode daltonien</strong>
-    (deutéranopie), <code>lang=fr</code>, <code>aria-live</code>, reduced-motion</li>
+  <li>Accessibilité : <strong>Écouter</strong> (topbar), panneau <strong>Couleurs</strong>
+    (daltonien + teinte du site), <code>lang=fr</code>, <code>aria-live</code>, reduced-motion</li>
+  <li>Bascule d’interface <strong>Classic / NewFront</strong> (<code>html[data-skin]</code>)</li>
 </ul>
 
 <h3>2.2 Parcours élève (solo)</h3>
@@ -255,10 +256,17 @@
   <li>Éditeur in-app : création, duplication, preview, publication</li>
 </ul>
 
-<h3>2.6 Accessibilité visuelle</h3>
+<h3>2.6 Interface &amp; accessibilité visuelle</h3>
 <ul>
-  <li>Bouton <strong>Couleurs / Daltonien</strong> (barre publique + Shell)</li>
-  <li>Préférence <code>localStorage</code> <code>happy-learn-colorblind</code> → attribut <code>html[data-colorblind="1"]</code></li>
+  <li>Bascule <strong>Classic / NewFront</strong> (<code>localStorage</code> <code>happy-learn-skin</code> → <code>html[data-skin]</code>)</li>
+  <li>NewFront : home plein viewport sans scroll, typo Fraunces + Plus Jakarta Sans</li>
+  <li>Bouton <strong>Écouter</strong> intégré à la topbar (plus de bouton flottant)</li>
+  <li>Panneau <strong>Couleurs</strong> :
+    <ul>
+      <li><strong>Mode daltonien</strong> — <code>happy-learn-colorblind</code> → <code>html[data-colorblind="1"]</code></li>
+      <li><strong>Couleur du site</strong> (pastilles + color picker) — <code>happy-learn-theme-color</code> → variables <code>--action</code>…</li>
+    </ul>
+  </li>
   <li>Palette deutéranopie : bleu = succès, ambre hachuré = attention, gris pointillé = à faire</li>
 </ul>
 
@@ -271,7 +279,7 @@
   <tbody>
     <tr>
       <td>Élève solo</td>
-      <td>Jouer toute mission officielle (79) selon niveau/matière, 4 univers, cahier/QCM, récompense ; mode daltonien ; écoute</td>
+      <td>Jouer toute mission officielle (79) selon niveau/matière, 4 univers, cahier/QCM, récompense ; bascule Classic/NewFront ; panneau Couleurs ; écoute</td>
       <td>Variantes facile/difficile (Phase&nbsp;B)</td>
     </tr>
     <tr>
@@ -521,7 +529,7 @@
 
 <h3>9.4 Expérience élève (priorité moyenne)</h3>
 <ul>
-  <li><strong>Livré :</strong> mode daltonien + écoute à voix haute.</li>
+  <li><strong>Livré :</strong> panneau Couleurs (daltonien + teinte), écoute en topbar, bascule Classic / NewFront.</li>
   <li>Accessibilité renforcée (dys, taille texte, clavier complet, autres daltonismes).</li>
   <li>Mode «&nbsp;reprise&nbsp;» si coupure réseau / changement d’appareil.</li>
   <li>Différenciation : variantes d’étapes selon profil (aide renforcée).</li>
@@ -612,12 +620,14 @@
     <tr><td>Builtin</td><td>Mission officielle embarquée dans le code TypeScript</td></tr>
     <tr><td>Couverture programme</td><td>Marquage App / En classe d’un thème pour une classe</td></tr>
     <tr><td>Mode daltonien</td><td>Palette deutéranopie + motifs sur pastilles de statut</td></tr>
+    <tr><td>NewFront</td><td>Interface moderne optionnelle (home sans scroll, typo expressive)</td></tr>
+    <tr><td>Teinte du site</td><td>Accent personnalisable (boutons, liens, hero) via le panneau Couleurs</td></tr>
   </tbody>
 </table>
 
 <footer class="page-note">
   Document généré pour Happy Learn v0.1 — septembre 2026 (doc à jour catalogue,
-  suivi, programme, daltonien). Les captures illustrent l’environnement de
+  suivi, programme, NewFront, panneau Couleurs). Les captures illustrent l’environnement de
   développement et les sessions live. Contact : dépôt HappyLearn.
 </footer>
 

@@ -101,10 +101,14 @@ La page d’accueil `/` présente Happy Learn. La connexion est sur `/connexion`
 
 Le professeur lance une session éphémère (code à 6 caractères). Les élèves rejoignent, attendent en salle d’attente, puis jouent la mission poussée. Navigation verrouillée pendant le live. Arrêt d’activité → retour salle d’attente.
 
-## Accessibilité
+## Interface & accessibilité
 
-- Bouton **Écouter cette page** (lecture à voix haute) dans la barre.
-- Bouton **Couleurs / Daltonien** : mode deutéranopie (bleu = succès, motifs sur les pastilles), mémorisé dans le navigateur.
+- Bascule **Classic / NewFront** dans la barre (préférence `happy-learn-skin`).
+  NewFront : home plein écran sans scroll, typo Fraunces + Plus Jakarta Sans.
+- Bouton **Écouter** dans la topbar : lecture à voix haute (cliquer pour arrêter).
+- Bouton **Couleurs** : panneau avec
+  - **Mode daltonien** (deutéranopie, pastilles à motifs) — `happy-learn-colorblind`
+  - **Couleur du site** (pastilles + color picker) — accents / boutons / hero — `happy-learn-theme-color`
 - `lang=fr`, `aria-live`, respect de `prefers-reduced-motion`.
 
 ## Parcours enfant
@@ -131,7 +135,8 @@ Exemple historique (fractions CM2, checklist `docs/PARCOURS-8.md`) : 10 étapes 
 - Couverture programme (App + En classe) par classe
 - Sessions de classe live (Realtime)
 - Créateur de missions multi-matières
-- Mode daltonien + lecture à voix haute
+- Mode daltonien + teinte personnalisable (panneau Couleurs) + lecture à voix haute (topbar)
+- Bascule d’interface Classic / NewFront
 - Supabase Auth + migrations + seed
 - Déploiement Cloudflare Pages (`happy-learn.pages.dev`)
 

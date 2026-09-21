@@ -158,13 +158,13 @@
   <p class="lead">
     Ce guide explique comment utiliser Happy Learn en classe ou à la maison :
     connexion, mission solo, session live, suivi de classe, couverture du programme,
-    créateur de missions, écoute et mode daltonien.
+    créateur de missions, écoute, panneau Couleurs et bascule Classic / NewFront.
     Aucune connaissance technique n’est requise.
   </p>
   <div class="meta">
     <p><strong>Public :</strong> enseignants · élèves · familles</p>
     <p><strong>Site :</strong> https://happylearn.net · https://happy-learn.pages.dev</p>
-    <p><strong>Version :</strong> 0.1 · septembre 2026 (mise à jour)</p>
+    <p><strong>Version :</strong> 0.1 · septembre 2026 (mise à jour UI)</p>
   </div>
 </section>
 
@@ -250,8 +250,9 @@
 <ul>
   <li><strong>Valider</strong> envoie ta réponse. Si c’est juste, Néo encourage et l’étape suivante arrive.</li>
   <li><strong>Un indice</strong> t’aide sans donner directement la réponse.</li>
-  <li><strong>Écouter cette page</strong> lit le texte à voix haute (bouton en haut à droite).</li>
-  <li><strong>Couleurs / Daltonien</strong> adapte les couleurs si tu confonds le vert et le rouge.</li>
+  <li><strong>Écouter</strong> (barre du haut) lit le texte à voix haute ; recliquer pour arrêter.</li>
+  <li><strong>Couleurs</strong> ouvre un panneau : mode daltonien et/ou teinte du site.</li>
+  <li><strong>Classic / NewFront</strong> change l’apparence de l’application (mémorisé).</li>
   <li><strong>Quitter</strong> revient à l’accueil <em>sans</em> gagner la récompense de la mission.</li>
 </ul>
 <div class="info"><strong>À retenir :</strong> Happy Learn ne met pas de note et ne fait pas de classement. L’objectif est de réussir la mission et de gagner une récompense visuelle.</div>
@@ -394,11 +395,17 @@
 
 <!-- 8 -->
 <h2>8. Astuces, accessibilité et dépannage</h2>
-<h3>Accessibilité</h3>
+<h3>Accessibilité &amp; apparence</h3>
 <ul>
-  <li>Bouton <strong>Écouter cette page</strong> : lecture à voix haute (cliquer à nouveau pour arrêter).</li>
-  <li>Bouton <strong>Couleurs / Daltonien</strong> : active une palette adaptée à la deutéranopie
-    (bleu = succès, ambre hachuré = attention). Le choix est mémorisé sur l’appareil.</li>
+  <li>Bouton <strong>Écouter</strong> dans la barre : lecture à voix haute (recliquer pour arrêter).</li>
+  <li>Bouton <strong>Couleurs</strong> : panneau avec
+    <ul>
+      <li><strong>Mode daltonien</strong> — palette deutéranopie (bleu = succès, ambre hachuré = attention).</li>
+      <li><strong>Couleur du site</strong> — pastilles proposées ou color picker pour changer boutons et accents.</li>
+      <li>Bouton <em>Couleur par défaut</em> pour revenir au teal Happy Learn.</li>
+    </ul>
+  </li>
+  <li>Bouton <strong>Classic / NewFront</strong> : deux interfaces au choix (NewFront = home sans scroll).</li>
   <li>L’interface respecte autant que possible les préférences «&nbsp;réduire les animations&nbsp;».</li>
 </ul>
 <h3>Problèmes fréquents</h3>
@@ -411,7 +418,8 @@
     <tr><td>Mission introuvable au pilotage</td><td>Publier la mission dans le créateur ; vérifier niveau / matière</td></tr>
     <tr><td>Rien ne se synchronise</td><td>Vérifier la connexion Internet (le live nécessite le serveur)</td></tr>
     <tr><td>Page bloquée en session</td><td>Normal : seul attente / mission sont autorisés pendant le live</td></tr>
-    <tr><td>Couleurs difficiles à distinguer</td><td>Activer le mode <strong>Daltonien</strong> dans la barre du haut</td></tr>
+    <tr><td>Couleurs difficiles à distinguer</td><td>Ouvrir <strong>Couleurs</strong> → cocher <strong>Mode daltonien</strong></td></tr>
+    <tr><td>Je veux une autre couleur</td><td>Ouvrir <strong>Couleurs</strong> → choisir une pastille ou « Personnaliser »</td></tr>
   </tbody>
 </table>
 
@@ -422,6 +430,7 @@
   <li><strong>79 missions officielles</strong> couvrent les thèmes du programme (Phase&nbsp;A).</li>
   <li>Tu peux aussi créer et publier d’autres missions via le créateur.</li>
   <li>Le suivi Programme distingue ce qui est fait <em>dans l’app</em> et <em>en classe</em>.</li>
+  <li>Tu peux basculer Classic / NewFront et personnaliser les couleurs (ou le mode daltonien).</li>
   <li>Pas de notes, pas de classement : feedback pédagogique uniquement.</li>
   <li>En classe, privilégie une tablette / ordinateur par élève et un vidéoprojecteur pour le code.</li>
 </ul>
@@ -438,7 +447,7 @@
 </div>
 
 <footer class="note">
-  Happy Learn — Guide utilisateur v0.1 · septembre 2026 (mise à jour).
+  Happy Learn — Guide utilisateur v0.1 · septembre 2026 (mise à jour UI Couleurs / NewFront).
   Pour la documentation produit &amp; technique (architecture, feuille de route),
   voir <em>HappyLearn_Documentation_Complete.pdf</em>.
 </footer>
