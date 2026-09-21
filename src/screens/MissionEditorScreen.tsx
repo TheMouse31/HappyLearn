@@ -27,7 +27,7 @@ import type {
 } from "../data/types";
 import { UNIVERSE_ORDER, UNIVERSES } from "../data/universes";
 import { sceneKeyOf } from "../engine/missionEngine";
-import { CUSTOM_ILLUSTRATIONS_EVENT, loadCustomIllustrations } from "../lib/customIllustrations";
+import { CUSTOM_ILLUSTRATIONS_EVENT } from "../lib/customIllustrations";
 import { getAllSceneOptions } from "../lib/illustrations";
 import { useSession } from "../lib/session";
 
@@ -216,7 +216,7 @@ export function MissionEditorScreen() {
   const previewSceneKey = previewStep ? sceneKeyOf(previewStep) : "";
   const selectedSceneOption =
     sceneOptions.find((item) => item.value === (currentDraft?.scene ?? "")) ?? sceneOptions[0];
-  const customCount = useMemo(() => loadCustomIllustrations().length, [sceneOptions]);
+  const customCount = sceneOptions.filter((item) => item.value.startsWith("custom:")).length;
 
   useEffect(() => {
     setPreviewSuccess(false);
