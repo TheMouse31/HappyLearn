@@ -37,7 +37,7 @@ import {
   savePrenom,
 } from "./localKeys";
 import { createPersistence, localPersistence, type Persistence } from "./persistence";
-import { subscribeClasseSession, subscribeSessionParticipants } from "./realtime";
+import { canUseRealtime, subscribeClasseSession, subscribeSessionParticipants } from "./realtime";
 import { getSupabase } from "./supabase";
 
 type SessionState = {
@@ -392,9 +392,18 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     const unsubSession = subscribeClasseSession(sessionIdLive, refreshSession);
     // Heartbeats ne doivent pas recharger toute la session (évite les re-renders inutiles).
     const unsubParts = subscribeSessionParticipants(sessionIdLive, refreshParticipants);
+    // Sans Realtime (mode local), poll pour la main levée / présence / activité.
+    let pollTimer: number | undefined;
+    if (!canUseRealtime()) {
+      pollTimer = window.setInterval(() => {
+        refreshParticipants();
+        refreshSession();
+      }, 2000);
+    }
     return () => {
       unsubSession();
       unsubParts();
+      if (pollTimer !== undefined) window.clearInterval(pollTimer);
     };
   }, [liveSession?.id, persistence]);
 
