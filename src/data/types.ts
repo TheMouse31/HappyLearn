@@ -71,6 +71,9 @@ export type SessionParticipant = {
   statut: ParticipantStatus;
   joinedAt: string;
   lastSeenAt: string;
+  /** Élève a levé la main pour appeler le professeur. */
+  handRaised: boolean;
+  handRaisedAt: string | null;
 };
 
 export type MissionDef = {

@@ -1478,6 +1478,30 @@ p {
   background: #eef1f5;
 }
 
+.hand-pill {
+  display: inline-block;
+  margin-left: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  vertical-align: middle;
+  color: #7a3b00;
+  background: #ffe8c8;
+}
+
+.hand-raised-btn.is-on {
+  border-color: #d97706;
+  background: #fff7ed;
+  color: #9a3412;
+  font-weight: 700;
+}
+
+.hand-clear-btn {
+  border-color: #d97706;
+  color: #9a3412;
+}
+
 .stats-filters .field {
   margin: 0;
   min-width: 0;

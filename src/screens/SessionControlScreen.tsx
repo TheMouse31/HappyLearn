@@ -31,6 +31,7 @@ export function SessionControlScreen() {
     refreshLiveSession,
     setClassActivity,
     kick,
+    clearHand,
     listClassMissionsDone,
     listClassStudents,
   } = useSession();
@@ -258,22 +259,40 @@ export function SessionControlScreen() {
                               >
                                 {presenceLabel(status)}
                               </span>
+                              {participant?.handRaised ? (
+                                <span className="hand-pill" title="Main levée">
+                                  Main levée
+                                </span>
+                              ) : null}
                             </strong>
                             <div className="roster-row-actions">
                               {participant ? (
-                                <Button
-                                  type="button"
-                                  onClick={() => {
-                                    const label = formatStudentName(student.prenom, student.nom);
-                                    const ok = window.confirm(
-                                      `Déconnecter ${label} ? Le nom redeviendra libre.`,
-                                    );
-                                    if (!ok) return;
-                                    void kick(participant.id);
-                                  }}
-                                >
-                                  Déconnecter
-                                </Button>
+                                <>
+                                  {participant.handRaised ? (
+                                    <Button
+                                      type="button"
+                                      className="hand-clear-btn"
+                                      onClick={() => {
+                                        void clearHand(participant.id);
+                                      }}
+                                    >
+                                      Vu
+                                    </Button>
+                                  ) : null}
+                                  <Button
+                                    type="button"
+                                    onClick={() => {
+                                      const label = formatStudentName(student.prenom, student.nom);
+                                      const ok = window.confirm(
+                                        `Déconnecter ${label} ? Le nom redeviendra libre.`,
+                                      );
+                                      if (!ok) return;
+                                      void kick(participant.id);
+                                    }}
+                                  >
+                                    Déconnecter
+                                  </Button>
+                                </>
                               ) : (
                                 <span className="field-help">—</span>
                               )}

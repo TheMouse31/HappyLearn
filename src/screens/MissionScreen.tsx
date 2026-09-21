@@ -68,6 +68,8 @@ export function MissionScreen() {
     missionId,
     lockedSession,
     liveSession,
+    liveParticipant,
+    raiseHand,
   } = useSession();
   const [index, setIndex] = useState(0);
   const [raw, setRaw] = useState("");
@@ -256,7 +258,20 @@ export function MissionScreen() {
       confirmLeaveMission={!lockedSession}
       homeTo={lockedSession ? "/salle-attente" : "/accueil"}
       extra={
-        lockedSession ? null : (
+        lockedSession ? (
+          liveParticipant ? (
+            <Button
+              type="button"
+              className={liveParticipant.handRaised ? "hand-raised-btn is-on" : "hand-raised-btn"}
+              aria-pressed={liveParticipant.handRaised}
+              onClick={() => {
+                void raiseHand(!liveParticipant.handRaised);
+              }}
+            >
+              {liveParticipant.handRaised ? "Baisser la main" : "Lever la main"}
+            </Button>
+          ) : null
+        ) : (
           <Button
             onClick={() => {
               const ok = window.confirm("Quitter la mission et revenir à l’accueil ?");

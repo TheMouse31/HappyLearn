@@ -21,6 +21,7 @@ export function StudentWaitingScreen() {
     kickedFromSession,
     clearKicked,
     leaveClassSession,
+    raiseHand,
     startMission,
     sessionId,
     universe,
@@ -179,6 +180,18 @@ export function StudentWaitingScreen() {
           )}
 
           <div className="actions" style={{ marginTop: "1rem" }}>
+            {liveParticipant ? (
+              <Button
+                type="button"
+                className={liveParticipant.handRaised ? "hand-raised-btn is-on" : "hand-raised-btn"}
+                aria-pressed={liveParticipant.handRaised}
+                onClick={() => {
+                  void raiseHand(!liveParticipant.handRaised);
+                }}
+              >
+                {liveParticipant.handRaised ? "Baisser la main" : "Lever la main"}
+              </Button>
+            ) : null}
             <Button
               type="button"
               onClick={() => {

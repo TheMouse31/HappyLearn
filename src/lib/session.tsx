@@ -88,6 +88,10 @@ type SessionState = {
     mode: PlayMode;
   } | null) => Promise<void>;
   kick: (participantId: string) => Promise<void>;
+  /** Élève : lever / baisser la main. */
+  raiseHand: (raised: boolean) => Promise<void>;
+  /** Professeur : baisser la main d’un élève. */
+  clearHand: (participantId: string) => Promise<void>;
   clearKicked: () => void;
   listStudentsByClassCode: (code: string) => Promise<ClassStudent[]>;
   listStudentsForSessionCode: (code: string) => Promise<ClassStudent[]>;
@@ -354,7 +358,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     const refreshParticipants = () => {
       void persistence.listParticipants(sessionIdLive).then((parts) => {
         const key = parts
-          .map((item) => `${item.id}:${item.statut}:${item.lastSeenAt}`)
+          .map(
+            (item) =>
+              `${item.id}:${item.statut}:${item.lastSeenAt}:${item.handRaised ? "1" : "0"}:${item.handRaisedAt ?? ""}`,
+          )
           .sort()
           .join(",");
         if (key === lastPartsKey) return;
@@ -370,7 +377,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             saveLiveParticipant(null);
           } else if (
             stillThere.statut !== mine.statut ||
-            stillThere.lastSeenAt !== mine.lastSeenAt
+            stillThere.lastSeenAt !== mine.lastSeenAt ||
+            stillThere.handRaised !== mine.handRaised ||
+            stillThere.handRaisedAt !== mine.handRaisedAt
           ) {
             setLiveParticipant(stillThere);
           }
@@ -653,6 +662,25 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       kick: async (participantId) => {
         const store = persistence ?? localPersistence;
         await store.kickParticipant(participantId);
+        if (liveSession) {
+          setLiveParticipants(await store.listParticipants(liveSession.id));
+        }
+      },
+      raiseHand: async (raised) => {
+        const store = persistence ?? localPersistence;
+        const mine = liveParticipantRef.current;
+        if (!mine) return;
+        const updated = await store.setHandRaised(mine.id, raised);
+        if (updated) {
+          setLiveParticipant(updated);
+        }
+        if (liveSession) {
+          setLiveParticipants(await store.listParticipants(liveSession.id));
+        }
+      },
+      clearHand: async (participantId) => {
+        const store = persistence ?? localPersistence;
+        await store.setHandRaised(participantId, false);
         if (liveSession) {
           setLiveParticipants(await store.listParticipants(liveSession.id));
         }

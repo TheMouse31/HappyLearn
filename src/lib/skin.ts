@@ -9,7 +9,7 @@ export function loadSkin(): Skin {
   } catch {
     /* ignore */
   }
-  return "classic";
+  return "newfront";
 }
 
 export function saveSkin(skin: Skin): void {
