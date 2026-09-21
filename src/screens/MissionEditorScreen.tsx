@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "../components/Button";
+import {
+  EMPTY_ILLUSTRATION_FORM,
+  IllustrationCreatePanel,
+  type IllustrationFormState,
+} from "../components/IllustrationCreatePanel";
+import { ScenePicker } from "../components/ScenePicker";
 import { Shell } from "../components/Shell";
 import { UniverseScene } from "../components/UniverseScene";
 import { GRADES, SUBJECTS, gradeLabel, subjectLabel } from "../data/catalog";
@@ -27,7 +33,11 @@ import type {
 } from "../data/types";
 import { UNIVERSE_ORDER, UNIVERSES } from "../data/universes";
 import { sceneKeyOf } from "../engine/missionEngine";
-import { CUSTOM_ILLUSTRATIONS_EVENT } from "../lib/customIllustrations";
+import {
+  CUSTOM_ILLUSTRATIONS_EVENT,
+  customSceneKey,
+  type CustomIllustration,
+} from "../lib/customIllustrations";
 import { getAllSceneOptions } from "../lib/illustrations";
 import { useSession } from "../lib/session";
 
@@ -45,6 +55,8 @@ type DraftStep = {
   caption: string;
   scene: string;
 };
+
+type StepPane = "content" | "illustration" | "answer";
 
 function emptyStep(index: number): DraftStep {
   return {
@@ -131,6 +143,18 @@ function missionToDrafts(mission: MissionDef): {
   };
 }
 
+function needsAnswer(kind: StepKind): boolean {
+  return (
+    kind === "number" ||
+    kind === "text" ||
+    kind === "choice" ||
+    kind === "direction" ||
+    kind === "fraction-choice" ||
+    kind === "simplify" ||
+    kind === "tutorial"
+  );
+}
+
 export function MissionEditorScreen() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -158,6 +182,10 @@ export function MissionEditorScreen() {
   const [previewUniverse, setPreviewUniverse] = useState<UniverseSlug>("football");
   const [previewSuccess, setPreviewSuccess] = useState(false);
   const [sceneOptions, setSceneOptions] = useState(() => getAllSceneOptions());
+  const [stepPane, setStepPane] = useState<StepPane>("content");
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [creatingIllust, setCreatingIllust] = useState(false);
+  const [illustForm, setIllustForm] = useState<IllustrationFormState>(EMPTY_ILLUSTRATION_FORM);
 
   async function refreshCatalog() {
     const rows = await listAdminCatalog();
@@ -216,10 +244,11 @@ export function MissionEditorScreen() {
   const previewSceneKey = previewStep ? sceneKeyOf(previewStep) : "";
   const selectedSceneOption =
     sceneOptions.find((item) => item.value === (currentDraft?.scene ?? "")) ?? sceneOptions[0];
-  const customCount = sceneOptions.filter((item) => item.value.startsWith("custom:")).length;
 
   useEffect(() => {
     setPreviewSuccess(false);
+    setStepPane("content");
+    setCreatingIllust(false);
   }, [selectedStep]);
 
   const filteredCatalog = useMemo(() => {
@@ -365,57 +394,77 @@ export function MissionEditorScreen() {
     await refreshCatalog();
   }
 
+  function onIllustrationCreated(item: CustomIllustration) {
+    setSceneOptions(getAllSceneOptions());
+    updateStep(selectedStep, { scene: customSceneKey(item.id) });
+    setIllustForm(EMPTY_ILLUSTRATION_FORM);
+    setCreatingIllust(false);
+    setMessage(`Illustration « ${item.label} » ajoutée et sélectionnée.`);
+  }
+
   if (role !== "admin" || !teacher?.isAdmin) {
     return <Navigate to="/espace-admin" replace />;
   }
 
   if (mode === "list") {
     return (
-      <Shell
-        brand="Happy Learn"
-        stepLabel="Missions"
-        homeTo="/espace-admin"
-        backTo="/espace-admin"
-      >
-        <section className="mission-editor">
-          <span className="kicker">Administration</span>
-          <h1>Catalogue des missions</h1>
-          <p className="lead" data-listen>
-            Toutes les missions (officielles et créées). Modifie-les, duplique-les ou crée-en de nouvelles.
-          </p>
-          <div className="actions">
-            <Button variant="primary" type="button" onClick={startCreate}>
-              Créer une mission
-            </Button>
-            <Button type="button" onClick={() => navigate("/espace-admin?tab=illustrations")}>
-              Illustrations animées
-            </Button>
+      <Shell brand="Happy Learn" stepLabel="Missions" homeTo="/espace-admin" backTo="/espace-admin">
+        <section className="mission-studio">
+          <header className="mission-studio-hero">
+            <div>
+              <p className="pilot-eyebrow">Studio missions</p>
+              <h1>Catalogue</h1>
+              <p className="lead" data-listen>
+                Crée, publie et affine les parcours. Les illustrations d’étapes se gèrent dans la bibliothèque.
+              </p>
+            </div>
+            <div className="mission-studio-hero-actions">
+              <Button variant="primary" type="button" onClick={startCreate}>
+                Nouvelle mission
+              </Button>
+              <Button type="button" onClick={() => navigate("/espace-admin?tab=illustrations")}>
+                Bibliothèque d’illustrations
+              </Button>
+            </div>
+          </header>
+
+          <div className="mission-studio-toolbar">
+            <div className="field mission-studio-search">
+              <label htmlFor="mission-filter">Rechercher</label>
+              <input
+                id="mission-filter"
+                type="search"
+                value={filter}
+                onChange={(event) => setFilter(event.target.value)}
+                placeholder="Titre, niveau, matière…"
+              />
+            </div>
+            <p className="mission-studio-count">
+              {filteredCatalog.length} mission{filteredCatalog.length > 1 ? "s" : ""}
+            </p>
           </div>
-          <div className="field" style={{ marginTop: "1rem", maxWidth: "28rem" }}>
-            <label htmlFor="mission-filter">Rechercher</label>
-            <input
-              id="mission-filter"
-              type="search"
-              value={filter}
-              onChange={(event) => setFilter(event.target.value)}
-              placeholder="Titre, id, niveau, matière…"
-            />
-          </div>
-          <h2>Missions ({filteredCatalog.length})</h2>
-          <ul className="mission-editor-list">
+
+          <ul className="mission-studio-catalog">
             {filteredCatalog.map((item) => (
               <li key={item.id}>
-                <div>
+                <div className="mission-studio-card-body">
+                  <div className="mission-studio-badges">
+                    <span className={`mission-badge${item.available ? " is-live" : ""}`}>
+                      {item.available ? "Publiée" : "Brouillon"}
+                    </span>
+                    <span className="mission-badge">
+                      {item.source === "teacher" ? "Créée" : "Officielle"}
+                    </span>
+                  </div>
                   <strong>{item.title}</strong>
-                  <small>
-                    {item.id} · {gradeLabel(item.grade)} · {subjectLabel(item.subject)} ·{" "}
-                    {item.available ? "publiée" : "brouillon"}
-                    {item.source === "teacher" ? " · créée" : " · officielle"}
-                  </small>
+                  <p>
+                    {gradeLabel(item.grade)} · {subjectLabel(item.subject)} · {item.steps.length}{" "}
+                    étape{item.steps.length > 1 ? "s" : ""}
+                  </p>
                 </div>
                 <div className="actions">
-                  <Button type="button" onClick={() => openMission(item, false)}>
-                    Modifier
+                  <Button type="button" variant="primary" onClick={() => openMission(item, false)}>
+                    Ouvrir
                   </Button>
                   {item.source !== "teacher" ? (
                     <Button type="button" onClick={() => duplicateBuiltin(item)}>
@@ -431,341 +480,394 @@ export function MissionEditorScreen() {
     );
   }
 
+  const answerNeeded = currentDraft ? needsAnswer(currentDraft.kind) : false;
+
   return (
     <Shell
       brand="Happy Learn"
-      stepLabel={readOnly ? "Mission (lecture seule)" : "Éditeur"}
+      stepLabel={readOnly ? "Lecture seule" : "Éditeur"}
       homeTo="/espace-admin"
       backTo="/espace-admin/missions"
     >
-      <section className="mission-editor">
-        <div className="actions">
-          <Button
-            type="button"
-            onClick={() => {
-              setMode("list");
-              setMessage("");
-              setError("");
-            }}
-          >
-            Catalogue
-          </Button>
-          {!readOnly ? (
-            <>
-              <Button variant="primary" type="button" disabled={busy} onClick={() => void onSave()}>
-                Enregistrer
-              </Button>
-              {editingId ? (
-                <Button type="button" disabled={busy} onClick={() => void onDelete()}>
-                  Supprimer
-                </Button>
-              ) : null}
-            </>
-          ) : (
+      <section className="mission-studio is-editing">
+        <header className="mission-studio-bar">
+          <div className="mission-studio-bar-main">
             <Button
               type="button"
               onClick={() => {
-                const source = catalog.find((item) => item.id === missionId);
-                if (source) duplicateBuiltin(source);
+                setMode("list");
+                setMessage("");
+                setError("");
               }}
             >
-              Dupliquer pour éditer
+              Catalogue
             </Button>
-          )}
-        </div>
+            <div className="mission-studio-title-block">
+              <input
+                className="mission-studio-title-input"
+                value={title}
+                disabled={readOnly}
+                placeholder="Titre de la mission"
+                onChange={(event) => setTitle(event.target.value)}
+                aria-label="Titre de la mission"
+              />
+              <p>
+                {gradeLabel(grade)} · {subjectLabel(subject)}
+                {available ? " · publiée" : " · brouillon"}
+              </p>
+            </div>
+          </div>
+          <div className="mission-studio-bar-actions">
+            {!readOnly ? (
+              <>
+                <label className="mission-publish-chip">
+                  <input
+                    type="checkbox"
+                    checked={available}
+                    onChange={(event) => setAvailable(event.target.checked)}
+                  />
+                  Publier
+                </label>
+                <Button variant="primary" type="button" disabled={busy} onClick={() => void onSave()}>
+                  Enregistrer
+                </Button>
+                {editingId ? (
+                  <Button type="button" disabled={busy} onClick={() => void onDelete()}>
+                    Supprimer
+                  </Button>
+                ) : null}
+              </>
+            ) : (
+              <Button
+                type="button"
+                onClick={() => {
+                  const source = catalog.find((item) => item.id === missionId);
+                  if (source) duplicateBuiltin(source);
+                }}
+              >
+                Dupliquer pour éditer
+              </Button>
+            )}
+          </div>
+        </header>
+
         {builtinOverride ? (
-          <p className="field-help">
-            Mission officielle : l’enregistrement crée un override distant (même id).
+          <p className="field-help mission-studio-note">
+            Mission officielle : l’enregistrement crée une version adaptée (même identifiant).
           </p>
         ) : null}
         {message ? <p className="feedback ok">{message}</p> : null}
         {error ? <p className="error">{error}</p> : null}
 
-        <div className="mission-editor-grid">
-          <div className="mission-editor-main">
-            <h1>{readOnly ? title || missionId : "Éditer la mission"}</h1>
-            <div className="stats-filters">
-              <div className="field">
-                <label htmlFor="me-grade">Niveau</label>
-                <select
-                  id="me-grade"
-                  value={grade}
-                  disabled={readOnly || Boolean(editingId)}
-                  onChange={(event) => setGrade(event.target.value as GradeLevel)}
-                >
-                  {GRADES.map((item) => (
-                    <option key={item.slug} value={item.slug}>
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="field">
-                <label htmlFor="me-subject">Matière</label>
-                <select
-                  id="me-subject"
-                  value={subject}
-                  disabled={readOnly || Boolean(editingId)}
-                  onChange={(event) => setSubject(event.target.value as SubjectSlug)}
-                >
-                  {SUBJECTS.map((item) => (
-                    <option key={item.slug} value={item.slug}>
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="field">
-                <label htmlFor="me-slug">Slug thématique</label>
-                <input
-                  id="me-slug"
-                  value={slug}
-                  disabled={readOnly || Boolean(editingId)}
-                  onChange={(event) => setSlug(event.target.value)}
-                />
-              </div>
+        <details className="mission-studio-meta" open={!editingId}>
+          <summary>Identité de la mission</summary>
+          <div className="mission-studio-meta-grid">
+            <div className="field">
+              <label htmlFor="me-grade">Niveau</label>
+              <select
+                id="me-grade"
+                value={grade}
+                disabled={readOnly || Boolean(editingId)}
+                onChange={(event) => setGrade(event.target.value as GradeLevel)}
+              >
+                {GRADES.map((item) => (
+                  <option key={item.slug} value={item.slug}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="field">
-              <label htmlFor="me-id">Identifiant (immuable une fois publié)</label>
-              <input id="me-id" value={missionId} readOnly />
-              <p className="field-help">Format : niveau-matière-slug-nn — ex. cm2-maths-fractions-01</p>
+              <label htmlFor="me-subject">Matière</label>
+              <select
+                id="me-subject"
+                value={subject}
+                disabled={readOnly || Boolean(editingId)}
+                onChange={(event) => setSubject(event.target.value as SubjectSlug)}
+              >
+                {SUBJECTS.map((item) => (
+                  <option key={item.slug} value={item.slug}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="field">
-              <label htmlFor="me-title">Titre</label>
+              <label htmlFor="me-slug">Thème (slug)</label>
               <input
-                id="me-title"
-                value={title}
-                disabled={readOnly}
-                onChange={(event) => setTitle(event.target.value)}
+                id="me-slug"
+                value={slug}
+                disabled={readOnly || Boolean(editingId)}
+                onChange={(event) => setSlug(event.target.value)}
               />
             </div>
             <div className="field">
-              <label htmlFor="me-blurb">Accroche</label>
+              <label htmlFor="me-blurb">Accroche catalogue</label>
               <input
                 id="me-blurb"
                 value={blurb}
                 disabled={readOnly}
                 onChange={(event) => setBlurb(event.target.value)}
+                placeholder="Une phrase pour le professeur"
               />
             </div>
-            <label className="mission-publish">
-              <input
-                type="checkbox"
-                checked={available}
-                disabled={readOnly}
-                onChange={(event) => setAvailable(event.target.checked)}
-              />
-              Publier (visible dans le pilotage de session)
-            </label>
+          </div>
+        </details>
 
-            <h2>Étapes</h2>
-            <div className="mission-step-tabs">
-              {steps.map((step, index) => (
-                <button
-                  key={`${step.slug}-${index}`}
-                  type="button"
-                  className={index === selectedStep ? "is-selected" : ""}
-                  onClick={() => setSelectedStep(index)}
-                >
-                  {step.slug || `s${index + 1}`}
-                </button>
-              ))}
+        <div className="mission-studio-layout">
+          <aside className="mission-studio-rail" aria-label="Étapes">
+            <div className="mission-studio-rail-head">
+              <h2>Étapes</h2>
               {!readOnly ? (
                 <Button type="button" onClick={addStep}>
-                  + Étape
+                  + Ajouter
                 </Button>
               ) : null}
             </div>
+            <ol className="mission-studio-steps">
+              {steps.map((step, index) => (
+                <li key={`${step.slug}-${index}`}>
+                  <button
+                    type="button"
+                    className={index === selectedStep ? "is-selected" : ""}
+                    onClick={() => setSelectedStep(index)}
+                  >
+                    <span className="mission-studio-step-num">{index + 1}</span>
+                    <span>
+                      <strong>{step.title.trim() || step.kicker || `Étape ${index + 1}`}</strong>
+                      <small>
+                        {EDITOR_KINDS.find((item) => item.value === step.kind)?.label ?? step.kind}
+                      </small>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ol>
+          </aside>
 
+          <div className="mission-studio-workspace">
             {currentDraft ? (
-              <div className="mission-step-editor">
-                <div className="stats-filters">
-                  <div className="field">
-                    <label>Slug local</label>
-                    <input
-                      value={currentDraft.slug}
-                      disabled={readOnly}
-                      onChange={(event) => updateStep(selectedStep, { slug: event.target.value })}
-                    />
-                  </div>
-                  <div className="field">
-                    <label>Type</label>
-                    <select
-                      value={currentDraft.kind}
-                      disabled={readOnly}
-                      onChange={(event) => updateStep(selectedStep, { kind: event.target.value as StepKind })}
+              <>
+                <nav className="mission-studio-panes" aria-label="Sections de l’étape">
+                  {(
+                    [
+                      ["content", "Contenu"],
+                      ["illustration", "Illustration"],
+                      ...(answerNeeded ? ([["answer", "Réponse"]] as const) : []),
+                    ] as const
+                  ).map(([id, label]) => (
+                    <button
+                      key={id}
+                      type="button"
+                      className={stepPane === id ? "is-selected" : ""}
+                      onClick={() => setStepPane(id)}
                     >
-                      {EDITOR_KINDS.map((item) => (
-                        <option key={item.value} value={item.value}>
-                          {item.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="field">
-                    <label>Progression</label>
-                    <input
-                      type="number"
-                      min={0}
-                      max={12}
-                      value={currentDraft.progress}
-                      disabled={readOnly}
-                      onChange={(event) =>
-                        updateStep(selectedStep, { progress: Number(event.target.value) || 0 })
-                      }
-                    />
-                  </div>
-                </div>
-                <div className="field">
-                  <label>Kicker</label>
-                  <input
-                    value={currentDraft.kicker}
-                    disabled={readOnly}
-                    onChange={(event) => updateStep(selectedStep, { kicker: event.target.value })}
-                  />
-                </div>
-                <div className="field">
-                  <label>Titre (appliqué aux 4 univers)</label>
-                  <input
-                    value={currentDraft.title}
-                    disabled={readOnly}
-                    onChange={(event) => updateStep(selectedStep, { title: event.target.value })}
-                  />
-                </div>
-                <div className="field">
-                  <label>Consigne / narration</label>
-                  <textarea
-                    rows={3}
-                    value={currentDraft.statement}
-                    disabled={readOnly}
-                    onChange={(event) => updateStep(selectedStep, { statement: event.target.value })}
-                  />
-                </div>
-                <div className="field">
-                  <label>Note (optionnel)</label>
-                  <input
-                    value={currentDraft.note}
-                    disabled={readOnly}
-                    onChange={(event) => updateStep(selectedStep, { note: event.target.value })}
-                  />
-                </div>
-                <div className="field">
-                  <label>Indice (optionnel)</label>
-                  <input
-                    value={currentDraft.hint}
-                    disabled={readOnly}
-                    onChange={(event) => updateStep(selectedStep, { hint: event.target.value })}
-                  />
-                </div>
-                <div className="field">
-                  <label>Légende scène (optionnel)</label>
-                  <input
-                    value={currentDraft.caption}
-                    disabled={readOnly}
-                    onChange={(event) => updateStep(selectedStep, { caption: event.target.value })}
-                  />
-                </div>
+                      {label}
+                    </button>
+                  ))}
+                </nav>
 
-                <div className="mission-illust-block">
-                  <div className="mission-illust-head">
-                    <h3>Illustration de l’étape</h3>
-                    <p className="field-help">
-                      Choisis une scène animée intégrée
-                      {customCount > 0
-                        ? ` ou une de tes ${customCount} illustration${customCount > 1 ? "s" : ""} personnalisée${customCount > 1 ? "s" : ""}`
-                        : ""}
-                      . Aperçu à droite (univers + réussite).
-                    </p>
-                  </div>
-                  <div className="mission-scene-grid" role="listbox" aria-label="Illustrations disponibles">
-                    {sceneOptions.map((option) => {
-                      const selected = (currentDraft.scene || "") === option.value;
-                      const isCustom = option.value.startsWith("custom:");
-                      return (
-                        <button
-                          key={option.value || "auto"}
-                          type="button"
-                          role="option"
-                          aria-selected={selected}
-                          className={`mission-scene-card${selected ? " is-selected" : ""}${isCustom ? " is-custom" : ""}`}
+                {stepPane === "content" ? (
+                  <div className="mission-studio-panel">
+                    <div className="field">
+                      <label>Type d’étape</label>
+                      <select
+                        value={currentDraft.kind}
+                        disabled={readOnly}
+                        onChange={(event) =>
+                          updateStep(selectedStep, { kind: event.target.value as StepKind })
+                        }
+                      >
+                        {EDITOR_KINDS.map((item) => (
+                          <option key={item.value} value={item.value}>
+                            {item.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="field">
+                      <label>Titre affiché à l’élève</label>
+                      <input
+                        value={currentDraft.title}
+                        disabled={readOnly}
+                        onChange={(event) => updateStep(selectedStep, { title: event.target.value })}
+                      />
+                    </div>
+                    <div className="field">
+                      <label>Consigne / narration</label>
+                      <textarea
+                        rows={4}
+                        value={currentDraft.statement}
+                        disabled={readOnly}
+                        onChange={(event) =>
+                          updateStep(selectedStep, { statement: event.target.value })
+                        }
+                      />
+                    </div>
+                    <div className="mission-studio-two">
+                      <div className="field">
+                        <label>Note (optionnel)</label>
+                        <input
+                          value={currentDraft.note}
                           disabled={readOnly}
-                          onClick={() => updateStep(selectedStep, { scene: option.value })}
-                        >
-                          <strong>{option.label}</strong>
-                          <span>{option.blurb}</span>
-                          {option.value ? (
-                            <small>{isCustom ? "perso" : option.value}</small>
-                          ) : (
-                            <small>auto</small>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <p className="mission-scene-current">
-                    Sélection : <strong>{selectedSceneOption?.label}</strong>
-                    {previewSceneKey ? (
-                      <>
-                        {" "}
-                        · clé jouée : <code>{previewSceneKey}</code>
-                      </>
-                    ) : null}
-                  </p>
-                </div>
+                          onChange={(event) => updateStep(selectedStep, { note: event.target.value })}
+                        />
+                      </div>
+                      <div className="field">
+                        <label>Indice (optionnel)</label>
+                        <input
+                          value={currentDraft.hint}
+                          disabled={readOnly}
+                          onChange={(event) => updateStep(selectedStep, { hint: event.target.value })}
+                        />
+                      </div>
+                    </div>
 
-                {currentDraft.kind === "number" ||
-                currentDraft.kind === "text" ||
-                currentDraft.kind === "choice" ||
-                currentDraft.kind === "direction" ||
-                currentDraft.kind === "fraction-choice" ||
-                currentDraft.kind === "simplify" ||
-                currentDraft.kind === "tutorial" ? (
-                  <>
+                    <button
+                      type="button"
+                      className="mission-studio-advanced-toggle"
+                      onClick={() => setShowAdvanced((value) => !value)}
+                    >
+                      {showAdvanced ? "Masquer" : "Afficher"} les réglages avancés
+                    </button>
+                    {showAdvanced ? (
+                      <div className="mission-studio-two">
+                        <div className="field">
+                          <label>Libellé court</label>
+                          <input
+                            value={currentDraft.kicker}
+                            disabled={readOnly}
+                            onChange={(event) =>
+                              updateStep(selectedStep, { kicker: event.target.value })
+                            }
+                          />
+                        </div>
+                        <div className="field">
+                          <label>Progression (0–12)</label>
+                          <input
+                            type="number"
+                            min={0}
+                            max={12}
+                            value={currentDraft.progress}
+                            disabled={readOnly}
+                            onChange={(event) =>
+                              updateStep(selectedStep, {
+                                progress: Number(event.target.value) || 0,
+                              })
+                            }
+                          />
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {!readOnly && steps.length > 1 ? (
+                      <Button type="button" onClick={() => removeStep(selectedStep)}>
+                        Supprimer cette étape
+                      </Button>
+                    ) : null}
+                  </div>
+                ) : null}
+
+                {stepPane === "illustration" ? (
+                  <div className="mission-studio-panel">
+                    <div className="mission-studio-illust-head">
+                      <div>
+                        <h3>Illustration de l’étape</h3>
+                        <p className="field-help">
+                          Sélection actuelle : <strong>{selectedSceneOption?.label}</strong>
+                        </p>
+                      </div>
+                      <div className="field" style={{ maxWidth: "14rem" }}>
+                        <label>Légende (optionnel)</label>
+                        <input
+                          value={currentDraft.caption}
+                          disabled={readOnly}
+                          onChange={(event) =>
+                            updateStep(selectedStep, { caption: event.target.value })
+                          }
+                        />
+                      </div>
+                    </div>
+
+                    {creatingIllust && !readOnly ? (
+                      <div className="mission-studio-inline-create">
+                        <h4>Nouvelle illustration</h4>
+                        <IllustrationCreatePanel
+                          form={illustForm}
+                          onChange={setIllustForm}
+                          compact
+                          onCancel={() => {
+                            setCreatingIllust(false);
+                            setIllustForm(EMPTY_ILLUSTRATION_FORM);
+                          }}
+                          onSaved={onIllustrationCreated}
+                          submitLabel="Créer et sélectionner"
+                        />
+                      </div>
+                    ) : (
+                      <ScenePicker
+                        options={sceneOptions}
+                        value={currentDraft.scene || ""}
+                        disabled={readOnly}
+                        onChange={(scene) => updateStep(selectedStep, { scene })}
+                        onCreateRequest={() => {
+                          setCreatingIllust(true);
+                          setIllustForm(EMPTY_ILLUSTRATION_FORM);
+                        }}
+                      />
+                    )}
+                  </div>
+                ) : null}
+
+                {stepPane === "answer" && answerNeeded ? (
+                  <div className="mission-studio-panel">
                     <div className="field">
                       <label>Réponse attendue</label>
                       <input
                         value={currentDraft.expected}
                         disabled={readOnly}
-                        onChange={(event) => updateStep(selectedStep, { expected: event.target.value })}
+                        onChange={(event) =>
+                          updateStep(selectedStep, { expected: event.target.value })
+                        }
                       />
                     </div>
                     <div className="field">
-                      <label>Distracteurs (séparés par |)</label>
+                      <label>Distracteurs</label>
                       <input
                         value={currentDraft.distractors}
                         disabled={readOnly}
-                        onChange={(event) => updateStep(selectedStep, { distractors: event.target.value })}
+                        onChange={(event) =>
+                          updateStep(selectedStep, { distractors: event.target.value })
+                        }
+                        placeholder="Sépare les distracteurs par |"
                       />
+                      <small className="field-help">Exemple : 1/2 | 2/3 | 3/4</small>
                     </div>
-                  </>
+                  </div>
                 ) : null}
-                {!readOnly && steps.length > 1 ? (
-                  <Button type="button" onClick={() => removeStep(selectedStep)}>
-                    Supprimer cette étape
-                  </Button>
-                ) : null}
-              </div>
-            ) : null}
+              </>
+            ) : (
+              <p className="field-help">Ajoute une étape pour commencer.</p>
+            )}
           </div>
 
-          <aside className="mission-preview" aria-label="Aperçu illustration">
+          <aside className="mission-preview mission-studio-preview" aria-label="Aperçu élève">
             <div className="mission-preview-head">
-              <h2>Aperçu illustration</h2>
+              <h2>Aperçu élève</h2>
               <p className="field-help">
                 Étape {selectedStep + 1}/{Math.max(steps.length, 1)}
-                {previewStep ? ` · ${previewStep.kind}` : ""}
               </p>
             </div>
 
             <div className="mission-preview-universes" role="group" aria-label="Univers d’aperçu">
-              {UNIVERSE_ORDER.map((slug) => (
+              {UNIVERSE_ORDER.map((item) => (
                 <button
-                  key={slug}
+                  key={item}
                   type="button"
-                  className={previewUniverse === slug ? "is-selected" : ""}
-                  onClick={() => setPreviewUniverse(slug)}
+                  className={previewUniverse === item ? "is-selected" : ""}
+                  onClick={() => setPreviewUniverse(item)}
                 >
-                  {UNIVERSES[slug].label}
+                  {UNIVERSES[item].label}
                 </button>
               ))}
             </div>
@@ -776,71 +878,32 @@ export function MissionEditorScreen() {
                 checked={previewSuccess}
                 onChange={(event) => setPreviewSuccess(event.target.checked)}
               />
-              Montrer l’état réussi (animation)
+              État réussi
             </label>
 
             {previewStep ? (
-              <>
-                <div className="mission-preview-stage">
-                  <UniverseScene
-                    universe={previewUniverse}
-                    stepId={previewSceneKey}
-                    progress={previewStep.progress}
-                    success={previewSuccess}
-                    selected={previewSuccess ? previewStep.expected : undefined}
-                    expected={previewStep.expected}
-                    caption={
-                      previewStep.copy[previewUniverse]?.caption ?? previewStep.copy.football.caption
-                    }
-                    kind={previewStep.kind}
-                    subject={subject}
-                    statement={
-                      previewStep.copy[previewUniverse]?.statement ??
-                      previewStep.copy.football.statement
-                    }
-                    title={
-                      previewStep.copy[previewUniverse]?.title ?? previewStep.copy.football.title
-                    }
-                  />
-                </div>
-                <span className="kicker">{previewStep.kicker}</span>
-                <h3>{previewStep.copy[previewUniverse]?.title ?? previewStep.copy.football.title}</h3>
-                <p>
-                  {previewStep.copy[previewUniverse]?.statement ?? previewStep.copy.football.statement}
-                </p>
-                {previewStep.expected ? (
-                  <p className="field-help">
-                    Attendu : {previewStep.expected}
-                    {previewStep.distractors?.length
-                      ? ` · distracteurs : ${previewStep.distractors.join(", ")}`
-                      : ""}
-                  </p>
-                ) : null}
-                <p className="field-help">
-                  Scène : <code>{previewSceneKey || "—"}</code>
-                  {currentDraft?.scene ? "" : " (automatique)"}
-                </p>
-                <div className="actions">
-                  <Button
-                    type="button"
-                    disabled={selectedStep <= 0}
-                    onClick={() => setSelectedStep((value) => Math.max(0, value - 1))}
-                  >
-                    Étape précédente
-                  </Button>
-                  <Button
-                    type="button"
-                    disabled={selectedStep >= steps.length - 1}
-                    onClick={() =>
-                      setSelectedStep((value) => Math.min(steps.length - 1, value + 1))
-                    }
-                  >
-                    Étape suivante
-                  </Button>
-                </div>
-              </>
+              <div className="mission-preview-stage">
+                <UniverseScene
+                  universe={previewUniverse}
+                  stepId={previewSceneKey}
+                  progress={previewStep.progress}
+                  success={previewSuccess}
+                  selected={previewSuccess ? previewStep.expected : undefined}
+                  expected={previewStep.expected}
+                  caption={
+                    previewStep.copy[previewUniverse]?.caption ?? previewStep.copy.football.caption
+                  }
+                  kind={previewStep.kind}
+                  subject={subject}
+                  statement={
+                    previewStep.copy[previewUniverse]?.statement ??
+                    previewStep.copy.football.statement
+                  }
+                  title={previewStep.copy[previewUniverse]?.title ?? previewStep.copy.football.title}
+                />
+              </div>
             ) : (
-              <p className="field-help">Ajoute une étape pour voir l’illustration.</p>
+              <p className="field-help">Aperçu indisponible.</p>
             )}
           </aside>
         </div>

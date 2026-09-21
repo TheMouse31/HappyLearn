@@ -1,5 +1,6 @@
 import type { UniverseDef, UniverseSlug } from "../data/types";
 import { UNIVERSES as BUILTIN_UNIVERSES, UNIVERSE_ORDER } from "../data/universes";
+import { customSceneOptions } from "./customIllustrations";
 
 const ILLUSTRATIONS_KEY = "happy-learn-illustration-overrides";
 
@@ -71,39 +72,163 @@ export const ILLUSTRATION_FIELDS: {
   }),
 ];
 
-import { customSceneOptions } from "./customIllustrations";
+export type SceneGroup = "auto" | "library" | "animated";
 
-export type SceneOption = { value: string; label: string; blurb: string };
+export type SceneTone =
+  | "auto"
+  | "tutorial"
+  | "share"
+  | "grid"
+  | "direction"
+  | "narrative"
+  | "celebrate"
+  | "method"
+  | "teaser"
+  | "empty"
+  | "custom";
+
+export type SceneOption = {
+  value: string;
+  label: string;
+  blurb: string;
+  group: SceneGroup;
+  tone: SceneTone;
+  thumb?: string;
+};
 
 /** Scènes animées intégrées sélectionnables dans le créateur de missions. */
 export const SCENE_OPTIONS: SceneOption[] = [
-  { value: "", label: "Automatique", blurb: "Selon le type d’étape et la matière" },
-  { value: "T00", label: "Tutoriel fraction", blurb: "Tableau de parts animé" },
-  { value: "M01", label: "Partage / moitié", blurb: "Terrain, sentier ou signaux" },
-  { value: "M01B", label: "Simplifier", blurb: "Parts qui se regroupent" },
-  { value: "M02", label: "Nombre — parts", blurb: "Grille de jetons animés" },
-  { value: "M03", label: "Nombre — parts 2", blurb: "Grille de jetons animés" },
-  { value: "M04", label: "Nombre — parts 3", blurb: "Grille de jetons animés" },
-  { value: "M05A", label: "Deux étapes A", blurb: "Progression en deux temps" },
-  { value: "M05B", label: "Deux étapes B", blurb: "Suite de la progression" },
-  { value: "M06", label: "Complément", blurb: "Jetons / salles restantes" },
-  { value: "D01", label: "Direction", blurb: "Choix gauche / axe / droite" },
-  { value: "N02", label: "Narration tokens", blurb: "Jetons qui clignent" },
-  { value: "N04", label: "Célébration", blurb: "Animation de réussite" },
-  { value: "L01", label: "Méthode", blurb: "Carte méthode" },
-  { value: "Z01", label: "Teaser", blurb: "Mystère / suite" },
-  { value: "B01", label: "Bilan", blurb: "Sans illustration dédiée" },
+  {
+    value: "",
+    label: "Automatique",
+    blurb: "Choisie selon le type d’étape et la matière",
+    group: "auto",
+    tone: "auto",
+  },
+  {
+    value: "T00",
+    label: "Tutoriel fraction",
+    blurb: "Tableau de parts animé",
+    group: "animated",
+    tone: "tutorial",
+  },
+  {
+    value: "M01",
+    label: "Partage / moitié",
+    blurb: "Terrain, sentier ou signaux",
+    group: "animated",
+    tone: "share",
+  },
+  {
+    value: "M01B",
+    label: "Simplifier",
+    blurb: "Parts qui se regroupent",
+    group: "animated",
+    tone: "share",
+  },
+  {
+    value: "M02",
+    label: "Nombre — parts",
+    blurb: "Grille de jetons animés",
+    group: "animated",
+    tone: "grid",
+  },
+  {
+    value: "M03",
+    label: "Nombre — parts 2",
+    blurb: "Grille de jetons animés",
+    group: "animated",
+    tone: "grid",
+  },
+  {
+    value: "M04",
+    label: "Nombre — parts 3",
+    blurb: "Grille de jetons animés",
+    group: "animated",
+    tone: "grid",
+  },
+  {
+    value: "M05A",
+    label: "Deux étapes A",
+    blurb: "Progression en deux temps",
+    group: "animated",
+    tone: "grid",
+  },
+  {
+    value: "M05B",
+    label: "Deux étapes B",
+    blurb: "Suite de la progression",
+    group: "animated",
+    tone: "grid",
+  },
+  {
+    value: "M06",
+    label: "Complément",
+    blurb: "Jetons / salles restantes",
+    group: "animated",
+    tone: "grid",
+  },
+  {
+    value: "D01",
+    label: "Direction",
+    blurb: "Choix gauche / axe / droite",
+    group: "animated",
+    tone: "direction",
+  },
+  {
+    value: "N02",
+    label: "Narration",
+    blurb: "Jetons qui clignent",
+    group: "animated",
+    tone: "narrative",
+  },
+  {
+    value: "N04",
+    label: "Célébration",
+    blurb: "Animation de réussite",
+    group: "animated",
+    tone: "celebrate",
+  },
+  {
+    value: "L01",
+    label: "Méthode",
+    blurb: "Carte méthode",
+    group: "animated",
+    tone: "method",
+  },
+  {
+    value: "Z01",
+    label: "Teaser",
+    blurb: "Mystère / suite",
+    group: "animated",
+    tone: "teaser",
+  },
+  {
+    value: "B01",
+    label: "Bilan",
+    blurb: "Sans illustration dédiée",
+    group: "animated",
+    tone: "empty",
+  },
 ];
+
+export const SCENE_GROUP_LABELS: Record<SceneGroup, string> = {
+  auto: "Suggestion",
+  library: "Ta bibliothèque",
+  animated: "Scènes animées",
+};
 
 /** Scènes intégrées + illustrations personnalisées créées dans l’espace admin. */
 export function getAllSceneOptions(): SceneOption[] {
   const custom = customSceneOptions();
-  if (!custom.length) return SCENE_OPTIONS;
-  return [
-    SCENE_OPTIONS[0],
-    ...custom,
-    ...SCENE_OPTIONS.slice(1),
-  ];
+  return [SCENE_OPTIONS[0], ...custom, ...SCENE_OPTIONS.slice(1)];
+}
+
+export function groupSceneOptions(options: SceneOption[]): { group: SceneGroup; items: SceneOption[] }[] {
+  const order: SceneGroup[] = ["auto", "library", "animated"];
+  return order
+    .map((group) => ({ group, items: options.filter((item) => item.group === group) }))
+    .filter((entry) => entry.items.length > 0);
 }
 
 export function loadIllustrationOverrides(): IllustrationOverrides {
