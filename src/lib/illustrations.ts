@@ -71,8 +71,12 @@ export const ILLUSTRATION_FIELDS: {
   }),
 ];
 
-/** Scènes animées sélectionnables dans le créateur de missions. */
-export const SCENE_OPTIONS: { value: string; label: string; blurb: string }[] = [
+import { customSceneOptions } from "./customIllustrations";
+
+export type SceneOption = { value: string; label: string; blurb: string };
+
+/** Scènes animées intégrées sélectionnables dans le créateur de missions. */
+export const SCENE_OPTIONS: SceneOption[] = [
   { value: "", label: "Automatique", blurb: "Selon le type d’étape et la matière" },
   { value: "T00", label: "Tutoriel fraction", blurb: "Tableau de parts animé" },
   { value: "M01", label: "Partage / moitié", blurb: "Terrain, sentier ou signaux" },
@@ -90,6 +94,17 @@ export const SCENE_OPTIONS: { value: string; label: string; blurb: string }[] = 
   { value: "Z01", label: "Teaser", blurb: "Mystère / suite" },
   { value: "B01", label: "Bilan", blurb: "Sans illustration dédiée" },
 ];
+
+/** Scènes intégrées + illustrations personnalisées créées dans l’espace admin. */
+export function getAllSceneOptions(): SceneOption[] {
+  const custom = customSceneOptions();
+  if (!custom.length) return SCENE_OPTIONS;
+  return [
+    SCENE_OPTIONS[0],
+    ...custom,
+    ...SCENE_OPTIONS.slice(1),
+  ];
+}
 
 export function loadIllustrationOverrides(): IllustrationOverrides {
   try {

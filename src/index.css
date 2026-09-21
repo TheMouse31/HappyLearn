@@ -2780,6 +2780,10 @@ button.text-link {
   background: #eafff2;
 }
 
+.mission-scene-card.is-custom {
+  border-style: dashed;
+}
+
 .mission-scene-card:disabled {
   opacity: 0.65;
   cursor: default;
@@ -3601,6 +3605,108 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 12px;
+}
+
+.admin-custom-form {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: #f8faf9;
+  margin-bottom: 18px;
+}
+
+.admin-custom-thumb-wrap {
+  display: grid;
+  place-items: center;
+}
+
+.admin-custom-thumb {
+  display: block;
+  width: 100%;
+  max-width: 280px;
+  max-height: 180px;
+  object-fit: contain;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.admin-custom-list {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 28px;
+}
+
+.admin-custom-list h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.admin-custom-cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.admin-custom-cards li {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.admin-custom-cards .admin-custom-thumb {
+  width: 96px;
+  height: 72px;
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
+}
+
+.admin-custom-cards p {
+  margin: 4px 0;
+  color: var(--muted, #5b6b66);
+}
+
+.admin-custom-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+@media (max-width: 700px) {
+  .admin-custom-cards li {
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
+
+  .admin-custom-actions {
+    grid-column: 1 / -1;
+    justify-content: stretch;
+  }
+}
+
+.scene-custom {
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  padding: 12px;
+}
+
+.scene-custom-img {
+  display: block;
+  width: min(100%, 420px);
+  max-height: 280px;
+  object-fit: contain;
+  border-radius: 12px;
 }
 
 .admin-email-list {

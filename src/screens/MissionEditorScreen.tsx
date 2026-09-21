@@ -27,7 +27,8 @@ import type {
 } from "../data/types";
 import { UNIVERSE_ORDER, UNIVERSES } from "../data/universes";
 import { sceneKeyOf } from "../engine/missionEngine";
-import { SCENE_OPTIONS } from "../lib/illustrations";
+import { CUSTOM_ILLUSTRATIONS_EVENT, loadCustomIllustrations } from "../lib/customIllustrations";
+import { getAllSceneOptions } from "../lib/illustrations";
 import { useSession } from "../lib/session";
 
 type DraftStep = {
@@ -156,6 +157,7 @@ export function MissionEditorScreen() {
   const [selectedStep, setSelectedStep] = useState(0);
   const [previewUniverse, setPreviewUniverse] = useState<UniverseSlug>("football");
   const [previewSuccess, setPreviewSuccess] = useState(false);
+  const [sceneOptions, setSceneOptions] = useState(() => getAllSceneOptions());
 
   async function refreshCatalog() {
     const rows = await listAdminCatalog();
@@ -165,6 +167,19 @@ export function MissionEditorScreen() {
   useEffect(() => {
     void refreshCatalog();
   }, [teacher?.id]);
+
+  useEffect(() => {
+    function syncScenes() {
+      setSceneOptions(getAllSceneOptions());
+    }
+    syncScenes();
+    window.addEventListener(CUSTOM_ILLUSTRATIONS_EVENT, syncScenes);
+    window.addEventListener("storage", syncScenes);
+    return () => {
+      window.removeEventListener(CUSTOM_ILLUSTRATIONS_EVENT, syncScenes);
+      window.removeEventListener("storage", syncScenes);
+    };
+  }, []);
 
   useEffect(() => {
     if (searchParams.get("new") === "1") {
@@ -200,7 +215,8 @@ export function MissionEditorScreen() {
   const previewStep = previewSteps[selectedStep] ?? previewSteps[0] ?? null;
   const previewSceneKey = previewStep ? sceneKeyOf(previewStep) : "";
   const selectedSceneOption =
-    SCENE_OPTIONS.find((item) => item.value === (currentDraft?.scene ?? "")) ?? SCENE_OPTIONS[0];
+    sceneOptions.find((item) => item.value === (currentDraft?.scene ?? "")) ?? sceneOptions[0];
+  const customCount = useMemo(() => loadCustomIllustrations().length, [sceneOptions]);
 
   useEffect(() => {
     setPreviewSuccess(false);
@@ -654,25 +670,34 @@ export function MissionEditorScreen() {
                   <div className="mission-illust-head">
                     <h3>Illustration de l’étape</h3>
                     <p className="field-help">
-                      Choisis la scène animée affichée à l’élève. Aperçu à droite (univers + réussite).
+                      Choisis une scène animée intégrée
+                      {customCount > 0
+                        ? ` ou une de tes ${customCount} illustration${customCount > 1 ? "s" : ""} personnalisée${customCount > 1 ? "s" : ""}`
+                        : ""}
+                      . Aperçu à droite (univers + réussite).
                     </p>
                   </div>
                   <div className="mission-scene-grid" role="listbox" aria-label="Illustrations disponibles">
-                    {SCENE_OPTIONS.map((option) => {
+                    {sceneOptions.map((option) => {
                       const selected = (currentDraft.scene || "") === option.value;
+                      const isCustom = option.value.startsWith("custom:");
                       return (
                         <button
                           key={option.value || "auto"}
                           type="button"
                           role="option"
                           aria-selected={selected}
-                          className={`mission-scene-card${selected ? " is-selected" : ""}`}
+                          className={`mission-scene-card${selected ? " is-selected" : ""}${isCustom ? " is-custom" : ""}`}
                           disabled={readOnly}
                           onClick={() => updateStep(selectedStep, { scene: option.value })}
                         >
                           <strong>{option.label}</strong>
                           <span>{option.blurb}</span>
-                          {option.value ? <small>{option.value}</small> : <small>auto</small>}
+                          {option.value ? (
+                            <small>{isCustom ? "perso" : option.value}</small>
+                          ) : (
+                            <small>auto</small>
+                          )}
                         </button>
                       );
                     })}

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { StepKind, SubjectSlug, UniverseSlug } from "../data/types";
+import { getCustomIllustration, isCustomSceneKey } from "../lib/customIllustrations";
 import {
   CalcBoardScene,
   DataScene,
@@ -748,8 +749,14 @@ export function UniverseScene({
 
   let body: ReactNode = null;
 
-  // --- Mission fractions CM2 : clés legacy uniquement ---
-  if (FRACTIONS_LEGACY.has(scene)) {
+  const custom = isCustomSceneKey(scene) ? getCustomIllustration(scene) : null;
+  if (custom) {
+    body = (
+      <div className="scene-panel scene-custom" role="img" aria-label={custom.label}>
+        <img className="scene-custom-img" src={custom.imageUrl} alt={custom.label} />
+      </div>
+    );
+  } else if (FRACTIONS_LEGACY.has(scene)) {
     if (scene === "B01") body = null;
     else if (scene === "T00") body = <TutorialScene />;
     else if (scene === "M01") {

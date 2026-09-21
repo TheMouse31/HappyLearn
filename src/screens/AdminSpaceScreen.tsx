@@ -11,6 +11,14 @@ import {
   SEED_ADMIN_EMAILS,
 } from "../lib/admins";
 import {
+  CUSTOM_ILLUSTRATIONS_EVENT,
+  customSceneKey,
+  deleteCustomIllustration,
+  loadCustomIllustrations,
+  upsertCustomIllustration,
+  type CustomIllustration,
+} from "../lib/customIllustrations";
+import {
   ILLUSTRATION_FIELDS,
   loadIllustrationOverrides,
   saveIllustrationOverrides,
@@ -20,6 +28,8 @@ import { loadPlatformStats, type PlatformStats } from "../lib/platformStats";
 import { useSession } from "../lib/session";
 
 type AdminTab = "overview" | "missions" | "illustrations" | "admins";
+
+const emptyCustomForm = { label: "", blurb: "", imageUrl: "" };
 
 export function AdminSpaceScreen() {
   const navigate = useNavigate();
@@ -42,6 +52,11 @@ export function AdminSpaceScreen() {
   const [adminError, setAdminError] = useState("");
   const [overrides, setOverrides] = useState<IllustrationOverrides>(() => loadIllustrationOverrides());
   const [illustMessage, setIllustMessage] = useState("");
+  const [customItems, setCustomItems] = useState<CustomIllustration[]>(() => loadCustomIllustrations());
+  const [customForm, setCustomForm] = useState(emptyCustomForm);
+  const [editingCustomId, setEditingCustomId] = useState<string | null>(null);
+  const [customMessage, setCustomMessage] = useState("");
+  const [customError, setCustomError] = useState("");
   const [previewPose, setPreviewPose] = useState<"guide" | "applaudit" | "pouce" | "a06">("applaudit");
   const [previewUniverse, setPreviewUniverse] = useState<"football" | "rugby" | "equitation" | "espace">(
     "football",
@@ -71,12 +86,73 @@ export function AdminSpaceScreen() {
     };
   }, [tab]);
 
+  useEffect(() => {
+    function sync() {
+      setCustomItems(loadCustomIllustrations());
+    }
+    window.addEventListener(CUSTOM_ILLUSTRATIONS_EVENT, sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener(CUSTOM_ILLUSTRATIONS_EVENT, sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
+
   if (role !== "admin" || !teacher?.isAdmin) {
     return <Navigate to="/connexion/enseignant" replace />;
   }
 
   function setTab(next: AdminTab) {
     setSearchParams(next === "overview" ? {} : { tab: next });
+  }
+
+  function resetCustomForm() {
+    setCustomForm(emptyCustomForm);
+    setEditingCustomId(null);
+    setCustomError("");
+  }
+
+  function startEditCustom(item: CustomIllustration) {
+    setEditingCustomId(item.id);
+    setCustomForm({ label: item.label, blurb: item.blurb, imageUrl: item.imageUrl });
+    setCustomError("");
+    setCustomMessage("");
+  }
+
+  function saveCustomForm() {
+    try {
+      upsertCustomIllustration(customForm, editingCustomId ?? undefined);
+      setCustomItems(loadCustomIllustrations());
+      setCustomMessage(editingCustomId ? "Illustration mise à jour." : "Illustration créée.");
+      resetCustomForm();
+    } catch (error) {
+      setCustomError(error instanceof Error ? error.message : "Enregistrement impossible.");
+      setCustomMessage("");
+    }
+  }
+
+  function readImageFile(file: File | null) {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setCustomError("Choisis un fichier image (PNG, JPG, WebP…).");
+      return;
+    }
+    if (file.size > 2_500_000) {
+      setCustomError("Image trop lourde (max. 2,5 Mo). Compresse-la ou utilise une URL.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === "string" ? reader.result : "";
+      if (!result) {
+        setCustomError("Lecture du fichier impossible.");
+        return;
+      }
+      setCustomForm((current) => ({ ...current, imageUrl: result }));
+      setCustomError("");
+    };
+    reader.onerror = () => setCustomError("Lecture du fichier impossible.");
+    reader.readAsDataURL(file);
   }
 
   return (
@@ -87,7 +163,7 @@ export function AdminSpaceScreen() {
             <p className="pilot-eyebrow">Administration</p>
             <h1>Espace admin</h1>
             <p className="lead" data-listen>
-              Gère les missions, les illustrations animées, les comptes admin et suis l’usage de la plateforme.
+              Gère les missions, crée des illustrations, gère les comptes admin et suis l’usage de la plateforme.
             </p>
           </div>
           <div className="admin-head-actions">
@@ -191,7 +267,133 @@ export function AdminSpaceScreen() {
 
         {tab === "illustrations" ? (
           <div className="admin-panel">
-            <h2>Illustrations animées</h2>
+            <h2>Créer des illustrations</h2>
+            <p className="lead">
+              Ajoute des images personnalisées (URL ou fichier). Elles apparaissent ensuite dans le
+              sélecteur d’illustration de chaque étape de mission.
+            </p>
+
+            <form
+              className="admin-custom-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                saveCustomForm();
+              }}
+            >
+              <div className="field">
+                <label htmlFor="custom-illust-label">Nom</label>
+                <input
+                  id="custom-illust-label"
+                  type="text"
+                  value={customForm.label}
+                  onChange={(event) =>
+                    setCustomForm((current) => ({ ...current, label: event.target.value }))
+                  }
+                  placeholder="Ex. Partage de pizza"
+                  required
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="custom-illust-blurb">Description courte</label>
+                <input
+                  id="custom-illust-blurb"
+                  type="text"
+                  value={customForm.blurb}
+                  onChange={(event) =>
+                    setCustomForm((current) => ({ ...current, blurb: event.target.value }))
+                  }
+                  placeholder="Affichée dans le créateur de missions"
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="custom-illust-url">URL de l’image</label>
+                <input
+                  id="custom-illust-url"
+                  type="text"
+                  value={customForm.imageUrl.startsWith("data:") ? "" : customForm.imageUrl}
+                  onChange={(event) =>
+                    setCustomForm((current) => ({ ...current, imageUrl: event.target.value }))
+                  }
+                  placeholder="/images/ma-scene.webp ou https://…"
+                />
+                <small className="field-help">
+                  {customForm.imageUrl.startsWith("data:")
+                    ? "Fichier local chargé (data URL)."
+                    : "Chemin local du site ou lien HTTPS."}
+                </small>
+              </div>
+              <div className="field">
+                <label htmlFor="custom-illust-file">Ou importer un fichier</label>
+                <input
+                  id="custom-illust-file"
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) => readImageFile(event.target.files?.[0] ?? null)}
+                />
+              </div>
+              {customForm.imageUrl ? (
+                <div className="admin-custom-thumb-wrap" aria-hidden={!customForm.imageUrl}>
+                  <img
+                    className="admin-custom-thumb"
+                    src={customForm.imageUrl}
+                    alt=""
+                  />
+                </div>
+              ) : null}
+              <div className="actions">
+                <Button variant="primary" type="submit">
+                  {editingCustomId ? "Mettre à jour" : "Créer l’illustration"}
+                </Button>
+                {editingCustomId ? (
+                  <Button type="button" onClick={resetCustomForm}>
+                    Annuler
+                  </Button>
+                ) : null}
+              </div>
+            </form>
+            {customError ? <p className="error">{customError}</p> : null}
+            {customMessage ? <p className="feedback ok">{customMessage}</p> : null}
+
+            <section className="admin-custom-list" aria-label="Illustrations personnalisées">
+              <h3>Tes illustrations ({customItems.length})</h3>
+              {customItems.length === 0 ? (
+                <p className="field-help">Aucune illustration personnalisée pour l’instant.</p>
+              ) : (
+                <ul className="admin-custom-cards">
+                  {customItems.map((item) => (
+                    <li key={item.id}>
+                      <img src={item.imageUrl} alt="" className="admin-custom-thumb" />
+                      <div>
+                        <strong>{item.label}</strong>
+                        <p>{item.blurb || "Illustration personnalisée"}</p>
+                        <small>
+                          Clé scène : <code>{customSceneKey(item.id)}</code>
+                        </small>
+                      </div>
+                      <div className="admin-custom-actions">
+                        <Button type="button" onClick={() => startEditCustom(item)}>
+                          Modifier
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            if (!window.confirm(`Supprimer « ${item.label} » ?`)) return;
+                            deleteCustomIllustration(item.id);
+                            setCustomItems(loadCustomIllustrations());
+                            if (editingCustomId === item.id) resetCustomForm();
+                            setCustomMessage("Illustration supprimée.");
+                          }}
+                        >
+                          Supprimer
+                        </Button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            <h2>Assets Néo & univers</h2>
             <p className="lead">
               Remplace les images de Néo et des univers (y compris les sprites qui bougent). Laisse vide pour
               l’asset par défaut.
