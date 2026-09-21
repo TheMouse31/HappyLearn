@@ -28,6 +28,8 @@ const files = [
   "supabase/migrations/20260920_missions_catalog.sql",
   "supabase/migrations/20260921_classe_programme_couverture.sql",
   "supabase/migrations/20260921_session_hand_raise.sql",
+  "supabase/migrations/20260922_admin_accounts.sql",
+  "supabase/migrations/20260922_platform_usage_stats.sql",
   "supabase/seed.sql",
 ];
 

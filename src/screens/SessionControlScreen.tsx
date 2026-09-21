@@ -163,7 +163,7 @@ export function SessionControlScreen() {
       });
   }, [roster, liveParticipants]);
 
-  if (role !== "enseignant" || !teacher) {
+  if ((role !== "enseignant" && role !== "admin") || !teacher) {
     return <Navigate to="/connexion/enseignant" replace />;
   }
 

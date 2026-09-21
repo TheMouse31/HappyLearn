@@ -38,6 +38,7 @@ import {
 } from "./localKeys";
 import { createPersistence, localPersistence, type Persistence } from "./persistence";
 import { canUseRealtime, subscribeClasseSession, subscribeSessionParticipants } from "./realtime";
+import { isAdminEmail } from "./admins";
 import { getSupabase } from "./supabase";
 
 type SessionState = {
@@ -150,16 +151,22 @@ async function restoreTeacher(): Promise<TeacherAccount | null> {
     const { data } = await client.auth.getSession();
     const user = data.session?.user;
     if (user?.email) {
+      const admin = isAdminEmail(user.email);
       await client.from("profils_enseignants").upsert({
         user_id: user.id,
         display_name: user.email.split("@")[0],
+        ...(admin ? { is_admin: true } : {}),
       });
-      return { id: user.id, email: user.email, backend: "supabase" };
+      return { id: user.id, email: user.email, backend: "supabase", isAdmin: admin };
     }
   }
   const local = loadLocalTeacher();
   if (!local) return null;
-  return { ...local, backend: "local" };
+  return {
+    ...local,
+    backend: "local",
+    isAdmin: isAdminEmail(local.email),
+  };
 }
 
 export function SessionProvider({ children }: { children: ReactNode }) {
@@ -221,7 +228,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           : (list[0]?.id ?? null);
         setActiveClassIdState(validActive);
         if (validActive) saveActiveClassId(validActive);
-        setRole("enseignant");
+        setRole(teacherAccount.isAdmin ? "admin" : "enseignant");
         if (validActive) {
           const active = await store.getActiveClassSession(validActive);
           if (!cancelled && active) {
@@ -745,8 +752,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         await client.from("profils_enseignants").upsert({
           user_id: user.id,
           display_name: user.email.split("@")[0],
+          ...(isAdminEmail(user.email) ? { is_admin: true } : {}),
         });
-        const account: TeacherAccount = { id: user.id, email: user.email, backend: "supabase" };
+        const account: TeacherAccount = {
+          id: user.id,
+          email: user.email,
+          backend: "supabase",
+          isAdmin: isAdminEmail(user.email),
+        };
         const store = persistence ?? (await createPersistence());
         setPersistence(store);
         let list = await store.listClasses(account.id);
@@ -758,7 +771,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         setClasses(list);
         setActiveClassIdState(list[0]?.id ?? null);
         if (list[0]) saveActiveClassId(list[0].id);
-        setRole("enseignant");
+        setRole(account.isAdmin ? "admin" : "enseignant");
         return null;
       },
       loginTeacherMagic: async (email) => {
@@ -774,10 +787,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       },
       loginTeacherLocal: async (email) => {
         if (!isEmail(email)) return "Indique un e-mail valide pour retrouver cet espace sur l’appareil.";
+        const normalized = email.trim().toLowerCase();
         const account: TeacherAccount = {
-          id: `local-${email.trim().toLowerCase()}`,
-          email: email.trim().toLowerCase(),
+          id: `local-${normalized}`,
+          email: normalized,
           backend: "local",
+          isAdmin: isAdminEmail(normalized),
         };
         saveLocalTeacher(account);
         const store = persistence ?? localPersistence;
@@ -790,7 +805,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         setClasses(list);
         setActiveClassIdState(list[0]?.id ?? null);
         if (list[0]) saveActiveClassId(list[0].id);
-        setRole("enseignant");
+        setRole(account.isAdmin ? "admin" : "enseignant");
         return null;
       },
       logout: async () => {

@@ -143,10 +143,22 @@ export async function listTeacherMissions(teacherId: string): Promise<MissionDef
   return remote.filter((item) => item.source === "teacher");
 }
 
-/** Catalogue éditeur : builtins + missions du professeur (brouillons inclus). */
+/** Catalogue éditeur professeur (legacy) : builtins + missions du professeur. */
 export async function listEditableCatalog(teacherId: string): Promise<MissionDef[]> {
   const teacher = await listTeacherMissions(teacherId);
   return mergeMissions(BUILTIN_MISSIONS, teacher);
+}
+
+/** Catalogue administrateur : toutes les missions (builtins + overrides / créations). */
+export async function listAdminCatalog(): Promise<MissionDef[]> {
+  const remote = await fetchRemoteMissions({ includeDrafts: true });
+  return mergeMissions(BUILTIN_MISSIONS, remote).sort((a, b) => {
+    const gradeCmp = a.grade.localeCompare(b.grade);
+    if (gradeCmp !== 0) return gradeCmp;
+    const subjectCmp = a.subject.localeCompare(b.subject);
+    if (subjectCmp !== 0) return subjectCmp;
+    return a.title.localeCompare(b.title, "fr", { sensitivity: "base" });
+  });
 }
 
 export async function suggestNextMissionId(
@@ -180,13 +192,15 @@ export type SaveMissionInput = {
   steps: Step[];
   version?: number;
   teacherId: string;
+  /** Admin : autorise l’écrasement d’une mission officielle (override distant). */
+  allowBuiltinOverride?: boolean;
 };
 
 export async function saveTeacherMission(input: SaveMissionInput): Promise<{ ok: true; mission: MissionDef } | { ok: false; error: string }> {
   if (!isValidMissionId(input.id)) {
     return { ok: false, error: "Identifiant de mission invalide." };
   }
-  if (findBuiltinMission(input.id)) {
+  if (findBuiltinMission(input.id) && !input.allowBuiltinOverride) {
     return { ok: false, error: "Une mission officielle porte déjà cet id. Duplique-la ou change le slug." };
   }
   const mission: MissionDef = {
@@ -238,13 +252,18 @@ export async function saveTeacherMission(input: SaveMissionInput): Promise<{ ok:
 export async function deleteTeacherMission(
   id: string,
   teacherId: string,
+  options?: { allowBuiltinOverride?: boolean },
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  if (findBuiltinMission(id)) {
+  if (findBuiltinMission(id) && !options?.allowBuiltinOverride) {
     return { ok: false, error: "Impossible de supprimer une mission officielle." };
   }
   const client = getSupabase();
   if (client) {
-    const { error } = await client.from("missions").delete().eq("id", id).eq("teacher_id", teacherId);
+    let query = client.from("missions").delete().eq("id", id);
+    if (!options?.allowBuiltinOverride) {
+      query = query.eq("teacher_id", teacherId);
+    }
+    const { error } = await query;
     if (error) {
       writeLocalTeacherMissions(readLocalTeacherMissions().filter((item) => item.id !== id));
       return { ok: false, error: error.message };

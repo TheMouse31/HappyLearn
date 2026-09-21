@@ -360,7 +360,7 @@ export function TeacherSpaceScreen() {
     );
   }, [selectedStudent, sessions]);
 
-  if (role !== "enseignant" || !teacher) return <Navigate to="/connexion/enseignant" replace />;
+  if ((role !== "enseignant" && role !== "admin") || !teacher) return <Navigate to="/connexion/enseignant" replace />;
 
   const showSetupHint = rosterReady && roster.length === 0;
   const showActivityFilters = mode === "eleves" || mode === "seances";
@@ -542,9 +542,6 @@ export function TeacherSpaceScreen() {
                       onClick={() => navigate("/espace-professeur/session")}
                     >
                       Piloter une session
-                    </Button>
-                    <Button type="button" onClick={() => navigate("/espace-professeur/missions")}>
-                      Créer une mission
                     </Button>
                     <button
                       type="button"

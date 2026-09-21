@@ -1,5 +1,6 @@
+import { useEffect, useState } from "react";
 import type { UniverseSlug } from "../data/types";
-import { UNIVERSES } from "../data/universes";
+import { resolveAsset, resolveUniverses, type NeoAssetKey } from "../lib/illustrations";
 
 export type NeoPose = "guide" | "universe" | "pouce" | "applaudit" | "a06";
 
@@ -10,9 +11,25 @@ type Props = {
   className?: string;
 };
 
+function useIllustrationTick() {
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const sync = () => setTick((n) => n + 1);
+    window.addEventListener("happy-learn-illustrations", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener("happy-learn-illustrations", sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
+}
+
 export function Neo({ pose = "guide", universe = null, alt, className }: Props) {
+  useIllustrationTick();
+  const universes = resolveUniverses();
+
   if (pose === "a06" && universe) {
-    const def = UNIVERSES[universe];
+    const def = universes[universe];
     return (
       <div className={`neo-a06 ${className ?? ""}`} role="img" aria-label={alt ?? `Néo en ${def.label}`}>
         <img src={def.body} alt="" />
@@ -23,14 +40,14 @@ export function Neo({ pose = "guide", universe = null, alt, className }: Props) 
 
   const src =
     pose === "applaudit"
-      ? "/neo/neo-applaudit-sprite.webp"
+      ? resolveAsset("applaudit" satisfies NeoAssetKey)
       : pose === "pouce" && universe
-        ? UNIVERSES[universe].pouce
+        ? universes[universe].pouce
         : pose === "pouce"
-          ? "/neo/neo-pouce-leve.webp"
+          ? resolveAsset("pouce")
           : pose === "universe" && universe
-            ? UNIVERSES[universe].mascot
-            : "/neo/neo-guide.webp";
+            ? universes[universe].mascot
+            : resolveAsset("guide");
 
   return (
     <img

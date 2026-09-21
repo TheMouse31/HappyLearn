@@ -8,7 +8,7 @@ import {
   allUniverses,
   defineSteps,
   deleteTeacherMission,
-  listEditableCatalog,
+  listAdminCatalog,
   ordinalStepSlug,
   parseMissionId,
   resolveMission,
@@ -16,6 +16,7 @@ import {
   suggestNextMissionId,
 } from "../data/missions/index";
 import type { GradeLevel, MissionDef, Step, StepKind, SubjectSlug, UniverseCopy } from "../data/types";
+import { SCENE_OPTIONS } from "../lib/illustrations";
 import { useSession } from "../lib/session";
 
 type DraftStep = {
@@ -30,6 +31,7 @@ type DraftStep = {
   note: string;
   hint: string;
   caption: string;
+  scene: string;
 };
 
 function emptyStep(index: number): DraftStep {
@@ -45,6 +47,7 @@ function emptyStep(index: number): DraftStep {
     note: "",
     hint: "",
     caption: "",
+    scene: "",
   };
 }
 
@@ -62,6 +65,7 @@ function stepToDraft(step: Step): DraftStep {
     note: copy?.note ?? "",
     hint: copy?.hint ?? "",
     caption: copy?.caption ?? "",
+    scene: step.scene ?? "",
   };
 }
 
@@ -87,6 +91,7 @@ function draftToSteps(missionId: string, drafts: DraftStep[]): Step[] {
         progress: Number(draft.progress) || 0,
         ...(draft.expected.trim() ? { expected: draft.expected.trim() } : {}),
         ...(distractors.length ? { distractors } : {}),
+        ...(draft.scene.trim() ? { scene: draft.scene.trim() } : {}),
         copy: allUniverses(copy),
       };
     }),
@@ -120,12 +125,14 @@ export function MissionEditorScreen() {
   const { role, teacher } = useSession();
 
   const [catalog, setCatalog] = useState<MissionDef[]>([]);
+  const [filter, setFilter] = useState("");
   const [mode, setMode] = useState<"list" | "edit">("list");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [readOnly, setReadOnly] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [builtinOverride, setBuiltinOverride] = useState(false);
 
   const [grade, setGrade] = useState<GradeLevel>("cm2");
   const [subject, setSubject] = useState<SubjectSlug>("maths");
@@ -139,8 +146,7 @@ export function MissionEditorScreen() {
   const [previewIndex, setPreviewIndex] = useState(0);
 
   async function refreshCatalog() {
-    if (!teacher) return;
-    const rows = await listEditableCatalog(teacher.id);
+    const rows = await listAdminCatalog();
     setCatalog(rows);
   }
 
@@ -149,16 +155,22 @@ export function MissionEditorScreen() {
   }, [teacher?.id]);
 
   useEffect(() => {
+    if (searchParams.get("new") === "1") {
+      startCreate();
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
     const id = searchParams.get("id");
     if (!id || !teacher) return;
     void resolveMission(id).then((mission) => {
       if (!mission) return;
-      openMission(mission, mission.source === "builtin");
+      openMission(mission, false);
     });
   }, [searchParams, teacher?.id]);
 
   useEffect(() => {
-    if (mode !== "edit" || readOnly || editingId) return;
+    if (mode !== "edit" || readOnly || editingId || builtinOverride) return;
     let cancelled = false;
     void suggestNextMissionId(grade, subject, slug).then((id) => {
       if (!cancelled) setMissionId(id);
@@ -166,7 +178,7 @@ export function MissionEditorScreen() {
     return () => {
       cancelled = true;
     };
-  }, [grade, subject, slug, mode, readOnly, editingId]);
+  }, [grade, subject, slug, mode, readOnly, editingId, builtinOverride]);
 
   const currentDraft = steps[selectedStep] ?? null;
   const previewSteps = useMemo(
@@ -174,6 +186,18 @@ export function MissionEditorScreen() {
     [missionId, steps],
   );
   const previewStep = previewSteps[previewIndex] ?? previewSteps[0] ?? null;
+
+  const filteredCatalog = useMemo(() => {
+    const q = filter.trim().toLowerCase();
+    if (!q) return catalog;
+    return catalog.filter(
+      (item) =>
+        item.title.toLowerCase().includes(q) ||
+        item.id.toLowerCase().includes(q) ||
+        item.grade.includes(q) ||
+        item.subject.includes(q),
+    );
+  }, [catalog, filter]);
 
   function openMission(mission: MissionDef, asReadOnly: boolean) {
     const draft = missionToDrafts(mission);
@@ -189,6 +213,7 @@ export function MissionEditorScreen() {
     setPreviewIndex(0);
     setEditingId(asReadOnly ? null : mission.id);
     setReadOnly(asReadOnly);
+    setBuiltinOverride(mission.source !== "teacher");
     setMode("edit");
     setMessage("");
     setError("");
@@ -197,6 +222,7 @@ export function MissionEditorScreen() {
   function startCreate() {
     setEditingId(null);
     setReadOnly(false);
+    setBuiltinOverride(false);
     setGrade("cm2");
     setSubject("maths");
     setSlug("nouvelle-mission");
@@ -216,6 +242,7 @@ export function MissionEditorScreen() {
     const draft = missionToDrafts(mission);
     setEditingId(null);
     setReadOnly(false);
+    setBuiltinOverride(false);
     setGrade(draft.grade);
     setSubject(draft.subject);
     setSlug(`${draft.slug}-copie`);
@@ -272,6 +299,7 @@ export function MissionEditorScreen() {
       steps: builtSteps,
       teacherId: teacher.id,
       version: 1,
+      allowBuiltinOverride: builtinOverride || role === "admin",
     });
     setBusy(false);
     if (!result.ok) {
@@ -279,16 +307,23 @@ export function MissionEditorScreen() {
       return;
     }
     setEditingId(result.mission.id);
+    setBuiltinOverride(false);
     setMessage(available ? "Mission enregistrée et publiée." : "Brouillon enregistré.");
     await refreshCatalog();
   }
 
   async function onDelete() {
     if (!teacher || !editingId || readOnly) return;
-    const ok = window.confirm("Supprimer cette mission ?");
+    const ok = window.confirm(
+      builtinOverride
+        ? "Supprimer l’override distant de cette mission officielle ?"
+        : "Supprimer cette mission ?",
+    );
     if (!ok) return;
     setBusy(true);
-    const result = await deleteTeacherMission(editingId, teacher.id);
+    const result = await deleteTeacherMission(editingId, teacher.id, {
+      allowBuiltinOverride: role === "admin",
+    });
     setBusy(false);
     if (!result.ok) {
       setError(result.error);
@@ -298,72 +333,63 @@ export function MissionEditorScreen() {
     await refreshCatalog();
   }
 
-  if (role !== "enseignant" || !teacher) {
-    return <Navigate to="/connexion/enseignant" replace />;
+  if (role !== "admin" || !teacher?.isAdmin) {
+    return <Navigate to="/espace-admin" replace />;
   }
 
   if (mode === "list") {
-    const builtins = catalog.filter((item) => item.source !== "teacher");
-    const mine = catalog.filter((item) => item.source === "teacher");
     return (
       <Shell
         brand="Happy Learn"
         stepLabel="Missions"
-        homeTo="/espace-professeur"
-        backTo="/espace-professeur"
+        homeTo="/espace-admin"
+        backTo="/espace-admin"
       >
         <section className="mission-editor">
-          <span className="kicker">Espace professeur</span>
-          <h1>Créateur de missions</h1>
-          <p className="lead">
-            Crée des missions multi-matières avec des identifiants standardisés. Les missions officielles sont en
-            lecture seule ; tu peux les dupliquer pour les adapter.
+          <span className="kicker">Administration</span>
+          <h1>Catalogue des missions</h1>
+          <p className="lead" data-listen>
+            Toutes les missions (officielles et créées). Modifie-les, duplique-les ou crée-en de nouvelles.
           </p>
           <div className="actions">
             <Button variant="primary" type="button" onClick={startCreate}>
-              Nouvelle mission
+              Créer une mission
             </Button>
-            <Button type="button" onClick={() => navigate("/espace-professeur")}>
-              Retour
+            <Button type="button" onClick={() => navigate("/espace-admin?tab=illustrations")}>
+              Illustrations animées
             </Button>
           </div>
-
-          <h2>Mes missions</h2>
-          {mine.length === 0 ? <p className="field-help">Aucune mission créée pour l’instant.</p> : null}
-          <ul className="mission-catalog-list">
-            {mine.map((item) => (
+          <div className="field" style={{ marginTop: "1rem", maxWidth: "28rem" }}>
+            <label htmlFor="mission-filter">Rechercher</label>
+            <input
+              id="mission-filter"
+              type="search"
+              value={filter}
+              onChange={(event) => setFilter(event.target.value)}
+              placeholder="Titre, id, niveau, matière…"
+            />
+          </div>
+          <h2>Missions ({filteredCatalog.length})</h2>
+          <ul className="mission-editor-list">
+            {filteredCatalog.map((item) => (
               <li key={item.id}>
                 <div>
                   <strong>{item.title}</strong>
-                  <span>
-                    {gradeLabel(item.grade)} · {subjectLabel(item.subject)} · {item.id}
-                    {item.available ? " · publiée" : " · brouillon"}
-                  </span>
+                  <small>
+                    {item.id} · {gradeLabel(item.grade)} · {subjectLabel(item.subject)} ·{" "}
+                    {item.available ? "publiée" : "brouillon"}
+                    {item.source === "teacher" ? " · créée" : " · officielle"}
+                  </small>
                 </div>
-                <Button type="button" onClick={() => openMission(item, false)}>
-                  Éditer
-                </Button>
-              </li>
-            ))}
-          </ul>
-
-          <h2>Missions officielles</h2>
-          <ul className="mission-catalog-list">
-            {builtins.map((item) => (
-              <li key={item.id}>
-                <div>
-                  <strong>{item.title}</strong>
-                  <span>
-                    {gradeLabel(item.grade)} · {subjectLabel(item.subject)} · {item.id}
-                  </span>
-                </div>
-                <div className="actions" style={{ flex: "0 0 auto" }}>
-                  <Button type="button" onClick={() => openMission(item, true)}>
-                    Voir
+                <div className="actions">
+                  <Button type="button" onClick={() => openMission(item, false)}>
+                    Modifier
                   </Button>
-                  <Button type="button" onClick={() => duplicateBuiltin(item)}>
-                    Dupliquer
-                  </Button>
+                  {item.source !== "teacher" ? (
+                    <Button type="button" onClick={() => duplicateBuiltin(item)}>
+                      Dupliquer
+                    </Button>
+                  ) : null}
                 </div>
               </li>
             ))}
@@ -377,8 +403,8 @@ export function MissionEditorScreen() {
     <Shell
       brand="Happy Learn"
       stepLabel={readOnly ? "Mission (lecture seule)" : "Éditeur"}
-      homeTo="/espace-professeur"
-      backTo="/espace-professeur/missions"
+      homeTo="/espace-admin"
+      backTo="/espace-admin/missions"
     >
       <section className="mission-editor">
         <div className="actions">
@@ -415,6 +441,11 @@ export function MissionEditorScreen() {
             </Button>
           )}
         </div>
+        {builtinOverride ? (
+          <p className="field-help">
+            Mission officielle : l’enregistrement crée un override distant (même id).
+          </p>
+        ) : null}
         {message ? <p className="feedback ok">{message}</p> : null}
         {error ? <p className="error">{error}</p> : null}
 
@@ -601,6 +632,21 @@ export function MissionEditorScreen() {
                     disabled={readOnly}
                     onChange={(event) => updateStep(selectedStep, { caption: event.target.value })}
                   />
+                </div>
+                <div className="field">
+                  <label htmlFor="step-scene">Illustration animée (scène)</label>
+                  <select
+                    id="step-scene"
+                    value={currentDraft.scene}
+                    disabled={readOnly}
+                    onChange={(event) => updateStep(selectedStep, { scene: event.target.value })}
+                  >
+                    {SCENE_OPTIONS.map((option) => (
+                      <option key={option.value || "auto"} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 {currentDraft.kind === "number" ||
                 currentDraft.kind === "text" ||

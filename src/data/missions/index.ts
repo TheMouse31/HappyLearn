@@ -218,6 +218,7 @@ export { BILAN_CHOICES, DIRECTION_LABELS } from "./labels";
 export {
   deleteTeacherMission,
   EDITOR_KINDS,
+  listAdminCatalog,
   listEditableCatalog,
   listResolvedMissions,
   listTeacherMissions,

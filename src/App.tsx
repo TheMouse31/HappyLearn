@@ -16,6 +16,7 @@ import { RewardScreen } from "./screens/RewardScreen";
 import { TeacherSpaceScreen } from "./screens/TeacherSpaceScreen";
 import { SessionControlScreen } from "./screens/SessionControlScreen";
 import { MissionEditorScreen } from "./screens/MissionEditorScreen";
+import { AdminSpaceScreen } from "./screens/AdminSpaceScreen";
 import { StudentWaitingScreen } from "./screens/StudentWaitingScreen";
 import { useSession } from "./lib/session";
 
@@ -61,7 +62,9 @@ export default function App() {
         <Route path="/recompense" element={<RewardScreen />} />
         <Route path="/espace-professeur" element={<TeacherSpaceScreen />} />
         <Route path="/espace-professeur/session" element={<SessionControlScreen />} />
-        <Route path="/espace-professeur/missions" element={<MissionEditorScreen />} />
+        <Route path="/espace-professeur/missions" element={<Navigate to="/espace-admin/missions" replace />} />
+        <Route path="/espace-admin" element={<AdminSpaceScreen />} />
+        <Route path="/espace-admin/missions" element={<MissionEditorScreen />} />
         <Route path="/salle-attente" element={<StudentWaitingScreen />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

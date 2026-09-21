@@ -1,6 +1,6 @@
 export type UniverseSlug = "football" | "rugby" | "equitation" | "espace";
 export type PlayMode = "cahier" | "qcm";
-export type AppRole = "eleve" | "enseignant";
+export type AppRole = "eleve" | "enseignant" | "admin";
 export type GradeLevel = "cp" | "ce1" | "ce2" | "cm1" | "cm2";
 export type SubjectSlug =
   | "francais"
@@ -18,6 +18,7 @@ export type TeacherAccount = {
   id: string;
   email: string;
   backend: "local" | "supabase";
+  isAdmin?: boolean;
 };
 
 export type ClassRecord = {

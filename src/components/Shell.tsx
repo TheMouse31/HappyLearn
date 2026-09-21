@@ -20,6 +20,7 @@ type Props = {
 function defaultHomeTo(role: string | null | undefined, lockedSession: boolean): string {
   if (lockedSession) return "/salle-attente";
   if (role === "eleve") return "/accueil";
+  if (role === "admin") return "/espace-admin";
   if (role === "enseignant") return "/espace-professeur";
   return "/";
 }
