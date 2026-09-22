@@ -3957,9 +3957,14 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
 
 .mission-studio-layout {
   display: grid;
-  grid-template-columns: minmax(180px, 220px) minmax(0, 1fr) minmax(240px, 320px);
-  gap: 14px;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 16px;
   align-items: start;
+  min-height: 520px;
+}
+
+.mission-studio.has-preview .mission-studio-layout {
+  grid-template-columns: 200px minmax(0, 1fr) minmax(260px, 300px);
 }
 
 .mission-studio-rail,
@@ -3972,9 +3977,10 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
 
 .mission-studio-rail {
   display: grid;
-  gap: 10px;
-  padding: 12px;
+  gap: 8px;
+  padding: 12px 10px;
   align-content: start;
+  background: #f7f9f8;
 }
 
 .mission-studio-rail-head {
@@ -3982,11 +3988,29 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  padding: 0 4px;
 }
 
 .mission-studio-rail-head h2 {
   margin: 0;
-  font-size: 1rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted, #5a6270);
+}
+
+.mission-studio-rail-add {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: #fff;
+  font: inherit;
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
 }
 
 .mission-studio-steps {
@@ -3994,18 +4018,20 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 6px;
+  gap: 2px;
+  max-height: min(70vh, 640px);
+  overflow: auto;
 }
 
 .mission-studio-steps button {
   width: 100%;
   display: grid;
-  grid-template-columns: 28px minmax(0, 1fr);
+  grid-template-columns: 24px minmax(0, 1fr);
   gap: 8px;
-  align-items: start;
+  align-items: center;
   text-align: left;
-  padding: 8px;
-  border-radius: 12px;
+  padding: 8px 8px;
+  border-radius: 10px;
   border: 1px solid transparent;
   background: transparent;
   font: inherit;
@@ -4013,50 +4039,90 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
 }
 
 .mission-studio-steps button.is-selected {
-  border-color: var(--action, #138c59);
-  background: #eafff2;
-}
-
-.mission-studio-steps strong {
-  display: block;
-  font-size: 0.92rem;
-  line-height: 1.25;
-}
-
-.mission-studio-steps small {
-  color: var(--muted, #5a6270);
+  border-color: color-mix(in srgb, var(--action, #138c59) 35%, var(--line));
+  background: #fff;
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--ink) 6%, transparent);
 }
 
 .mission-studio-step-num {
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: 999px;
-  background: #eef2f0;
-  font-size: 0.8rem;
+  background: #e8eeeb;
+  font-size: 0.72rem;
   font-weight: 800;
+  color: #35574a;
+}
+
+.mission-studio-steps button.is-selected .mission-studio-step-num {
+  background: var(--action, #138c59);
+  color: #fff;
+}
+
+.mission-studio-step-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.88rem;
+  font-weight: 650;
+  line-height: 1.25;
 }
 
 .mission-studio-workspace {
   display: grid;
+  grid-template-rows: auto auto 1fr;
   gap: 0;
   overflow: hidden;
+  min-width: 0;
+}
+
+.mission-studio-doc-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: end;
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.mission-studio-doc-kicker {
+  margin: 0 0 4px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted, #5a6270);
+}
+
+.mission-studio-doc-head h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  line-height: 1.25;
+  max-width: 36rem;
+}
+
+.mission-studio-doc-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .mission-studio-panes {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0;
-  border-bottom: 1px solid var(--line);
-  background: #f8faf9;
+  gap: 4px;
+  padding: 10px 14px 0;
+  background: #fff;
 }
 
 .mission-studio-panes button {
-  min-height: 44px;
-  padding: 0 16px;
-  border: 0;
-  border-bottom: 2px solid transparent;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 999px;
   background: transparent;
   font: inherit;
   font-weight: 750;
@@ -4066,19 +4132,37 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
 
 .mission-studio-panes button.is-selected {
   color: var(--ink);
-  border-bottom-color: var(--action, #138c59);
+  background: #eafff2;
+  border-color: color-mix(in srgb, var(--action, #138c59) 35%, var(--line));
 }
 
 .mission-studio-panel {
   display: grid;
-  gap: 12px;
-  padding: 16px;
+  gap: 14px;
+  padding: 16px 18px 20px;
+  max-width: 46rem;
+}
+
+.mission-studio-field-row {
+  display: grid;
+  grid-template-columns: minmax(0, 280px);
+}
+
+.mission-studio-panel .field-statement textarea {
+  min-height: 160px;
+  line-height: 1.45;
+  resize: vertical;
 }
 
 .mission-studio-two {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+.mission-studio-danger {
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
 }
 
 .mission-studio-advanced-toggle,
@@ -4107,6 +4191,12 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
   margin: 0 0 4px;
 }
 
+.mission-studio-caption-field {
+  flex: 1 1 180px;
+  max-width: 16rem;
+  margin: 0;
+}
+
 .mission-studio-inline-create {
   display: grid;
   gap: 10px;
@@ -4123,10 +4213,42 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
 .mission-studio-preview {
   position: sticky;
   top: 12px;
-  padding: 14px;
+  padding: 12px;
   display: grid;
   gap: 10px;
-  background: #f8faf9;
+  align-content: start;
+  background: #f7f9f8;
+  max-height: calc(100vh - 24px);
+  overflow: auto;
+}
+
+.mission-studio-preview .mission-preview-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 8px;
+}
+
+.mission-studio-preview .mission-preview-head h2 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.mission-preview-close {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 8px;
+  background: #eef2f0;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.mission-studio-bar-actions .is-active-toggle,
+button.is-active-toggle {
+  border-color: var(--action, #138c59);
+  background: #eafff2;
 }
 
 .scene-picker {
@@ -4413,15 +4535,16 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
 /* —— Desktop (PC) —— */
 @media (min-width: 1100px) {
   .mission-studio-layout {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+
+  .mission-studio.has-preview .mission-studio-layout {
     grid-template-columns: 220px minmax(0, 1fr) 300px;
-    gap: 16px;
   }
 
   .mission-studio-preview {
     position: sticky;
     top: 12px;
-    max-height: calc(100vh - 24px);
-    overflow: auto;
   }
 
   .scene-picker-grid {
@@ -4435,9 +4558,9 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
 
 /* —— Tablet —— */
 @media (max-width: 1099px) and (min-width: 761px) {
-  .mission-studio-layout {
+  .mission-studio-layout,
+  .mission-studio.has-preview .mission-studio-layout {
     grid-template-columns: 180px minmax(0, 1fr);
-    gap: 12px;
   }
 
   .mission-studio-preview {
@@ -4446,6 +4569,7 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
     display: grid;
     grid-template-columns: minmax(0, 1.1fr) minmax(220px, 0.9fr);
     align-items: start;
+    max-height: none;
   }
 
   .mission-studio-preview .mission-preview-head,
@@ -4552,7 +4676,8 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
     grid-template-columns: 1fr;
   }
 
-  .mission-studio-layout {
+  .mission-studio-layout,
+  .mission-studio.has-preview .mission-studio-layout {
     grid-template-columns: 1fr;
     gap: 12px;
   }
@@ -4562,14 +4687,11 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
     padding: 10px;
   }
 
-  .mission-studio-rail-head {
-    margin-bottom: 4px;
-  }
-
   .mission-studio-steps {
     display: flex;
     gap: 8px;
     overflow-x: auto;
+    max-height: none;
     padding-bottom: 4px;
     scroll-snap-type: x proximity;
     -webkit-overflow-scrolling: touch;
@@ -4583,7 +4705,11 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
   .mission-studio-steps button {
     width: auto;
     min-width: 148px;
-    grid-template-columns: 28px minmax(0, 1fr);
+    grid-template-columns: 24px minmax(0, 1fr);
+  }
+
+  .mission-studio-step-label {
+    white-space: nowrap;
   }
 
   .mission-studio-workspace {
@@ -4595,23 +4721,30 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
     position: static;
     display: grid;
     grid-template-columns: 1fr;
+    max-height: none;
+  }
+
+  .mission-studio-doc-head {
+    padding: 14px 14px 10px;
   }
 
   .mission-studio-panes {
     overflow-x: auto;
     flex-wrap: nowrap;
+    padding: 10px 10px 0;
     -webkit-overflow-scrolling: touch;
   }
 
   .mission-studio-panes button {
     flex: 0 0 auto;
-    padding: 0 14px;
   }
 
   .mission-studio-panel {
-    padding: 12px;
+    padding: 14px;
+    max-width: none;
   }
 
+  .mission-studio-field-row,
   .mission-studio-two,
   .illust-create-grid {
     grid-template-columns: 1fr;
@@ -4622,8 +4755,8 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
     align-items: stretch;
   }
 
-  .mission-studio-illust-head .field {
-    max-width: none !important;
+  .mission-studio-caption-field {
+    max-width: none;
   }
 
   .scene-picker-grid {
