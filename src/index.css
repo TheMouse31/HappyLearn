@@ -4140,7 +4140,8 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
   display: grid;
   gap: 14px;
   padding: 16px 18px 20px;
-  max-width: 46rem;
+  max-width: none;
+  width: 100%;
 }
 
 .mission-studio-field-row {
@@ -4148,8 +4149,19 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
   grid-template-columns: minmax(0, 280px);
 }
 
-.mission-studio-panel .field-statement textarea {
-  min-height: 160px;
+.mission-studio-panel .field-statement {
+  width: 100%;
+  max-width: none;
+}
+
+.mission-studio-panel .field-statement .rich-editor,
+.mission-studio-panel .field-statement .rich-editor-surface {
+  width: 100%;
+}
+
+.mission-studio-panel .field-statement textarea,
+.mission-studio-panel .field-statement .rich-editor-surface {
+  min-height: 200px;
   line-height: 1.45;
   resize: vertical;
 }

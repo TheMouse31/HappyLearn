@@ -4,6 +4,7 @@ import { Button } from "../components/Button";
 import { FractionViz } from "../components/FractionViz";
 import { HintOverlay } from "../components/HintOverlay";
 import { Neo } from "../components/Neo";
+import { RichText } from "../components/RichText";
 import { Shell } from "../components/Shell";
 import { UniverseScene } from "../components/UniverseScene";
 import { BILAN_CHOICES } from "../data/missions/labels";
@@ -305,11 +306,9 @@ export function MissionScreen() {
             ))}
           </div>
           <span className="kicker">{step.kicker}</span>
-          <h1>{copy.title}</h1>
-          <p className="lead" data-listen>
-            {copy.statement}
-          </p>
-          {copy.note ? <p>{copy.note}</p> : null}
+          <RichText as="h1" html={copy.title} />
+          <RichText className="lead" html={copy.statement} data-listen />
+          {copy.note ? <RichText html={copy.note} /> : null}
           {step.twoStep ? (
             <div className="two-steps">
               <div className={`step-card ${step.twoStep === 1 ? "active" : ""}`}>
@@ -322,7 +321,11 @@ export function MissionScreen() {
               </div>
             </div>
           ) : null}
-          {step.kind === "method" ? <div className="method-box">{copy.note}</div> : null}
+          {step.kind === "method" ? (
+            <div className="method-box">
+              <RichText html={copy.note ?? ""} />
+            </div>
+          ) : null}
           {step.kind === "bilan" ? (
             <div className="choice-grid">
               {BILAN_CHOICES[universe].map((choice) => (

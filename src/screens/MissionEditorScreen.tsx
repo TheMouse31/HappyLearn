@@ -6,6 +6,7 @@ import {
   IllustrationCreatePanel,
   type IllustrationFormState,
 } from "../components/IllustrationCreatePanel";
+import { RichTextEditor } from "../components/RichTextEditor";
 import { ScenePicker } from "../components/ScenePicker";
 import { Shell } from "../components/Shell";
 import { UniverseScene } from "../components/UniverseScene";
@@ -39,6 +40,7 @@ import {
   type CustomIllustration,
 } from "../lib/customIllustrations";
 import { getAllSceneOptions } from "../lib/illustrations";
+import { sanitizeRichHtml } from "../lib/richText";
 import { useSession } from "../lib/session";
 
 type DraftStep = {
@@ -99,9 +101,9 @@ function draftToSteps(missionId: string, drafts: DraftStep[]): Step[] {
     drafts.map((draft) => {
       const copy: UniverseCopy = {
         title: draft.title.trim() || draft.kicker,
-        statement: draft.statement.trim() || "…",
-        ...(draft.note.trim() ? { note: draft.note.trim() } : {}),
-        ...(draft.hint.trim() ? { hint: draft.hint.trim() } : {}),
+        statement: sanitizeRichHtml(draft.statement) || "…",
+        ...(draft.note.trim() ? { note: sanitizeRichHtml(draft.note) } : {}),
+        ...(draft.hint.trim() ? { hint: sanitizeRichHtml(draft.hint) } : {}),
         ...(draft.caption.trim() ? { caption: draft.caption.trim() } : {}),
       };
       const distractors = draft.distractors
@@ -730,34 +732,31 @@ export function MissionEditorScreen() {
                         onChange={(event) => updateStep(selectedStep, { title: event.target.value })}
                       />
                     </div>
-                    <div className="field field-statement">
-                      <label>Consigne / narration</label>
-                      <textarea
-                        rows={8}
+                    <div className="field-statement">
+                      <RichTextEditor
+                        label="Consigne / narration"
                         value={currentDraft.statement}
                         disabled={readOnly}
-                        onChange={(event) =>
-                          updateStep(selectedStep, { statement: event.target.value })
-                        }
+                        minHeight={200}
+                        placeholder="Écris la consigne. Tu peux mettre du gras, de l’italique et de la couleur."
+                        onChange={(statement) => updateStep(selectedStep, { statement })}
                       />
                     </div>
                     <div className="mission-studio-two">
-                      <div className="field">
-                        <label>Note (optionnel)</label>
-                        <input
-                          value={currentDraft.note}
-                          disabled={readOnly}
-                          onChange={(event) => updateStep(selectedStep, { note: event.target.value })}
-                        />
-                      </div>
-                      <div className="field">
-                        <label>Indice (optionnel)</label>
-                        <input
-                          value={currentDraft.hint}
-                          disabled={readOnly}
-                          onChange={(event) => updateStep(selectedStep, { hint: event.target.value })}
-                        />
-                      </div>
+                      <RichTextEditor
+                        label="Note (optionnel)"
+                        value={currentDraft.note}
+                        disabled={readOnly}
+                        minHeight={88}
+                        onChange={(note) => updateStep(selectedStep, { note })}
+                      />
+                      <RichTextEditor
+                        label="Indice (optionnel)"
+                        value={currentDraft.hint}
+                        disabled={readOnly}
+                        minHeight={88}
+                        onChange={(hint) => updateStep(selectedStep, { hint })}
+                      />
                     </div>
 
                     <button
