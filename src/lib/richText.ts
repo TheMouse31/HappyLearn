@@ -1,3 +1,8 @@
+/**
+ * Sanitisation du HTML de mission (consignes, notes, indices).
+ * N’autorise que gras / italique / souligné, sauts de ligne et couleur inline sûre.
+ */
+
 const ALLOWED_TAGS = new Set(["B", "STRONG", "I", "EM", "U", "BR", "P", "SPAN", "DIV"]);
 
 const COLOR_RE =
@@ -12,6 +17,7 @@ export const RICH_TEXT_COLORS = [
   { label: "Violet", value: "#6b3fa0" },
 ] as const;
 
+/** Ne conserve que `color: …` si la valeur est un hex/rgb simple. */
 function cleanStyle(style: string | null): string | null {
   if (!style) return null;
   const colorMatch = /(?:^|;)\s*color\s*:\s*([^;]+)/i.exec(style);
@@ -35,6 +41,7 @@ function walk(node: Node, out: string[]): void {
     return;
   }
 
+  // Balises inconnues : on garde le texte enfants, pas la balise.
   if (!ALLOWED_TAGS.has(tag)) {
     for (const child of Array.from(el.childNodes)) walk(child, out);
     return;
@@ -44,11 +51,12 @@ function walk(node: Node, out: string[]): void {
     const style = cleanStyle(el.getAttribute("style"));
     if (style) out.push(`<span style="${style}">`);
     else {
+      // Span sans couleur utile → transparent (évite des wrappers vides).
       for (const child of Array.from(el.childNodes)) walk(child, out);
       return;
     }
   } else if (tag === "P" || tag === "DIV") {
-    // Normalize block wrappers to line breaks around content.
+    // Les blocs contentEditable deviennent des <br> (stockage plat).
     if (out.length && !out[out.length - 1].endsWith("<br>") && out[out.length - 1] !== "") {
       out.push("<br>");
     }
@@ -66,10 +74,11 @@ function walk(node: Node, out: string[]): void {
   else if (tag !== "BR" && tag !== "P" && tag !== "DIV") out.push(`</${tag.toLowerCase()}>`);
 }
 
-/** Keep only safe formatting tags for mission copy. */
+/** Ne garde que les balises de formatage sûres pour les textes de mission. */
 export function sanitizeRichHtml(input: string): string {
   const raw = input.trim();
   if (!raw) return "";
+  // SSR / tests sans DOM : strip total des balises.
   if (typeof document === "undefined") {
     return raw.replace(/<[^>]*>/g, "");
   }
@@ -94,6 +103,7 @@ export function stripRichHtml(input: string): string {
   return (template.content.textContent ?? "").replace(/\s+/g, " ").trim();
 }
 
+/** Heuristique : évite de passer par dangerouslySetInnerHTML pour du texte brut. */
 export function looksLikeRichHtml(input: string): boolean {
   return /<\/?[a-z][\s\S]*>/i.test(input);
 }

@@ -62,7 +62,9 @@ export default function App() {
         <Route path="/recompense" element={<RewardScreen />} />
         <Route path="/espace-professeur" element={<TeacherSpaceScreen />} />
         <Route path="/espace-professeur/session" element={<SessionControlScreen />} />
+        {/* Ancienne entrée prof → studio admin missions. */}
         <Route path="/espace-professeur/missions" element={<Navigate to="/espace-admin/missions" replace />} />
+        {/* Hub admin (?tab=missions|illustrations|admins) + studio missions. */}
         <Route path="/espace-admin" element={<AdminSpaceScreen />} />
         <Route path="/espace-admin/missions" element={<MissionEditorScreen />} />
         <Route path="/salle-attente" element={<StudentWaitingScreen />} />

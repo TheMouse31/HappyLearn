@@ -1,3 +1,7 @@
+/**
+ * Affichage lecture seule d’un texte de mission (brut ou HTML déjà sanitisé).
+ * Utilisé dans MissionScreen, HintOverlay, etc.
+ */
 import { looksLikeRichHtml, sanitizeRichHtml } from "../lib/richText";
 
 type Props = {
@@ -7,7 +11,7 @@ type Props = {
   "data-listen"?: boolean;
 };
 
-/** Renders mission copy with optional safe rich formatting. */
+/** Rendu avec formatage riche sûr ; texte sans balises → enfants React classiques. */
 export function RichText({ html, className, as = "p", ...rest }: Props) {
   const Tag = as;
   const value = html ?? "";

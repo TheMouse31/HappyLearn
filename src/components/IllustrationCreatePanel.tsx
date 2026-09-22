@@ -1,3 +1,7 @@
+/**
+ * Formulaire création / édition d’une illustration personnalisée.
+ * Image = URL HTTPS/chemin site, ou data-URL via fichier (max 2,5 Mo).
+ */
 import { useState } from "react";
 import { Button } from "./Button";
 import {
@@ -108,6 +112,7 @@ export function IllustrationCreatePanel({
             <input
               id="illust-create-url"
               type="text"
+              // Masque la data-URL (trop longue) ; le fichier reste dans form.imageUrl.
               value={form.imageUrl.startsWith("data:") ? "" : form.imageUrl}
               onChange={(event) => onChange({ ...form, imageUrl: event.target.value })}
               placeholder="/images/ma-scene.webp ou https://…"

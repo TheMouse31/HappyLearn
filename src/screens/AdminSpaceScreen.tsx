@@ -1,3 +1,8 @@
+/**
+ * Hub admin (`/espace-admin`) : stats, entrée studio missions,
+ * bibliothèque d’illustrations (étapes + overrides Néo), comptes admin.
+ * Onglet via `?tab=` (overview | missions | illustrations | admins).
+ */
 import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "../components/Button";
@@ -31,6 +36,7 @@ import { loadPlatformStats, type PlatformStats } from "../lib/platformStats";
 import { useSession } from "../lib/session";
 
 type AdminTab = "overview" | "missions" | "illustrations" | "admins";
+/** Sous-onglets du studio visuel : bibliothèque d’étapes vs sprites Néo. */
 type IllustStudio = "library" | "characters";
 
 export function AdminSpaceScreen() {
@@ -89,6 +95,7 @@ export function AdminSpaceScreen() {
     };
   }, [tab]);
 
+  // Resync si une illustration est créée depuis le studio missions (même onglet ou autre).
   useEffect(() => {
     function sync() {
       setCustomItems(loadCustomIllustrations());
@@ -106,6 +113,7 @@ export function AdminSpaceScreen() {
   }
 
   function setTab(next: AdminTab) {
+    // overview = URL propre sans query.
     setSearchParams(next === "overview" ? {} : { tab: next });
   }
 
@@ -147,6 +155,7 @@ export function AdminSpaceScreen() {
           </div>
         </header>
 
+        {/* Navigation principale : l’état vit dans l’URL (?tab=). */}
         <nav className="admin-tabs" aria-label="Sections administration">
           {(
             [
@@ -215,6 +224,7 @@ export function AdminSpaceScreen() {
           </div>
         ) : null}
 
+        {/* Entrée vers MissionEditorScreen (/espace-admin/missions). */}
         {tab === "missions" ? (
           <div className="admin-panel">
             <h2>Studio missions</h2>
@@ -234,6 +244,7 @@ export function AdminSpaceScreen() {
           </div>
         ) : null}
 
+        {/* Studio illustrations : bibliothèque perso (custom:) + overrides personnages. */}
         {tab === "illustrations" ? (
           <div className="admin-panel illust-studio">
             <header className="illust-studio-hero">

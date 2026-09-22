@@ -749,6 +749,7 @@ export function UniverseScene({
 
   let body: ReactNode = null;
 
+  // Illustrations perso (préfixe custom:) : image pleine zone, pas de scène procédurale.
   const custom = isCustomSceneKey(scene) ? getCustomIllustration(scene) : null;
   if (custom) {
     body = (

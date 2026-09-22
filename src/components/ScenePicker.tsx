@@ -1,3 +1,7 @@
+/**
+ * Grille de choix de scène d’étape (auto / bibliothèque perso / animées).
+ * Peut injecter un groupe « library » vide pour exposer « + Nouvelle ».
+ */
 import {
   SCENE_GROUP_LABELS,
   groupSceneOptions,
@@ -9,12 +13,14 @@ type Props = {
   value: string;
   disabled?: boolean;
   onChange: (value: string) => void;
+  /** Ouvre le panneau de création d’illustration (studio / admin). */
   onCreateRequest?: () => void;
 };
 
 export function ScenePicker({ options, value, disabled, onChange, onCreateRequest }: Props) {
   const base = groupSceneOptions(options);
   const hasLibrary = base.some((entry) => entry.group === "library");
+  // Sans aucune perso, on force quand même la section bibliothèque si création possible.
   const groups =
     onCreateRequest && !hasLibrary
       ? [

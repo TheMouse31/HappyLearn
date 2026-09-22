@@ -1,3 +1,6 @@
+/**
+ * Bulle d’indice élève : le texte peut contenir du HTML riche (même pipeline que les consignes).
+ */
 import { RichText } from "./RichText";
 import { Neo } from "./Neo";
 import type { UniverseSlug } from "../data/types";

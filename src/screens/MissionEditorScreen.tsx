@@ -1,3 +1,7 @@
+/**
+ * Studio missions (`/espace-admin/missions`) : catalogue + éditeur 3 colonnes
+ * (sommaire | panneau étape | aperçu élève). Textes riches + ScenePicker inclus.
+ */
 import { useEffect, useMemo, useState } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "../components/Button";
@@ -43,6 +47,7 @@ import { getAllSceneOptions } from "../lib/illustrations";
 import { sanitizeRichHtml } from "../lib/richText";
 import { useSession } from "../lib/session";
 
+/** Formulaire plat d’une étape (les copy multi-univers sont répliquées à l’enregistrement). */
 type DraftStep = {
   slug: string;
   kind: StepKind;
@@ -58,6 +63,7 @@ type DraftStep = {
   scene: string;
 };
 
+/** Sous-panneaux de l’étape courante (onglets workspace). */
 type StepPane = "content" | "illustration" | "answer";
 
 function emptyStep(index: number): DraftStep {
@@ -95,6 +101,7 @@ function stepToDraft(step: Step): DraftStep {
   };
 }
 
+/** Convertit les brouillons éditeur → Steps métier (HTML sanitisé + copy partagée). */
 function draftToSteps(missionId: string, drafts: DraftStep[]): Step[] {
   return defineSteps(
     missionId,
@@ -199,6 +206,7 @@ export function MissionEditorScreen() {
     void refreshCatalog();
   }, [teacher?.id]);
 
+  // Rafraîchit ScenePicker quand la bibliothèque perso change (admin ou création inline).
   useEffect(() => {
     function syncScenes() {
       setSceneOptions(getAllSceneOptions());
@@ -212,6 +220,7 @@ export function MissionEditorScreen() {
     };
   }, []);
 
+  // Deep-links : ?new=1 (création) et ?id=… (ouverture).
   useEffect(() => {
     if (searchParams.get("new") === "1") {
       startCreate();
@@ -253,6 +262,13 @@ export function MissionEditorScreen() {
     setStepPane("content");
     setCreatingIllust(false);
   }, [selectedStep]);
+
+  // Si le type d’étape n’a plus de réponse, quitter le panneau « answer » (évite un workspace vide).
+  useEffect(() => {
+    if (stepPane === "answer" && currentDraft && !needsAnswer(currentDraft.kind)) {
+      setStepPane("content");
+    }
+  }, [stepPane, currentDraft?.kind]);
 
   const filteredCatalog = useMemo(() => {
     const q = filter.trim().toLowerCase();
@@ -397,6 +413,7 @@ export function MissionEditorScreen() {
     await refreshCatalog();
   }
 
+  /** Après création inline : sélectionne immédiatement la scène `custom:id`. */
   function onIllustrationCreated(item: CustomIllustration) {
     setSceneOptions(getAllSceneOptions());
     updateStep(selectedStep, { scene: customSceneKey(item.id) });
@@ -625,6 +642,7 @@ export function MissionEditorScreen() {
           </div>
         </details>
 
+        {/* Layout studio : rail étapes | workspace (onglets) | aperçu élève. */}
         <div className="mission-studio-layout">
           <aside className="mission-studio-rail" aria-label="Sommaire des étapes">
             <div className="mission-studio-rail-head">
@@ -685,6 +703,7 @@ export function MissionEditorScreen() {
                   </div>
                 </div>
 
+                {/* Onglets contenu / illustration / réponse (si le kind le nécessite). */}
                 <nav className="mission-studio-panes" aria-label="Sections de l’étape">
                   {(
                     [
@@ -806,6 +825,7 @@ export function MissionEditorScreen() {
                   </div>
                 ) : null}
 
+                {/* Scène d’étape : picker + création inline (custom:). */}
                 {stepPane === "illustration" ? (
                   <div className="mission-studio-panel">
                     <div className="mission-studio-illust-head">
@@ -889,6 +909,7 @@ export function MissionEditorScreen() {
             )}
           </div>
 
+          {/* Aperçu live via UniverseScene (y compris scènes custom:). */}
           {previewOpen ? (
             <aside className="mission-preview mission-studio-preview" aria-label="Aperçu élève">
               <div className="mission-preview-head">

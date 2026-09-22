@@ -1,3 +1,7 @@
+/**
+ * Éditeur contentEditable pour consignes / notes / indices (studio missions).
+ * Sortie toujours passée par sanitizeRichHtml avant onChange.
+ */
 import { useEffect, useId, useRef } from "react";
 import { RICH_TEXT_COLORS, sanitizeRichHtml } from "../lib/richText";
 
@@ -27,11 +31,13 @@ export function RichTextEditor({
   const autoId = useId();
   const fieldId = id ?? autoId;
   const editorRef = useRef<HTMLDivElement>(null);
+  /** Évite de réécrire le DOM pendant la frappe (boucle value ↔ innerHTML). */
   const lastEmitted = useRef(value);
 
   useEffect(() => {
     const el = editorRef.current;
     if (!el) return;
+    // Ne pas écraser le curseur si l’éditeur a le focus.
     if (document.activeElement === el) return;
     const next = value || "";
     if (el.innerHTML !== next) {
@@ -44,7 +50,7 @@ export function RichTextEditor({
     const el = editorRef.current;
     if (!el) return;
     const html = sanitizeRichHtml(el.innerHTML);
-    // Keep empty paragraph as empty string.
+    // contentEditable vide → souvent un seul <br>.
     const normalized = html === "<br>" ? "" : html;
     if (normalized === lastEmitted.current) return;
     lastEmitted.current = normalized;
@@ -114,7 +120,9 @@ export function RichTextEditor({
         onBlur={emitFromEditor}
         onPaste={(event) => {
           event.preventDefault();
-          const text = event.clipboardData.getData("text/html") || event.clipboardData.getData("text/plain");
+          const text =
+            event.clipboardData.getData("text/html") ||
+            event.clipboardData.getData("text/plain");
           const safe = sanitizeRichHtml(text.replace(/\n/g, "<br>"));
           runCommand("insertHTML", safe || " ");
           emitFromEditor();

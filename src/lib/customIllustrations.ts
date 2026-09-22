@@ -1,5 +1,11 @@
+/**
+ * Bibliothèque d’illustrations personnalisées (localStorage).
+ * Les clés de scène côté mission utilisent le préfixe `custom:` + id.
+ */
+
 const CUSTOM_ILLUSTRATIONS_KEY = "happy-learn-custom-illustrations";
 export const CUSTOM_SCENE_PREFIX = "custom:";
+/** Événement fenêtre : synchro entre onglets / écrans (admin ↔ studio missions). */
 export const CUSTOM_ILLUSTRATIONS_EVENT = "happy-learn-custom-illustrations";
 
 export type CustomIllustration = {
@@ -17,6 +23,7 @@ export type CustomIllustrationInput = {
   imageUrl: string;
 };
 
+/** Slug URL-safe (sans accents) pour préfixer l’id. */
 function slugify(value: string): string {
   return value
     .normalize("NFD")
@@ -37,6 +44,7 @@ export function customSceneKey(id: string): string {
   return `${CUSTOM_SCENE_PREFIX}${id}`;
 }
 
+/** Extrait l’id depuis `custom:…`, ou null si ce n’est pas une scène perso. */
 export function parseCustomSceneId(scene: string): string | null {
   if (!scene.startsWith(CUSTOM_SCENE_PREFIX)) return null;
   const id = scene.slice(CUSTOM_SCENE_PREFIX.length).trim();
@@ -81,6 +89,7 @@ function persist(items: CustomIllustration[]): void {
   window.dispatchEvent(new Event(CUSTOM_ILLUSTRATIONS_EVENT));
 }
 
+/** Accepte un id brut ou une clé `custom:id`. */
 export function getCustomIllustration(idOrScene: string): CustomIllustration | null {
   const id = parseCustomSceneId(idOrScene) ?? idOrScene;
   return loadCustomIllustrations().find((item) => item.id === id) ?? null;
@@ -128,6 +137,7 @@ export function deleteCustomIllustration(id: string): void {
   persist(loadCustomIllustrations().filter((item) => item.id !== id));
 }
 
+/** Options prêtes pour ScenePicker (groupe « library », ton custom). */
 export function customSceneOptions(): {
   value: string;
   label: string;
