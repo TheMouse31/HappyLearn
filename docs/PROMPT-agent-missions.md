@@ -48,15 +48,18 @@ Toute mission builtin doit respecter cet ordre logique (les textes changent, la 
 
 | # | Rôle | kind typique | Notes |
 |---|------|--------------|-------|
-| 1 | Tutoriel / prise en main interaction | `tutorial` ou `continue` + `text`/`number` | Apprendre le geste de réponse si besoin |
+| 1 | Tutoriel / prise en main interaction | `continue`, `tutorial`, `text` ou `number` | Apprendre le geste de réponse si besoin |
 | 2 | Mise en action narrative | `continue` | 4 univers (football, rugby, equitation, espace) |
 | 3 | Objectif narratif | `continue` | Idem |
-| 4–9 | Cœur pédagogique (6 étapes max recommandées) | `number`, `text`, `choice`, `fraction-choice`, `simplify`… | Progression croissante ; `expected` + `distractors` si QCM |
-| 10 | Application / décision | `choice` ou `direction` ou `number` | Réinvestissement |
+| 4–9 | Cœur pédagogique (6 étapes max recommandées) | `choice`, `text`, `blanks`, `number`, `audio`, (+ maths : `fraction-choice`, `simplify`…) | Progression croissante ; `expected` + `distractors` si QCM |
+| 10 | Application / décision | `choice`, `blanks`, `number` ou `direction` | Réinvestissement |
 | 11 | Victoire narrative | `continue` | |
 | 12 | Ce que j’ai appris | `method` | Synthèse pédagogique (1 texte → 4 univers OK) |
 | 13 | Bilan sans note | `bilan` | |
 | 14 | Teaser prochaine mission | `teaser` | |
+
+Kinds **standardisés toutes matières** (studio) : voir `src/data/missions/CONTRACT.md` et `EDITOR_KIND_GROUPS` dans `catalog.ts`
+(`continue`, `choice`, `text`, `blanks`, `number`, `audio`, `method`, `bilan`, `teaser` + maths spécialisé).
 
 Règles de trame :
 - Utiliser `defineMission({ ... steps })` et `allUniverses()` quand le texte est commun aux 4 univers.

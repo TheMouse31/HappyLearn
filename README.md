@@ -7,13 +7,14 @@ Le catalogue couvre **toutes les matières du primaire**. **79 missions officiel
 **Démo en ligne :** [https://happy-learn.pages.dev](https://happy-learn.pages.dev)
 
 **Documentation :**
+- **Index** : [`docs/README.md`](./docs/README.md)
 - **Prompt agent (fabriquer les missions)** : [`docs/PROMPT-agent-missions.md`](./docs/PROMPT-agent-missions.md)
 - **Suivi thèmes / missions** : [`docs/SUIVI-missions-themes.md`](./docs/SUIVI-missions-themes.md) · CSV [`docs/SUIVI-missions-themes.csv`](./docs/SUIVI-missions-themes.csv)
 - **Trame type** : [`docs/TRAME-mission-type.md`](./docs/TRAME-mission-type.md)
-- **Thèmes du programme par classe × matière (PDF)** : [`docs/Themes_Programme_Par_Classe_Matiere.pdf`](./docs/Themes_Programme_Par_Classe_Matiere.pdf)
+- **Contrat missions / kinds** : [`src/data/missions/CONTRACT.md`](./src/data/missions/CONTRACT.md)
+- **Thèmes du programme (PDF)** : [`docs/HappyLearn_Themes_Par_Classe_Matiere.pdf`](./docs/HappyLearn_Themes_Par_Classe_Matiere.pdf)
 - **Guide utilisateur (PDF)** : [`docs/HappyLearn_Guide_Utilisateur.pdf`](./docs/HappyLearn_Guide_Utilisateur.pdf)
 - **Documentation produit & technique (PDF)** : [`docs/HappyLearn_Documentation_Complete.pdf`](./docs/HappyLearn_Documentation_Complete.pdf)
-- **Plan sessions live** : [`docs/PLAN-sessions-classe-live.md`](./docs/PLAN-sessions-classe-live.md)
 
 Le prototype HTML du dossier voisin `mini-produit` est la spécification produit. Ce dépôt est le logiciel.
 
@@ -123,7 +124,7 @@ Connexion élève → A00 accueil → `/classe` (niveau + matière) → A02 pré
 
 A01 (changer de prénom) reste accessible depuis l’accueil **seulement sans code classe**.
 
-Exemple historique (fractions CM2, checklist `docs/PARCOURS-8.md`) : 10 étapes nombres / fractions / bilan. Quitter une mission = retour sans étoile.
+Exemple historique (fractions CM2, checklist archive `docs/archive/PARCOURS-8.md`) : 10 étapes nombres / fractions / bilan. Quitter une mission = retour sans étoile.
 
 ## Fait
 

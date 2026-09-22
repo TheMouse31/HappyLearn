@@ -318,6 +318,7 @@ export function MissionScreen() {
       stepLabel={`Mission ${copy.title}`}
       confirmLeaveMission={!lockedSession}
       homeTo={lockedSession ? "/salle-attente" : "/accueil"}
+      backTo={lockedSession ? undefined : "/pret"}
       extra={
         lockedSession ? (
           liveParticipant ? (

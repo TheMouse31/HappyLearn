@@ -11,7 +11,10 @@ type Props = {
   children: ReactNode;
   extra?: ReactNode;
   brand?: string;
+  /** Cible de navigation pour ← Retour (ignoré si `onBack` est fourni). */
   backTo?: string;
+  /** Handler prioritaire pour ← Retour (ex. bascule mode local sans changer d’URL). */
+  onBack?: () => void;
   homeTo?: string;
   showSetupSteps?: boolean;
   confirmLeaveMission?: boolean;
@@ -31,16 +34,34 @@ export function Shell({
   extra,
   brand = "Happy Learn",
   backTo,
+  onBack,
   homeTo,
   showSetupSteps = false,
   confirmLeaveMission = false,
 }: Props) {
   const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const { role, lockedSession } = useSession();
   const resolvedHome = homeTo ?? defaultHomeTo(role, lockedSession);
   const brandTo = lockedSession ? "/salle-attente" : role === "enseignant" ? "/" : resolvedHome;
   const hideNav = lockedSession && (pathname === "/salle-attente" || pathname === "/mission");
+
+  const showBack = Boolean(!hideNav && (onBack || backTo));
+
+  function goBack() {
+    if (onBack) {
+      onBack();
+      return;
+    }
+    if (!backTo) return;
+    const current = `${pathname}${search}`;
+    // Même URL → pas de remount : tenter l’historique, sinon rester (évite un no-op silencieux).
+    if (current === backTo || pathname === backTo) {
+      if (window.history.length > 1) navigate(-1);
+      return;
+    }
+    navigate(backTo);
+  }
 
   function goHome() {
     if (lockedSession) {
@@ -58,8 +79,8 @@ export function Shell({
     <div className="app-shell">
       <header className="topbar">
         <div className="topbar-start">
-          {backTo && !hideNav ? (
-            <button type="button" className="nav-icon-btn" onClick={() => navigate(backTo)} aria-label="Retour">
+          {showBack ? (
+            <button type="button" className="nav-icon-btn nav-back-btn" onClick={goBack} aria-label="Retour">
               ← Retour
             </button>
           ) : null}

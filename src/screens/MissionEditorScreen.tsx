@@ -501,7 +501,13 @@ export function MissionEditorScreen() {
       brand="Happy Learn"
       stepLabel={readOnly ? "Lecture seule" : "Éditeur"}
       homeTo="/espace-admin"
-      backTo="/espace-admin/missions"
+      onBack={() => {
+        setMode("list");
+        setMessage("");
+        setError("");
+        // Nettoyer ?new=1 / ?id= pour un catalogue propre.
+        navigate("/espace-admin/missions", { replace: true });
+      }}
     >
       <section className={`mission-studio is-editing${previewOpen ? " has-preview" : ""}`}>
         <header className="mission-studio-bar">
@@ -512,6 +518,7 @@ export function MissionEditorScreen() {
                 setMode("list");
                 setMessage("");
                 setError("");
+                navigate("/espace-admin/missions", { replace: true });
               }}
             >
               Catalogue

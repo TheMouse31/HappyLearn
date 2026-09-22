@@ -166,10 +166,10 @@
   <div class="meta">
     <p><strong>Produit :</strong> Happy Learn · SPA React / Vite / TypeScript</p>
     <p><strong>Démo :</strong> https://happy-learn.pages.dev · https://happylearn.net</p>
-    <p><strong>Date :</strong> 22 septembre 2026 (mise à jour doc)</p>
+    <p><strong>Date :</strong> 22 septembre 2026 (doc + types d’étapes standardisés)</p>
     <p><strong>Périmètre :</strong> parcours élève multi-niveaux, espace professeur
       (suivi + programme), sessions live, catalogue 79 missions, espace admin
-      (studio missions + bibliothèque d’illustrations + texte enrichi),
+      (studio missions + types d’étapes standardisés + bibliothèque d’illustrations + texte enrichi),
       interfaces Classic / NewFront, accessibilité (écoute + panneau Couleurs)</p>
   </div>
 </section>
@@ -257,7 +257,12 @@
   <li>Table Supabase <code>missions</code> (jsonb) + cache local</li>
   <li><strong>Studio missions</strong> (admin) : catalogue, création / duplication, layout type Course Studio
     (sommaire + canvas + aperçu élève optionnel), publication</li>
-  <li><strong>Texte enrichi</strong> sur les consignes : gras, italique, souligné, couleurs (HTML sanitisé)</li>
+  <li><strong>Types d’étapes standardisés</strong> (toutes matières) :
+    Parcours (<code>continue</code>, <code>method</code>, <code>bilan</code>, <code>teaser</code>) ·
+    Réponses (<code>choice</code> QCM, <code>text</code>, <code>blanks</code> texte à trous, <code>number</code>, <code>audio</code> écoute) ·
+    Maths spécialisé (fractions / direction)</li>
+  <li><strong>Texte enrichi</strong> sur les consignes : gras, italique, souligné, couleurs (HTML sanitisé) ;
+    zones de saisie clairement encadrées dans le studio</li>
   <li><strong>Bibliothèque d’illustrations</strong> : scènes animées intégrées + illustrations perso
     (<code>custom:</code> en <code>localStorage</code>), sélectionnables par étape</li>
   <li>Allowlist admin (<code>happy-learn-admin-emails</code>, seed <code>test@test.fr</code>)</li>
@@ -302,6 +307,7 @@
     <tr>
       <td>Administrateur</td>
       <td>Espace admin : stats plateforme, studio missions (créer / dupliquer / publier),
+        types d’étapes standardisés (QCM, texte à trous, écoute, nombre…),
         bibliothèque d’illustrations (URL ou fichier), texte enrichi des consignes,
         personnages Néo (overrides), gestion des comptes admin</td>
       <td>Rôles granulaires, audit, sync cloud des illustrations perso</td>
@@ -419,15 +425,38 @@
   <img src="pdf-assets/15_editeur_detail.png" alt="Éditeur de mission avec texte enrichi et aperçu" />
   <figcaption>Figure 19 — Éditeur : sommaire + canvas (consigne riche) + aperçu élève</figcaption>
 </figure>
+<figure class="figure">
+  <img src="pdf-assets/30_studio_step_kinds.png" alt="Palette des types d’étapes" />
+  <figcaption>Figure 20 — Types d’étapes standardisés (parcours / réponses / maths)</figcaption>
+</figure>
+<div class="grid-2">
+  <figure class="figure">
+    <img src="pdf-assets/31_studio_fields_framed.png" alt="Zones de texte encadrées" />
+    <figcaption>Figure 21 — Zones de saisie clairement encadrées</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="pdf-assets/32_studio_blanks.png" alt="Éditeur texte à trous" />
+    <figcaption>Figure 22 — Texte à trous : réponses des trous</figcaption>
+  </figure>
+</div>
 <div class="grid-2">
   <figure class="figure">
     <img src="pdf-assets/29_studio_scene_picker.png" alt="Sélecteur d’illustration d’étape" />
-    <figcaption>Figure 20 — Onglet Illustration : auto, bibliothèque perso, scènes animées</figcaption>
+    <figcaption>Figure 23 — Onglet Illustration : auto, bibliothèque perso, scènes animées</figcaption>
   </figure>
   <figure class="figure">
     <img src="pdf-assets/26_admin_illustration_create.png" alt="Création d’illustration" />
-    <figcaption>Figure 21 — Nouvelle illustration (nom, description, URL ou fichier)</figcaption>
+    <figcaption>Figure 24 — Nouvelle illustration (nom, description, URL ou fichier)</figcaption>
   </figure>
+</div>
+
+<div class="callout">
+  <p><strong>Types d’étapes (toutes matières)</strong></p>
+  <ul>
+    <li><strong>Parcours :</strong> Narration, Méthode, Bilan, Clôture</li>
+    <li><strong>Réponses :</strong> QCM, Texte libre, Texte à trous (<code>___</code>), Nombre/calcul, Écoute (TTS)</li>
+    <li><strong>Maths spécialisé :</strong> Tutoriel / choix / simplification de fraction, Direction spatiale</li>
+  </ul>
 </div>
 
 <!-- 5 -->
@@ -536,7 +565,7 @@
     <tr>
       <td>Qualité</td>
       <td>Régressions parcours</td>
-      <td>Tests e2e (élève solo, live, studio admin) ; checklist <code>PARCOURS-8</code> automatisée</td>
+      <td>Tests e2e (élève solo, live, studio admin) ; checklist archive <code>PARCOURS-8</code></td>
     </tr>
   </tbody>
 </table>
@@ -623,11 +652,12 @@
 <h3>10.1 Documents du dépôt</h3>
 <ul>
   <li><code>README.md</code> — démarrage, env, déploiement</li>
-  <li><code>docs/PLAN-sessions-classe-live.md</code> — plan sessions live</li>
-  <li><code>docs/PARCOURS-8.md</code> — checklist parcours fractions</li>
+  <li><code>docs/README.md</code> — index de la documentation</li>
   <li><code>docs/SUIVI-missions-themes.md</code> — pilotage éditorial des thèmes</li>
   <li><code>docs/PROMPT-agent-missions.md</code> — prompt agent missions</li>
-  <li><code>src/data/missions/CONTRACT.md</code> — contrat d’IDs missions</li>
+  <li><code>docs/TRAME-mission-type.md</code> — trame type d’une mission</li>
+  <li><code>src/data/missions/CONTRACT.md</code> — contrat d’IDs + kinds d’étapes</li>
+  <li><code>docs/archive/</code> — plans / checklists historiques (sessions live, PARCOURS-8)</li>
 </ul>
 
 <h3>10.2 Migrations SQL</h3>
@@ -660,7 +690,7 @@
 
 <footer class="page-note">
   Document généré pour Happy Learn v0.1 — 22 septembre 2026 (catalogue, studio admin,
-  illustrations, texte enrichi, suivi, programme, NewFront, panneau Couleurs).
+  types d’étapes standardisés, illustrations, texte enrichi, suivi, programme, NewFront, Couleurs).
   Les captures illustrent l’environnement de développement. Contact : dépôt HappyLearn.
 </footer>
 

@@ -164,7 +164,7 @@
   <div class="meta">
     <p><strong>Public :</strong> enseignants · élèves · familles · admins</p>
     <p><strong>Site :</strong> https://happylearn.net · https://happy-learn.pages.dev</p>
-    <p><strong>Version :</strong> 0.1 · 22 septembre 2026 (studio admin + texte enrichi)</p>
+    <p><strong>Version :</strong> 0.1 · 22 septembre 2026 (studio admin, types d’étapes, texte enrichi)</p>
   </div>
 </section>
 
@@ -372,7 +372,9 @@
   <li>Onglet <strong>Missions</strong> ou bouton <strong>Gérer les missions</strong> → studio catalogue.</li>
   <li>Clique sur <strong>Nouvelle mission</strong> (ou <strong>Dupliquer</strong> une officielle).</li>
   <li>Renseigne l’identité (niveau, matière, slug, titre) via «&nbsp;Identité de la mission&nbsp;».</li>
-  <li>Pour chaque étape : type, titre, <strong>consigne en texte enrichi</strong> (gras / couleurs),
+  <li>Pour chaque étape : choisis un <strong>type standardisé</strong> (QCM, texte libre, texte à trous,
+    nombre, écoute, narration… — valable pour toutes les matières), titre,
+    <strong>consigne en texte enrichi</strong> (gras / couleurs),
     réponse si besoin, et onglet <strong>Illustration</strong> (auto, perso ou scène animée).</li>
   <li>Bascule <strong>Aperçu élève</strong> pour vérifier le rendu, puis <strong>Enregistrer</strong>.</li>
   <li>Coche <strong>Publier</strong> pour la rendre disponible dans le sélecteur d’activité du pilotage.</li>
@@ -382,6 +384,14 @@
   (ou «&nbsp;Bibliothèque d’illustrations&nbsp;» depuis le catalogue). Ajoute une image par URL
   ou fichier (max.&nbsp;2,5&nbsp;Mo) : elle apparaît ensuite dans le sélecteur d’étape du studio.
 </div>
+<table>
+  <thead><tr><th>Groupe</th><th>Types d’étape</th><th>Usage</th></tr></thead>
+  <tbody>
+    <tr><td>Parcours</td><td>Narration, Méthode, Bilan, Clôture</td><td>Histoire, rappel, fin de mission</td></tr>
+    <tr><td>Réponses</td><td>QCM, Texte libre, Texte à trous, Nombre, Écoute</td><td>Toutes matières — trous avec <code>___</code>, écoute = voix</td></tr>
+    <tr><td>Maths</td><td>Tutoriel / choix / simplification de fraction, Direction</td><td>Interactions fractions / spatial</td></tr>
+  </tbody>
+</table>
 <figure class="figure">
   <img src="pdf-assets/23_admin_overview.png" alt="Espace admin" />
   <figcaption>Figure 15 — Espace admin : vue d’ensemble</figcaption>
@@ -392,18 +402,28 @@
     <figcaption>Figure 16 — Catalogue du studio missions</figcaption>
   </figure>
   <figure class="figure">
-    <img src="pdf-assets/15_editeur_detail.png" alt="Éditeur avec texte enrichi" />
-    <figcaption>Figure 17 — Éditeur : consigne enrichie + aperçu</figcaption>
+    <img src="pdf-assets/30_studio_step_kinds.png" alt="Types d’étapes" />
+    <figcaption>Figure 17 — Palette des types (toutes matières)</figcaption>
+  </figure>
+</div>
+<div class="grid-2">
+  <figure class="figure">
+    <img src="pdf-assets/31_studio_fields_framed.png" alt="Éditeur consignes encadrées" />
+    <figcaption>Figure 18 — Consigne enrichie (zones encadrées)</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="pdf-assets/32_studio_blanks.png" alt="Texte à trous" />
+    <figcaption>Figure 19 — Texte à trous</figcaption>
   </figure>
 </div>
 <div class="grid-2">
   <figure class="figure">
     <img src="pdf-assets/25_admin_illustrations.png" alt="Bibliothèque" />
-    <figcaption>Figure 18 — Bibliothèque d’illustrations</figcaption>
+    <figcaption>Figure 20 — Bibliothèque d’illustrations</figcaption>
   </figure>
   <figure class="figure">
     <img src="pdf-assets/29_studio_scene_picker.png" alt="Sélecteur d’illustration" />
-    <figcaption>Figure 19 — Choix d’illustration par étape</figcaption>
+    <figcaption>Figure 21 — Choix d’illustration par étape</figcaption>
   </figure>
 </div>
 <div class="info">
@@ -471,7 +491,7 @@
 </div>
 
 <footer class="note">
-  Happy Learn — Guide utilisateur v0.1 · 22 septembre 2026 (studio admin, illustrations, texte enrichi).
+  Happy Learn — Guide utilisateur v0.1 · 22 septembre 2026 (studio admin, types d’étapes, illustrations, texte enrichi).
   Pour la documentation produit &amp; technique (architecture, feuille de route),
   voir <em>HappyLearn_Documentation_Complete.pdf</em>.
 </footer>

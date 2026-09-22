@@ -370,6 +370,7 @@ export function TeacherSpaceScreen() {
       brand="Happy Learn"
       stepLabel="Espace enseignant"
       homeTo="/espace-professeur"
+      backTo="/"
       extra={
         <Button
           onClick={() => {

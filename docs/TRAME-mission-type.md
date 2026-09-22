@@ -8,13 +8,17 @@ Toute mission builtin suit cette structure. Seuls changent : classe, matière, n
 [1] Tutoriel interaction
 [2] Narratif — mise en action          (continue × 4 univers)
 [3] Narratif — objectif                (continue × 4 univers)
-[4..9] Cœur pédagogique (4 à 6 étapes) (number | text | choice | …)
+[4..9] Cœur pédagogique (4 à 6 étapes) (choice | text | blanks | number | audio | …)
 [10] Application / décision
 [11] Victoire narrative                (continue)
 [12] Méthode — ce que j’ai appris      (method)
 [13] Bilan sans note                   (bilan)
 [14] Teaser                            (teaser)
 ```
+
+Kinds standardisés (toutes matières) : `continue`, `choice`, `text`, `blanks`, `number`, `audio`,
+`method`, `bilan`, `teaser` (+ maths : `tutorial`, `fraction-choice`, `simplify`, `direction`).
+Détail : `src/data/missions/CONTRACT.md`.
 
 ## Gabarit TypeScript (à adapter)
 

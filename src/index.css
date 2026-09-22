@@ -41,25 +41,40 @@ button {
   min-height: var(--tap);
   padding: 12px 18px;
   border-radius: 14px;
-  border: 2px solid var(--line);
-  background: var(--panel);
+  border: 2px solid #3d8f72;
+  background: #fff;
   color: var(--ink);
   font-weight: 750;
   cursor: pointer;
+  box-shadow: 0 1px 0 rgb(15 45 35 / 6%);
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--action, #0f8f78);
+  background: #f4fbf8;
 }
 
 button:disabled { opacity: 0.45; cursor: default; }
 
 button:focus-visible,
-input:focus-visible {
-  outline: 3px solid var(--action);
-  outline-offset: 3px;
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[contenteditable="true"]:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--action, #0f8f78) 45%, transparent);
+  outline-offset: 2px;
 }
 
 .primary {
-  border-color: #20c978;
+  border-color: #0f8f78;
   background: linear-gradient(145deg, var(--action-2), var(--action));
   color: var(--action-ink);
+  box-shadow: 0 2px 0 rgb(7 62 40 / 18%);
+}
+
+.primary:hover:not(:disabled) {
+  border-color: #0a6b58;
+  background: linear-gradient(145deg, #2ae08f, #12a86a);
 }
 
 .app-shell {
@@ -111,12 +126,23 @@ input:focus-visible {
   min-height: var(--tap);
   padding: 8px 12px;
   border-radius: 12px;
-  border: 2px solid var(--line);
+  border: 2px solid #3d8f72;
   background: #fff;
   color: var(--ink);
   font-weight: 800;
   font-size: 0.92rem;
   cursor: pointer;
+  box-shadow: 0 1px 0 rgb(15 45 35 / 6%);
+}
+
+.nav-icon-btn:hover:not(:disabled) {
+  border-color: var(--action, #0f8f78);
+  background: #eef8f3;
+}
+
+.nav-back-btn {
+  border-color: #2f7a60;
+  background: #f3faf7;
 }
 
 .home-btn span:first-child {
@@ -137,7 +163,7 @@ input:focus-visible {
 
 .step-pill {
   padding: 7px 12px;
-  border: 1px solid #a8d4c2;
+  border: 2px solid #3d8f72;
   border-radius: 999px;
   background: #fff;
   color: #316254;
@@ -1695,7 +1721,7 @@ p {
 .suivi-modes button {
   min-height: var(--tap);
   padding: 10px 16px;
-  border: 2px solid var(--line);
+  border: 2px solid #3d8f72;
   border-radius: 999px;
   background: #fff;
   font: inherit;
@@ -3543,7 +3569,7 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
 .admin-tabs button {
   min-height: 40px;
   padding: 8px 14px;
-  border: 2px solid var(--line);
+  border: 2px solid #3d8f72;
   border-radius: 999px;
   background: #fff;
   font: inherit;
@@ -3552,8 +3578,12 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
 }
 
 .admin-tabs button.is-selected {
-  border-color: var(--action, #138c59);
+  border-color: #0f8f78;
   background: #eafff2;
+}
+
+.admin-tabs button:hover:not(:disabled) {
+  background: #f4fbf8;
 }
 
 .admin-panel {
@@ -4155,27 +4185,34 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
 
 .mission-studio-panes {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   padding: 10px 14px 0;
   background: #fff;
 }
 
 .mission-studio-panes button {
-  min-height: 38px;
+  min-height: 40px;
   padding: 0 14px;
-  border: 1px solid transparent;
+  border: 2px solid #b7d9cb;
   border-radius: 999px;
-  background: transparent;
+  background: #fff;
   font: inherit;
   font-weight: 750;
   cursor: pointer;
   color: var(--muted, #5a6270);
+  box-shadow: none;
+}
+
+.mission-studio-panes button:hover:not(:disabled) {
+  border-color: #3d8f72;
+  background: #f4fbf8;
+  color: var(--ink);
 }
 
 .mission-studio-panes button.is-selected {
   color: var(--ink);
   background: #eafff2;
-  border-color: color-mix(in srgb, var(--action, #138c59) 35%, var(--line));
+  border-color: #3d8f72;
 }
 
 .mission-studio-panel {

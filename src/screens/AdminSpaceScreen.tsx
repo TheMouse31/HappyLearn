@@ -132,7 +132,19 @@ export function AdminSpaceScreen() {
   }
 
   return (
-    <Shell brand="Happy Learn" stepLabel="Administration" homeTo="/espace-admin">
+    <Shell
+      brand="Happy Learn"
+      stepLabel="Administration"
+      homeTo="/espace-admin"
+      backTo={tab === "overview" ? "/" : undefined}
+      onBack={
+        tab === "overview"
+          ? undefined
+          : () => {
+              setTab("overview");
+            }
+      }
+    >
       <section className="admin-space">
         <header className="admin-head">
           <div>
