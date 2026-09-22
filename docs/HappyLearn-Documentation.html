@@ -166,9 +166,10 @@
   <div class="meta">
     <p><strong>Produit :</strong> Happy Learn · SPA React / Vite / TypeScript</p>
     <p><strong>Démo :</strong> https://happy-learn.pages.dev · https://happylearn.net</p>
-    <p><strong>Date :</strong> 21 septembre 2026 (mise à jour doc)</p>
+    <p><strong>Date :</strong> 22 septembre 2026 (mise à jour doc)</p>
     <p><strong>Périmètre :</strong> parcours élève multi-niveaux, espace professeur
-      (suivi + programme), sessions live, catalogue 79 missions, créateur,
+      (suivi + programme), sessions live, catalogue 79 missions, espace admin
+      (studio missions + bibliothèque d’illustrations + texte enrichi),
       interfaces Classic / NewFront, accessibilité (écoute + panneau Couleurs)</p>
   </div>
 </section>
@@ -198,15 +199,16 @@
 </p>
 <ul>
   <li><strong>Pour l’élève :</strong> engagement, feedback immédiat, aventure guidée par la mascotte Néo.</li>
-  <li><strong>Pour l’enseignant :</strong> classes, roster, suivi plein écran, couverture du programme, session live, stats non classantes, création de missions.</li>
+  <li><strong>Pour l’enseignant :</strong> classes, roster, suivi plein écran, couverture du programme, session live, stats non classantes.</li>
+  <li><strong>Pour l’admin :</strong> studio missions (création / publication), bibliothèque d’illustrations, gestion des comptes admin, stats plateforme.</li>
   <li><strong>Pour l’école :</strong> application web (aucun install), code de session éphémère, traces pédagogiques.</li>
 </ul>
 <div class="callout">
   <strong>État actuel :</strong> <strong>79 missions officielles</strong> (Phase&nbsp;A :
   une mission standard par thème du programme) sont jouables sur les
-  <strong>27 couples niveau × matière</strong> du primaire. Le créateur permet d’ajouter
-  d’autres contenus publiables dans le pilotage. Phase&nbsp;B (variantes facile / difficile)
-  reste à venir.
+  <strong>27 couples niveau × matière</strong> du primaire. La création / édition de missions
+  et d’illustrations est <strong>réservée aux comptes admin</strong> (studio pro).
+  Phase&nbsp;B (variantes facile / difficile) reste à venir.
 </div>
 
 <!-- 2 -->
@@ -247,13 +249,18 @@
   <li>Kick / reconnexion, retour salle d’attente à l’arrêt d’activité</li>
 </ul>
 
-<h3>2.5 Catalogue &amp; créateur de missions</h3>
+<h3>2.5 Catalogue, studio admin &amp; illustrations</h3>
 <ul>
   <li><strong>79 missions officielles</strong> Phase&nbsp;A (une par thème) embarquées en TypeScript</li>
   <li>Contrat d’IDs multi-matières : <code>{niveau}-{matière}-{slug}-{nn}</code></li>
   <li>Étapes canoniques : <code>{missionId}/{slug}</code> (ex. <code>cm2-maths-fractions-01/s01</code>)</li>
-  <li>Table Supabase <code>missions</code> (jsonb) + cache local enseignant</li>
-  <li>Éditeur in-app : création, duplication, preview, publication</li>
+  <li>Table Supabase <code>missions</code> (jsonb) + cache local</li>
+  <li><strong>Studio missions</strong> (admin) : catalogue, création / duplication, layout type Course Studio
+    (sommaire + canvas + aperçu élève optionnel), publication</li>
+  <li><strong>Texte enrichi</strong> sur les consignes : gras, italique, souligné, couleurs (HTML sanitisé)</li>
+  <li><strong>Bibliothèque d’illustrations</strong> : scènes animées intégrées + illustrations perso
+    (<code>custom:</code> en <code>localStorage</code>), sélectionnables par étape</li>
+  <li>Allowlist admin (<code>happy-learn-admin-emails</code>, seed <code>test@test.fr</code>)</li>
 </ul>
 
 <h3>2.6 Interface &amp; accessibilité visuelle</h3>
@@ -294,13 +301,15 @@
     </tr>
     <tr>
       <td>Administrateur</td>
-      <td>Espace admin : stats plateforme, catalogue missions (créer/modifier), illustrations animées, gestion des admins</td>
-      <td>Rôles granulaires, audit</td>
+      <td>Espace admin : stats plateforme, studio missions (créer / dupliquer / publier),
+        bibliothèque d’illustrations (URL ou fichier), texte enrichi des consignes,
+        personnages Néo (overrides), gestion des comptes admin</td>
+      <td>Rôles granulaires, audit, sync cloud des illustrations perso</td>
     </tr>
     <tr>
       <td>Enseignant auteur</td>
-      <td>—</td>
-      <td>Création missions réservée aux admins</td>
+      <td>Utilise les missions publiées dans le pilotage live</td>
+      <td>Création / édition de missions réservée aux admins</td>
     </tr>
   </tbody>
 </table>
@@ -386,25 +395,40 @@
   <figcaption>Figure 15 — Sélecteur de missions (officielles + créées / publiées)</figcaption>
 </figure>
 
-<h3>4.4 Espace professeur &amp; créateur de missions</h3>
+<h3>4.4 Espace admin — studio missions &amp; illustrations</h3>
+<p>
+  La création de missions n’est plus dans l’espace professeur : elle vit dans
+  <strong>/espace-admin</strong> (allowlist e-mail). L’enseignant continue de
+  piloter les missions <em>publiées</em> en session live.
+</p>
 <figure class="figure">
-  <img src="pdf-assets/11_espace_professeur.png" alt="Espace professeur" />
-  <figcaption>Figure 16 — Espace professeur : classes, roster, stats, accès créateur</figcaption>
+  <img src="pdf-assets/23_admin_overview.png" alt="Espace admin — vue d’ensemble" />
+  <figcaption>Figure 16 — Espace admin : vue d’ensemble (stats + raccourcis)</figcaption>
 </figure>
 <div class="grid-2">
   <figure class="figure">
-    <img src="pdf-assets/16_catalogue_missions.png" alt="Catalogue de missions" />
-    <figcaption>Figure 17 — Catalogue (mes missions + officielles)</figcaption>
+    <img src="pdf-assets/13_createur_missions.png" alt="Catalogue studio missions" />
+    <figcaption>Figure 17 — Studio missions : catalogue (79 officielles + personnalisées)</figcaption>
   </figure>
   <figure class="figure">
-    <img src="pdf-assets/15_editeur_detail.png" alt="Éditeur de mission" />
-    <figcaption>Figure 18 — Éditeur d’étapes + aperçu joueur</figcaption>
+    <img src="pdf-assets/25_admin_illustrations.png" alt="Bibliothèque d’illustrations" />
+    <figcaption>Figure 18 — Bibliothèque d’illustrations (étapes + personnages Néo)</figcaption>
   </figure>
 </div>
 <figure class="figure">
-  <img src="pdf-assets/17_mission_publiee.png" alt="Mission publiée" />
-  <figcaption>Figure 19 — Publication : la mission devient disponible au pilotage</figcaption>
+  <img src="pdf-assets/15_editeur_detail.png" alt="Éditeur de mission avec texte enrichi et aperçu" />
+  <figcaption>Figure 19 — Éditeur : sommaire + canvas (consigne riche) + aperçu élève</figcaption>
 </figure>
+<div class="grid-2">
+  <figure class="figure">
+    <img src="pdf-assets/29_studio_scene_picker.png" alt="Sélecteur d’illustration d’étape" />
+    <figcaption>Figure 20 — Onglet Illustration : auto, bibliothèque perso, scènes animées</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="pdf-assets/26_admin_illustration_create.png" alt="Création d’illustration" />
+    <figcaption>Figure 21 — Nouvelle illustration (nom, description, URL ou fichier)</figcaption>
+  </figure>
+</div>
 
 <!-- 5 -->
 <h2 class="pagebreak">5. Architecture technique</h2>
@@ -416,7 +440,7 @@
     <tr><td>Persistance</td><td><code>Persistence</code> unifiée : Supabase ou localStorage (<code>persistence.ts</code>)</td></tr>
     <tr><td>Realtime</td><td>Supabase Realtime sur <code>classe_sessions</code> / <code>session_participants</code></td></tr>
     <tr><td>Moteur pédagogique</td><td><code>missionEngine.ts</code> (validation, QCM, scènes)</td></tr>
-    <tr><td>Catalogue</td><td>TS embarqué + table <code>missions</code> + cache local enseignant</td></tr>
+    <tr><td>Catalogue</td><td>TS embarqué + table <code>missions</code> + cache local ; illustrations perso en <code>localStorage</code> (<code>custom:</code>)</td></tr>
     <tr><td>Hébergement</td><td>Cloudflare Pages (SPA + <code>_redirects</code>)</td></tr>
   </tbody>
 </table>
@@ -429,7 +453,9 @@
     <tr><td><code>/accueil</code> … <code>/recompense</code></td><td>Parcours élève solo</td></tr>
     <tr><td><code>/espace-professeur</code></td><td>Suivi de classe (Élèves / Séances / Programme)</td></tr>
     <tr><td><code>/espace-professeur/session</code></td><td>Session live</td></tr>
-    <tr><td><code>/espace-professeur/missions</code></td><td>Créateur / éditeur</td></tr>
+    <tr><td><code>/espace-admin</code></td><td>Administration (stats, missions, illustrations, admins)</td></tr>
+    <tr><td><code>/espace-admin/missions</code></td><td>Studio missions (catalogue + éditeur)</td></tr>
+    <tr><td><code>/espace-professeur/missions</code></td><td>Redirige vers <code>/espace-admin/missions</code></td></tr>
     <tr><td><code>/salle-attente</code>, <code>/mission</code></td><td>Élève en session (nav verrouillée)</td></tr>
   </tbody>
 </table>
@@ -462,7 +488,7 @@
 <h2>7. Sécurité, déploiement &amp; exploitation</h2>
 <ul>
   <li><strong>Auth élèves :</strong> pas de compte e-mail ; prénom libre ou sélection roster.</li>
-  <li><strong>Auth enseignants :</strong> Supabase Auth (self-signup ouvert en démo).</li>
+  <li><strong>Auth enseignants :</strong> Supabase Auth (self-signup ouvert en démo) ; comptes admin via allowlist e-mail locale + seed.</li>
   <li><strong>RLS :</strong> encore permissives sur certaines écritures (traces) — à resserrer.</li>
   <li><strong>Secrets :</strong> variables <code>VITE_*</code> / <code>VITE_HL_*</code> au build ; token migrations hors dépôt.</li>
   <li><strong>Déploiement :</strong> <code>npm run build</code> puis Cloudflare Pages / Wrangler.</li>
@@ -475,7 +501,7 @@
   <li>Sessions live dégradées hors Supabase (mono-appareil localStorage).</li>
   <li>RLS / anonymat trop ouverts pour une production scolaire stricte.</li>
   <li>Pas d’export de données, pas de multi-établissements, pas de SSO ENT.</li>
-  <li>Créateur : pas d’édition des animations UniverseScene par étape.</li>
+  <li>Illustrations perso stockées en localStorage (pas encore synchronisées cloud / multi-appareils).</li>
   <li>Kinds avancés (matching, ordonnancement…) non exposés.</li>
   <li>Pas de suite de tests automatisés complète des parcours checklist.</li>
   <li>Pas de gestion fine des rôles (directeur, formateur, éditeur pédagogique).</li>
@@ -510,7 +536,7 @@
     <tr>
       <td>Qualité</td>
       <td>Régressions parcours</td>
-      <td>Tests e2e (élève solo, live, créateur) ; checklist <code>PARCOURS-8</code> automatisée</td>
+      <td>Tests e2e (élève solo, live, studio admin) ; checklist <code>PARCOURS-8</code> automatisée</td>
     </tr>
   </tbody>
 </table>
@@ -541,10 +567,11 @@
   <li>Récompenses &amp; collection enrichies sans gamification toxique (toujours sans classement).</li>
 </ul>
 
-<h3>9.5 Créateur de missions (priorité moyenne)</h3>
+<h3>9.5 Studio missions &amp; illustrations (priorité moyenne)</h3>
 <ul>
+  <li>Sync cloud des illustrations perso (au-delà du <code>localStorage</code>).</li>
   <li>Textes par univers (au-delà du mode «&nbsp;1 texte → 4 univers&nbsp;»).</li>
-  <li>Éditeur de scène / assets, preview joueur fidèle (iframe player).</li>
+  <li>Éditeur d’animations / assets avancé, preview joueur fidèle (iframe player).</li>
   <li>Import / export JSON, duplication inter-classes, co-édition.</li>
   <li>Banque d’items partagée (établissement / académie).</li>
 </ul>
@@ -632,9 +659,9 @@
 </table>
 
 <footer class="page-note">
-  Document généré pour Happy Learn v0.1 — septembre 2026 (doc à jour catalogue,
-  suivi, programme, NewFront, panneau Couleurs). Les captures illustrent l’environnement de
-  développement et les sessions live. Contact : dépôt HappyLearn.
+  Document généré pour Happy Learn v0.1 — 22 septembre 2026 (catalogue, studio admin,
+  illustrations, texte enrichi, suivi, programme, NewFront, panneau Couleurs).
+  Les captures illustrent l’environnement de développement. Contact : dépôt HappyLearn.
 </footer>
 
 </body>

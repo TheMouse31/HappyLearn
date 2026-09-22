@@ -2,7 +2,7 @@
 
 Apprentissages du CP au CM2, racontés comme une mission. Application web React (Vite).
 
-Le catalogue couvre **toutes les matières du primaire**. **79 missions officielles** (une par thème du programme, Phase A) sont jouables ; les **27 couples niveau × matière** du primaire sont ouverts. Les enseignants peuvent aussi créer et publier leurs propres missions.
+Le catalogue couvre **toutes les matières du primaire**. **79 missions officielles** (une par thème du programme, Phase A) sont jouables ; les **27 couples niveau × matière** du primaire sont ouverts. Les **comptes admin** créent et publient missions et illustrations via le studio ; les enseignants les utilisent ensuite en session live.
 
 **Démo en ligne :** [https://happy-learn.pages.dev](https://happy-learn.pages.dev)
 
@@ -94,8 +94,14 @@ La page d’accueil `/` présente Happy Learn. La connexion est sur `/connexion`
 - **Suivi de classe** (plein écran) : modes Élèves / Séances / Programme ; sélecteur de classe en popup.
 - **Couverture du programme** : pour chaque thème, marque *App* (fait dans Happy Learn) et *En classe* (traité hors app).
 - **Pilotage de session live** : code du jour, présence, lancement d’activité.
-- **Créateur de missions** : missions multi-matières publiables.
 - Stats et journal **sans note ni classement**.
+
+### Espace admin
+
+- **Studio missions** (`/espace-admin/missions`) : catalogue, création / duplication, texte enrichi des consignes, aperçu élève, publication.
+- **Bibliothèque d’illustrations** : scènes animées + illustrations perso (`custom:`), sélectionnables par étape.
+- **Stats plateforme** et **gestion des comptes admin** (allowlist e-mail).
+- L’ancienne route `/espace-professeur/missions` redirige vers le studio admin.
 
 ## Sessions live
 
@@ -134,7 +140,7 @@ Exemple historique (fractions CM2, checklist `docs/PARCOURS-8.md`) : 10 étapes 
 - Suivi de classe plein écran (Élèves / Séances / Programme) + popup classes
 - Couverture programme (App + En classe) par classe
 - Sessions de classe live (Realtime)
-- Créateur de missions multi-matières
+- Espace admin : studio missions (texte enrichi) + bibliothèque d’illustrations
 - Mode daltonien + teinte personnalisable (panneau Couleurs) + lecture à voix haute (topbar)
 - Bascule d’interface Classic / NewFront
 - Supabase Auth + migrations + seed
