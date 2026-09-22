@@ -4535,7 +4535,7 @@ button.is-active-toggle {
 /* —— Desktop (PC) —— */
 @media (min-width: 1100px) {
   .mission-studio-layout {
-    grid-template-columns: 220px minmax(0, 1fr);
+    grid-template-columns: 260px minmax(0, 1fr);
   }
 
   .mission-studio.has-preview .mission-studio-layout {
