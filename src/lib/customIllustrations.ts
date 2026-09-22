@@ -128,10 +128,20 @@ export function deleteCustomIllustration(id: string): void {
   persist(loadCustomIllustrations().filter((item) => item.id !== id));
 }
 
-export function customSceneOptions(): { value: string; label: string; blurb: string }[] {
+export function customSceneOptions(): {
+  value: string;
+  label: string;
+  blurb: string;
+  group: "library";
+  tone: "custom";
+  thumb: string;
+}[] {
   return loadCustomIllustrations().map((item) => ({
     value: customSceneKey(item.id),
     label: item.label,
     blurb: item.blurb || "Illustration personnalisée",
+    group: "library" as const,
+    tone: "custom" as const,
+    thumb: item.imageUrl,
   }));
 }

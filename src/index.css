@@ -3765,3 +3765,946 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
   margin-top: 2px;
   color: var(--muted, #5a6270);
 }
+
+/* —— Studio missions & illustrations —— */
+.mission-studio {
+  display: grid;
+  gap: 18px;
+}
+
+.mission-studio-hero,
+.illust-studio-hero {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: end;
+}
+
+.mission-studio-hero h1,
+.illust-studio-hero h2 {
+  margin: 0 0 6px;
+}
+
+.mission-studio-hero-actions,
+.mission-studio-bar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.mission-studio-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mission-studio-search {
+  flex: 1 1 240px;
+  max-width: 28rem;
+  margin: 0;
+}
+
+.mission-studio-count {
+  margin: 0;
+  font-weight: 700;
+  color: var(--muted, #5a6270);
+}
+
+.mission-studio-catalog {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.mission-studio-catalog li {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.mission-studio-card-body {
+  display: grid;
+  gap: 6px;
+}
+
+.mission-studio-card-body strong {
+  font-size: 1.05rem;
+}
+
+.mission-studio-card-body p {
+  margin: 0;
+  color: var(--muted, #5a6270);
+  font-size: 0.92rem;
+}
+
+.mission-studio-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mission-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #f4f6f5;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.mission-badge.is-live {
+  border-color: color-mix(in srgb, var(--action, #138c59) 40%, var(--line));
+  background: #eafff2;
+  color: #0f6b45;
+}
+
+.mission-studio-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.mission-studio-bar-main {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+  flex: 1 1 280px;
+}
+
+.mission-studio-title-block {
+  min-width: 0;
+  flex: 1 1 200px;
+}
+
+.mission-studio-title-block p {
+  margin: 2px 0 0;
+  font-size: 0.88rem;
+  color: var(--muted, #5a6270);
+}
+
+.mission-studio-title-input {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 1.25rem;
+  font-weight: 800;
+  padding: 0;
+}
+
+.mission-studio-title-input:focus {
+  outline: none;
+}
+
+.mission-publish-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #f8faf9;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mission-studio-note {
+  margin: 0;
+}
+
+.mission-studio-meta {
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: #f8faf9;
+  padding: 10px 14px;
+}
+
+.mission-studio-meta summary {
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.mission-studio-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.mission-studio-layout {
+  display: grid;
+  grid-template-columns: minmax(180px, 220px) minmax(0, 1fr) minmax(240px, 320px);
+  gap: 14px;
+  align-items: start;
+}
+
+.mission-studio-rail,
+.mission-studio-workspace,
+.mission-studio-preview {
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.mission-studio-rail {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  align-content: start;
+}
+
+.mission-studio-rail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mission-studio-rail-head h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.mission-studio-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.mission-studio-steps button {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+  text-align: left;
+  padding: 8px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.mission-studio-steps button.is-selected {
+  border-color: var(--action, #138c59);
+  background: #eafff2;
+}
+
+.mission-studio-steps strong {
+  display: block;
+  font-size: 0.92rem;
+  line-height: 1.25;
+}
+
+.mission-studio-steps small {
+  color: var(--muted, #5a6270);
+}
+
+.mission-studio-step-num {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: #eef2f0;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.mission-studio-workspace {
+  display: grid;
+  gap: 0;
+  overflow: hidden;
+}
+
+.mission-studio-panes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  border-bottom: 1px solid var(--line);
+  background: #f8faf9;
+}
+
+.mission-studio-panes button {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+  color: var(--muted, #5a6270);
+}
+
+.mission-studio-panes button.is-selected {
+  color: var(--ink);
+  border-bottom-color: var(--action, #138c59);
+}
+
+.mission-studio-panel {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.mission-studio-two {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.mission-studio-advanced-toggle,
+.scene-picker-create,
+.text-link {
+  appearance: none;
+  border: 0;
+  background: none;
+  color: var(--action, #138c59);
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+
+.mission-studio-illust-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: end;
+}
+
+.mission-studio-illust-head h3 {
+  margin: 0 0 4px;
+}
+
+.mission-studio-inline-create {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px dashed var(--line);
+  background: #f8faf9;
+}
+
+.mission-studio-inline-create h4 {
+  margin: 0;
+}
+
+.mission-studio-preview {
+  position: sticky;
+  top: 12px;
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+  background: #f8faf9;
+}
+
+.scene-picker {
+  display: grid;
+  gap: 16px;
+}
+
+.scene-picker-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.scene-picker-group-head h4 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.scene-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 8px;
+}
+
+.scene-pick {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  overflow: hidden;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.scene-pick.is-selected {
+  border-color: var(--action, #138c59);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--action, #138c59) 18%, transparent);
+}
+
+.scene-pick.is-library {
+  border-style: solid;
+}
+
+.scene-pick:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
+.scene-pick-thumb {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 10;
+  background: #eef2f0;
+}
+
+.scene-pick-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.scene-pick-glyph {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #355;
+  opacity: 0.85;
+}
+
+.tone-auto { background: linear-gradient(135deg, #e8f5ef, #d7ebe2); }
+.tone-tutorial { background: linear-gradient(135deg, #fff4d6, #ffe8a8); }
+.tone-share { background: linear-gradient(135deg, #dcefff, #c2e0ff); }
+.tone-grid { background: linear-gradient(135deg, #e6f0ff, #cfdfff); }
+.tone-direction { background: linear-gradient(135deg, #efe6ff, #ddd0ff); }
+.tone-narrative { background: linear-gradient(135deg, #e8f7f2, #cfeedf); }
+.tone-celebrate { background: linear-gradient(135deg, #ffe8d6, #ffd0a8); }
+.tone-method { background: linear-gradient(135deg, #eef2f7, #d9e2ec); }
+.tone-teaser { background: linear-gradient(135deg, #f3e8ff, #e4d4ff); }
+.tone-empty { background: linear-gradient(135deg, #f0f0f0, #e2e2e2); }
+.tone-custom { background: #f4f6f5; }
+
+.scene-pick-meta {
+  display: grid;
+  gap: 2px;
+  padding: 0 10px 10px;
+}
+
+.scene-pick-meta strong {
+  font-size: 0.88rem;
+  line-height: 1.25;
+}
+
+.scene-pick-meta span {
+  font-size: 0.75rem;
+  color: var(--muted, #5a6270);
+  line-height: 1.3;
+}
+
+.illust-create {
+  display: grid;
+  gap: 12px;
+}
+
+.illust-create-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(160px, 0.8fr);
+  gap: 14px;
+  align-items: stretch;
+}
+
+.illust-create.is-compact .illust-create-grid {
+  grid-template-columns: 1fr;
+}
+
+.illust-create-fields {
+  display: grid;
+  gap: 10px;
+}
+
+.illust-create-stage {
+  display: grid;
+  place-items: center;
+  min-height: 180px;
+  border-radius: 14px;
+  border: 1px dashed var(--line);
+  background: #f4f6f5;
+  color: var(--muted, #5a6270);
+  overflow: hidden;
+  padding: 8px;
+}
+
+.illust-create-stage.has-image {
+  border-style: solid;
+  background: #fff;
+}
+
+.illust-create-stage img {
+  max-width: 100%;
+  max-height: 220px;
+  object-fit: contain;
+}
+
+.illust-studio-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.illust-studio-tabs button {
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #fff;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.illust-studio-tabs button.is-selected {
+  border-color: var(--action, #138c59);
+  background: #eafff2;
+}
+
+.illust-library {
+  display: grid;
+  gap: 14px;
+}
+
+.illust-library-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.illust-library-toolbar p {
+  margin: 0;
+  font-weight: 700;
+}
+
+.illust-library-editor {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: #f8faf9;
+}
+
+.illust-library-editor h3 {
+  margin: 0;
+}
+
+.illust-library-empty {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  padding: 28px 18px;
+  border-radius: 16px;
+  border: 1px dashed var(--line);
+  background: #fbfcfd;
+}
+
+.illust-library-empty h3 {
+  margin: 0;
+}
+
+.illust-library-empty p {
+  margin: 0;
+  max-width: 36rem;
+  color: var(--muted, #5a6270);
+}
+
+.illust-library-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.illust-library-grid li {
+  display: grid;
+  gap: 8px;
+}
+
+.illust-library-card {
+  display: grid;
+  gap: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  overflow: hidden;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.illust-library-thumb {
+  display: block;
+  aspect-ratio: 16 / 10;
+  background: #eef2f0;
+}
+
+.illust-library-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.illust-library-meta {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px 12px;
+}
+
+.illust-library-meta span {
+  font-size: 0.85rem;
+  color: var(--muted, #5a6270);
+}
+
+.illust-library-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Wider canvas for admin / studio authoring tools */
+.app-shell:has(.mission-studio),
+.app-shell:has(.admin-space) {
+  --max: min(1200px, 100%);
+}
+
+/* —— Desktop (PC) —— */
+@media (min-width: 1100px) {
+  .mission-studio-layout {
+    grid-template-columns: 220px minmax(0, 1fr) 300px;
+    gap: 16px;
+  }
+
+  .mission-studio-preview {
+    position: sticky;
+    top: 12px;
+    max-height: calc(100vh - 24px);
+    overflow: auto;
+  }
+
+  .scene-picker-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+
+  .illust-library-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
+}
+
+/* —— Tablet —— */
+@media (max-width: 1099px) and (min-width: 761px) {
+  .mission-studio-layout {
+    grid-template-columns: 180px minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .mission-studio-preview {
+    grid-column: 1 / -1;
+    position: static;
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(220px, 0.9fr);
+    align-items: start;
+  }
+
+  .mission-studio-preview .mission-preview-head,
+  .mission-studio-preview .mission-preview-universes,
+  .mission-studio-preview .mission-preview-success {
+    grid-column: 1;
+  }
+
+  .mission-studio-preview .mission-preview-stage {
+    grid-column: 2;
+    grid-row: 1 / span 4;
+    min-height: 260px;
+  }
+
+  .mission-studio-catalog {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
+
+  .illust-create-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(180px, 240px);
+  }
+
+  .admin-illust-preview {
+    grid-template-columns: minmax(160px, 200px) minmax(0, 1fr);
+  }
+}
+
+/* —— Smartphone —— */
+@media (max-width: 760px) {
+  .app-shell:has(.mission-studio),
+  .app-shell:has(.admin-space) {
+    --max: 100%;
+  }
+
+  .mission-studio,
+  .admin-space,
+  .illust-studio {
+    gap: 14px;
+  }
+
+  .mission-studio-hero,
+  .illust-studio-hero,
+  .admin-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .mission-studio-hero-actions,
+  .mission-studio-bar-actions,
+  .illust-library-toolbar .actions,
+  .admin-head-actions,
+  .admin-quick {
+    width: 100%;
+  }
+
+  .mission-studio-hero-actions > *,
+  .mission-studio-bar-actions > button,
+  .illust-library-toolbar .actions > *,
+  .admin-quick > * {
+    flex: 1 1 auto;
+  }
+
+  .mission-studio-bar {
+    align-items: stretch;
+    padding: 10px 12px;
+  }
+
+  .mission-studio-bar-main {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .mission-studio-title-input {
+    font-size: 1.1rem;
+  }
+
+  .mission-publish-chip {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .mission-studio-toolbar {
+    align-items: stretch;
+  }
+
+  .mission-studio-search {
+    max-width: none;
+    flex: 1 1 auto;
+  }
+
+  .mission-studio-catalog {
+    grid-template-columns: 1fr;
+  }
+
+  .mission-studio-catalog li .actions {
+    width: 100%;
+  }
+
+  .mission-studio-catalog li .actions > * {
+    flex: 1 1 auto;
+  }
+
+  .mission-studio-meta-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mission-studio-layout {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .mission-studio-rail {
+    order: 0;
+    padding: 10px;
+  }
+
+  .mission-studio-rail-head {
+    margin-bottom: 4px;
+  }
+
+  .mission-studio-steps {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mission-studio-steps li {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+  }
+
+  .mission-studio-steps button {
+    width: auto;
+    min-width: 148px;
+    grid-template-columns: 28px minmax(0, 1fr);
+  }
+
+  .mission-studio-workspace {
+    order: 1;
+  }
+
+  .mission-studio-preview {
+    order: 2;
+    position: static;
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .mission-studio-panes {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mission-studio-panes button {
+    flex: 0 0 auto;
+    padding: 0 14px;
+  }
+
+  .mission-studio-panel {
+    padding: 12px;
+  }
+
+  .mission-studio-two,
+  .illust-create-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mission-studio-illust-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .mission-studio-illust-head .field {
+    max-width: none !important;
+  }
+
+  .scene-picker-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .scene-pick-meta strong {
+    font-size: 0.82rem;
+  }
+
+  .scene-pick-meta span {
+    font-size: 0.7rem;
+  }
+
+  .illust-studio-tabs {
+    width: 100%;
+  }
+
+  .illust-studio-tabs button {
+    flex: 1 1 auto;
+    text-align: center;
+  }
+
+  .illust-library-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .illust-library-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .illust-library-card-actions > * {
+    flex: 1 1 auto;
+  }
+
+  .illust-create-stage {
+    min-height: 140px;
+  }
+
+  .admin-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-tabs button {
+    flex: 0 0 auto;
+  }
+
+  .admin-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-illust-preview {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-illust-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-custom-cards li,
+  .illust-library-editor {
+    padding: 12px;
+  }
+}
+
+/* —— Very small phones —— */
+@media (max-width: 360px) {
+  .scene-picker-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .mission-studio-steps button {
+    min-width: 132px;
+  }
+}
