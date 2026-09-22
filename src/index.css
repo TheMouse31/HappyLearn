@@ -4695,7 +4695,7 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
 }
 
 /* —— Very small phones —— */
-@media (max-width: 420px) {
+@media (max-width: 360px) {
   .scene-picker-grid {
     grid-template-columns: 1fr;
   }
