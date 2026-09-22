@@ -100,17 +100,32 @@ export type SessionStatsFilters = {
 };
 
 export type StepKind =
-  | "tutorial"
+  /** Narration / passage d’histoire — bouton Continuer. */
   | "continue"
-  | "fraction-choice"
-  | "simplify"
-  | "number"
-  | "direction"
+  /** QCM — propositions = expected + distractors. */
   | "choice"
+  /** Réponse courte texte libre. */
   | "text"
+  /** Texte à trous — consignes avec `___`, réponses dans expected (séparées par |). */
+  | "blanks"
+  /** Nombre / calcul (saisie numérique). */
+  | "number"
+  /** Écoute (TTS) puis réponse optionnelle (QCM ou texte). */
+  | "audio"
+  /** Rappel de méthode / aide. */
   | "method"
+  /** Bilan de fin de parcours (choix soft non noté). */
   | "bilan"
-  | "teaser";
+  /** Teaser / clôture avant récompense. */
+  | "teaser"
+  /** Maths spécialisé — tutoriel fraction. */
+  | "tutorial"
+  /** Maths spécialisé — choix de fraction. */
+  | "fraction-choice"
+  /** Maths spécialisé — simplification. */
+  | "simplify"
+  /** Maths spécialisé — direction spatiale (gauche / axe / droite). */
+  | "direction";
 
 export type UniverseCopy = {
   title: string;

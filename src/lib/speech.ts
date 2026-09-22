@@ -79,9 +79,17 @@ export function toggleSpeech(): boolean {
   }
   const text = visibleText();
   if (!text) return false;
+  return speakText(text);
+}
+
+/** Lit un texte précis (étapes « Écoute », indices ciblés). */
+export function speakText(text: string): boolean {
+  if (!canSpeak()) return false;
+  const cleaned = text.replace(/\s+/g, " ").trim();
+  if (!cleaned) return false;
 
   window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
+  const utterance = new SpeechSynthesisUtterance(cleaned);
   utterance.lang = "fr-FR";
   utterance.rate = 0.92;
   utterance.pitch = 1.12;

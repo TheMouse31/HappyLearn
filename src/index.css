@@ -312,6 +312,45 @@ p {
   border-radius: 12px;
 }
 
+.blanks-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 4px;
+  margin: 14px 0;
+  font-size: 1.15rem;
+  line-height: 1.7;
+  font-weight: 600;
+}
+
+.blanks-input {
+  display: inline-block;
+  min-width: 4.5rem;
+  max-width: 12rem;
+  width: 6rem;
+  min-height: 2.4rem;
+  margin: 0 2px;
+  padding: 4px 8px;
+  border: 2px dashed var(--action, #0f8f78);
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+  font-weight: 700;
+  text-align: center;
+}
+
+.audio-step {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0 4px;
+  align-items: flex-start;
+}
+
+.audio-step .audio-heard {
+  outline: 2px solid color-mix(in srgb, var(--action, #0f8f78) 35%, transparent);
+}
+
 .two-steps {
   display: grid;
   grid-template-columns: 1fr 1fr;

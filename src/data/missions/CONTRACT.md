@@ -41,6 +41,20 @@ Table legacy `etapes` : dépréciée pour le runtime.
 
 ## Kinds (primitives d’interaction)
 
-Transverses MVP : `continue`, `number`, `text`, `choice`, `method`, `bilan`, `teaser`  
-Spécialisés maths : `fraction-choice`, `simplify`, `tutorial`, `direction`  
-Le créateur n’expose que les kinds supportés par le player.
+Palette **standardisée pour toutes les matières** (studio + player) :
+
+| Groupe | Kinds | Usage |
+|--------|--------|--------|
+| Parcours | `continue`, `method`, `bilan`, `teaser` | Narration, rappel, bilan soft, clôture |
+| Réponses | `choice`, `text`, `blanks`, `number`, `audio` | QCM, texte libre, texte à trous (`___`), nombre, écoute TTS |
+| Maths spécialisé | `tutorial`, `fraction-choice`, `simplify`, `direction` | Fractions / spatial (missions maths avancées) |
+
+### Conventions studio
+
+- **QCM (`choice`)** : `expected` + `distractors[]` (toujours en propositions).
+- **Texte à trous (`blanks`)** : dans la consigne, `___` par trou ; réponses dans `expected` séparées par `|`.
+- **Écoute (`audio`)** : TTS de la consigne. Sans `expected` = écoute seule ; avec `expected` (+ distracteurs optionnels) = compréhension orale.
+- **Nombre (`number`)** : saisie numérique ; passe en QCM si le mode élève est QCM.
+- Le créateur expose **tous** ces kinds pour **chaque** matière (pas de filtre sujet).
+
+Le player ignore un kind inconnu (continue sans bloquer) — ne pas inventer de kinds hors liste.

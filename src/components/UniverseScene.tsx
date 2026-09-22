@@ -669,6 +669,10 @@ function resolvePedagogy(props: {
   if (kind === "bilan") return null;
   if (kind === "teaser") return <Celebration text="?" />;
   if (kind === "method") return <MethodBoardScene subject={subject ?? "maths"} />;
+  if (kind === "audio") return <MethodBoardScene subject={subject ?? "francais"} />;
+  if (kind === "blanks") {
+    return <TextBoardScene subject={subject ?? "francais"} expected={expected} ok={ok} title={title} />;
+  }
   if (kind === "direction") {
     if (universe === "espace") {
       return (

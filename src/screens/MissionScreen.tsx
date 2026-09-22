@@ -12,14 +12,17 @@ import { defaultMissionFor, findMission, resolveMission } from "../data/missions
 import type { MissionDef, Step } from "../data/types";
 import {
   advanceDelay,
+  countBlanks,
   needsAnswer,
   optionLabel,
   qcmOptions,
   sceneKeyOf,
+  splitBlankSegments,
   usesQcm,
   validateAnswer,
 } from "../engine/missionEngine";
 import { useSession } from "../lib/session";
+import { canSpeak, speakText, stopSpeech, subscribeSpeech } from "../lib/speech";
 import { isCoursePlayable } from "../data/catalog";
 
 function FractionFields({
@@ -81,6 +84,9 @@ export function MissionScreen() {
   const [kind, setKind] = useState<"ok" | "retry" | "hint" | "info">("info");
   const [hint, setHint] = useState("");
   const [showPouce, setShowPouce] = useState(false);
+  const [blankValues, setBlankValues] = useState<string[]>([]);
+  const [audioHeard, setAudioHeard] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
   const [mission, setMission] = useState<MissionDef | null>(
     () => findMission(missionId) ?? defaultMissionFor(grade, subject) ?? findMission("cm2-maths-fractions-01"),
   );
@@ -133,7 +139,13 @@ export function MissionScreen() {
     setKind("info");
     setHint("");
     setShowPouce(false);
-  }, [index]);
+    setAudioHeard(false);
+    stopSpeech();
+    const blankCount = step ? countBlanks(step.copy[universe ?? "football"]?.statement ?? "") : 0;
+    setBlankValues(Array.from({ length: Math.max(blankCount, blankCount === 0 && step?.kind === "blanks" ? 1 : 0) }, () => ""));
+  }, [index, step?.id, universe]);
+
+  useEffect(() => subscribeSpeech(setSpeaking), []);
 
   if (!prenom) return <Navigate to="/connexion/eleve" replace />;
   if (!isCoursePlayable(grade, subject) && !lockedSession) return <Navigate to="/classe" replace />;
@@ -152,7 +164,9 @@ export function MissionScreen() {
   const currentValue =
     step.kind === "tutorial" || step.kind === "fraction-choice" || step.kind === "simplify"
       ? `${top}/${bottom}`
-      : raw;
+      : step.kind === "blanks"
+        ? blankValues.join("|")
+        : raw;
 
   function goNext() {
     if (index >= steps.length - 1) {
@@ -205,7 +219,8 @@ export function MissionScreen() {
         current.kind === "simplify" ||
         current.kind === "number" ||
         current.kind === "direction" ||
-        current.kind === "choice")
+        current.kind === "choice" ||
+        current.kind === "audio")
     ) {
       return (
         <div className="qcm" role="group" aria-label="Propositions">
@@ -237,7 +252,52 @@ export function MissionScreen() {
     if (current.kind === "fraction-choice" || current.kind === "simplify") {
       return <FractionFields top={top} bottom={bottom} onTop={setTop} onBottom={setBottom} />;
     }
-    if (current.kind === "number" || current.kind === "text") {
+    if (current.kind === "blanks") {
+      const segments = splitBlankSegments(copy.statement);
+      const blankOnly = segments.every((seg) => seg.type === "text") || segments.length === 0;
+      if (blankOnly) {
+        return (
+          <div className="free-row">
+            <input
+              type="text"
+              aria-label="Complète le trou"
+              value={blankValues[0] ?? ""}
+              onChange={(event) => setBlankValues([event.target.value])}
+              placeholder="Ta réponse"
+            />
+          </div>
+        );
+      }
+      let blankIndex = 0;
+      return (
+        <p className="blanks-line" aria-label="Texte à trous">
+          {segments.map((seg, i) => {
+            if (seg.type === "text") {
+              return <span key={`t-${i}`}>{seg.value}</span>;
+            }
+            const idx = blankIndex;
+            blankIndex += 1;
+            return (
+              <input
+                key={`b-${idx}`}
+                type="text"
+                className="blanks-input"
+                aria-label={`Trou ${idx + 1}`}
+                value={blankValues[idx] ?? ""}
+                onChange={(event) => {
+                  setBlankValues((prev) => {
+                    const next = [...prev];
+                    next[idx] = event.target.value;
+                    return next;
+                  });
+                }}
+              />
+            );
+          })}
+        </p>
+      );
+    }
+    if (current.kind === "number" || current.kind === "text" || current.kind === "audio") {
       return (
         <div className="free-row">
           <input
@@ -307,8 +367,35 @@ export function MissionScreen() {
           </div>
           <span className="kicker">{step.kicker}</span>
           <RichText as="h1" html={copy.title} />
-          <RichText className="lead" html={copy.statement} data-listen />
+          {step.kind === "blanks" ? null : (
+            <RichText className="lead" html={copy.statement} data-listen />
+          )}
           {copy.note ? <RichText html={copy.note} /> : null}
+          {step.kind === "audio" ? (
+            <div className="audio-step">
+              <Button
+                type="button"
+                variant="primary"
+                className={audioHeard ? "audio-heard" : ""}
+                disabled={!canSpeak()}
+                onClick={() => {
+                  if (speaking) {
+                    stopSpeech();
+                    return;
+                  }
+                  const ok = speakText(
+                    [copy.title, copy.statement, copy.note].filter(Boolean).join(". "),
+                  );
+                  if (ok) setAudioHeard(true);
+                }}
+              >
+                {speaking ? "Stopper l’écoute" : audioHeard ? "Réécouter" : "Écouter la consigne"}
+              </Button>
+              {!canSpeak() ? (
+                <p className="field-help">La lecture vocale n’est pas disponible sur cet appareil.</p>
+              ) : null}
+            </div>
+          ) : null}
           {step.twoStep ? (
             <div className="two-steps">
               <div className={`step-card ${step.twoStep === 1 ? "active" : ""}`}>
@@ -373,7 +460,11 @@ export function MissionScreen() {
               <Button variant="primary" onClick={goNext}>
                 {lockedSession ? "Terminer" : "Voir ma récompense"}
               </Button>
-            ) : step.kind === "bilan" ? null : (
+            ) : step.kind === "bilan" ? null : step.kind === "audio" && !needsAnswer(step) ? (
+              <Button variant="primary" onClick={goNext} disabled={!audioHeard && canSpeak()}>
+                Continuer
+              </Button>
+            ) : (
               <Button variant="primary" onClick={goNext}>
                 Continuer
               </Button>

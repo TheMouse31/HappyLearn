@@ -217,7 +217,10 @@ export { allUniverses, defineMission, defineSteps } from "./define";
 export { BILAN_CHOICES, DIRECTION_LABELS } from "./labels";
 export {
   deleteTeacherMission,
+  EDITOR_KIND_GROUPS,
   EDITOR_KINDS,
+  editorKindHelp,
+  editorKindNeedsAnswer,
   listAdminCatalog,
   listEditableCatalog,
   listResolvedMissions,
@@ -226,3 +229,4 @@ export {
   saveTeacherMission,
   suggestNextMissionId,
 } from "./catalog";
+export type { EditorKindGroup } from "./catalog";

@@ -10,20 +10,125 @@ import { getSupabase } from "../../lib/supabase";
 
 const LOCAL_TEACHER_MISSIONS_KEY = "happy-learn-teacher-missions";
 
-/** Kinds exposés dans le créateur (supportés par le player). */
-export const EDITOR_KINDS: { value: StepKind; label: string }[] = [
-  { value: "continue", label: "Continuer (narration)" },
-  { value: "number", label: "Nombre" },
-  { value: "text", label: "Texte libre" },
-  { value: "choice", label: "Choix / QCM" },
-  { value: "method", label: "Méthode" },
-  { value: "bilan", label: "Bilan" },
-  { value: "teaser", label: "Teaser / fin" },
-  { value: "tutorial", label: "Tutoriel fraction" },
-  { value: "fraction-choice", label: "Choix de fraction" },
-  { value: "simplify", label: "Simplifier" },
-  { value: "direction", label: "Direction" },
+/**
+ * Palette standardisée du studio — valable pour toutes les matières.
+ * Groupe « Maths spécialisé » = kinds historiques fractions (toujours jouables).
+ */
+export type EditorKindGroup = {
+  label: string;
+  items: { value: StepKind; label: string; help: string }[];
+};
+
+export const EDITOR_KIND_GROUPS: EditorKindGroup[] = [
+  {
+    label: "Parcours",
+    items: [
+      {
+        value: "continue",
+        label: "Narration",
+        help: "Texte d’histoire ou consigne sans réponse — bouton Continuer.",
+      },
+      {
+        value: "method",
+        label: "Méthode / rappel",
+        help: "Affiche une boîte méthode (note) puis Continuer.",
+      },
+      {
+        value: "bilan",
+        label: "Bilan",
+        help: "Choix soft de fin de parcours (non noté).",
+      },
+      {
+        value: "teaser",
+        label: "Clôture / teaser",
+        help: "Dernière étape avant la récompense.",
+      },
+    ],
+  },
+  {
+    label: "Réponses (toutes matières)",
+    items: [
+      {
+        value: "choice",
+        label: "QCM",
+        help: "Une bonne réponse + distracteurs (séparés par |). Toujours en choix multiples.",
+      },
+      {
+        value: "text",
+        label: "Texte libre",
+        help: "Réponse courte saisie au clavier (mot, expression).",
+      },
+      {
+        value: "blanks",
+        label: "Texte à trous",
+        help: "Dans la consigne, écris ___ pour chaque trou. Réponses attendues séparées par |.",
+      },
+      {
+        value: "number",
+        label: "Nombre / calcul",
+        help: "Saisie numérique (ou QCM si le mode élève est QCM).",
+      },
+      {
+        value: "audio",
+        label: "Écoute",
+        help: "L’élève écoute la consigne (voix). Avec une réponse attendue = compréhension orale ; sinon écoute seule.",
+      },
+    ],
+  },
+  {
+    label: "Maths (spécialisé)",
+    items: [
+      {
+        value: "tutorial",
+        label: "Tutoriel fraction",
+        help: "Montre un exemple de fraction puis saisie numérateur / dénominateur.",
+      },
+      {
+        value: "fraction-choice",
+        label: "Choix de fraction",
+        help: "Réponse sous forme a/b (cahier ou QCM).",
+      },
+      {
+        value: "simplify",
+        label: "Simplifier une fraction",
+        help: "Attend la fraction irréductible attendue.",
+      },
+      {
+        value: "direction",
+        label: "Direction spatiale",
+        help: "QCM gauche / axe / droite (scènes couloirs).",
+      },
+    ],
+  },
 ];
+
+/** Liste plate (compat selects / itérations). */
+export const EDITOR_KINDS: { value: StepKind; label: string }[] = EDITOR_KIND_GROUPS.flatMap((group) =>
+  group.items.map((item) => ({ value: item.value, label: item.label })),
+);
+
+export function editorKindHelp(kind: StepKind): string {
+  for (const group of EDITOR_KIND_GROUPS) {
+    const found = group.items.find((item) => item.value === kind);
+    if (found) return found.help;
+  }
+  return "";
+}
+
+/** Kinds qui ouvrent l’onglet Réponse dans le studio. */
+export function editorKindNeedsAnswer(kind: StepKind): boolean {
+  return (
+    kind === "number" ||
+    kind === "text" ||
+    kind === "choice" ||
+    kind === "blanks" ||
+    kind === "audio" ||
+    kind === "direction" ||
+    kind === "fraction-choice" ||
+    kind === "simplify" ||
+    kind === "tutorial"
+  );
+}
 
 type MissionRow = {
   id: string;

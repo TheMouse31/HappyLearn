@@ -16,7 +16,9 @@ import { Shell } from "../components/Shell";
 import { UniverseScene } from "../components/UniverseScene";
 import { GRADES, SUBJECTS, gradeLabel, subjectLabel } from "../data/catalog";
 import {
-  EDITOR_KINDS,
+  EDITOR_KIND_GROUPS,
+  editorKindHelp,
+  editorKindNeedsAnswer,
   allUniverses,
   defineSteps,
   deleteTeacherMission,
@@ -153,15 +155,7 @@ function missionToDrafts(mission: MissionDef): {
 }
 
 function needsAnswer(kind: StepKind): boolean {
-  return (
-    kind === "number" ||
-    kind === "text" ||
-    kind === "choice" ||
-    kind === "direction" ||
-    kind === "fraction-choice" ||
-    kind === "simplify" ||
-    kind === "tutorial"
-  );
+  return editorKindNeedsAnswer(kind);
 }
 
 export function MissionEditorScreen() {
@@ -735,12 +729,17 @@ export function MissionEditorScreen() {
                             updateStep(selectedStep, { kind: event.target.value as StepKind })
                           }
                         >
-                          {EDITOR_KINDS.map((item) => (
-                            <option key={item.value} value={item.value}>
-                              {item.label}
-                            </option>
+                          {EDITOR_KIND_GROUPS.map((group) => (
+                            <optgroup key={group.label} label={group.label}>
+                              {group.items.map((item) => (
+                                <option key={item.value} value={item.value}>
+                                  {item.label}
+                                </option>
+                              ))}
+                            </optgroup>
                           ))}
                         </select>
+                        <small className="field-help">{editorKindHelp(currentDraft.kind)}</small>
                       </div>
                     </div>
                     <div className="field">
@@ -757,7 +756,13 @@ export function MissionEditorScreen() {
                         value={currentDraft.statement}
                         disabled={readOnly}
                         minHeight={200}
-                        placeholder="Écris la consigne. Tu peux mettre du gras, de l’italique et de la couleur."
+                        placeholder={
+                          currentDraft.kind === "blanks"
+                            ? "Ex. Le ___ court dans le jardin. (utilise ___ pour chaque trou)"
+                            : currentDraft.kind === "audio"
+                              ? "Texte lu à voix haute à l’élève (puis réponse si tu en définis une)."
+                              : "Écris la consigne. Tu peux mettre du gras, de l’italique et de la couleur."
+                        }
                         onChange={(statement) => updateStep(selectedStep, { statement })}
                       />
                     </div>
@@ -880,27 +885,57 @@ export function MissionEditorScreen() {
                 {stepPane === "answer" && answerNeeded ? (
                   <div className="mission-studio-panel">
                     <div className="field">
-                      <label>Réponse attendue</label>
+                      <label>
+                        {currentDraft.kind === "audio"
+                          ? "Réponse attendue (optionnel)"
+                          : currentDraft.kind === "blanks"
+                            ? "Réponses des trous"
+                            : "Réponse attendue"}
+                      </label>
                       <input
                         value={currentDraft.expected}
                         disabled={readOnly}
                         onChange={(event) =>
                           updateStep(selectedStep, { expected: event.target.value })
                         }
-                      />
-                    </div>
-                    <div className="field">
-                      <label>Distracteurs</label>
-                      <input
-                        value={currentDraft.distractors}
-                        disabled={readOnly}
-                        onChange={(event) =>
-                          updateStep(selectedStep, { distractors: event.target.value })
+                        placeholder={
+                          currentDraft.kind === "blanks"
+                            ? "Ex. chat | chien"
+                            : currentDraft.kind === "audio"
+                              ? "Laisse vide = écoute seule"
+                              : undefined
                         }
-                        placeholder="Sépare les distracteurs par |"
                       />
-                      <small className="field-help">Exemple : 1/2 | 2/3 | 3/4</small>
+                      {currentDraft.kind === "blanks" ? (
+                        <small className="field-help">
+                          Une réponse par trou, séparées par |. Dans la consigne, utilise ___ pour chaque trou.
+                        </small>
+                      ) : null}
+                      {currentDraft.kind === "audio" ? (
+                        <small className="field-help">
+                          Avec réponse + distracteurs → QCM après écoute. Avec réponse seule → saisie texte. Sans
+                          réponse → écoute puis Continuer.
+                        </small>
+                      ) : null}
                     </div>
+                    {currentDraft.kind === "blanks" ? null : (
+                      <div className="field">
+                        <label>Distracteurs (QCM)</label>
+                        <input
+                          value={currentDraft.distractors}
+                          disabled={readOnly}
+                          onChange={(event) =>
+                            updateStep(selectedStep, { distractors: event.target.value })
+                          }
+                          placeholder="Sépare les distracteurs par |"
+                        />
+                        <small className="field-help">
+                          Exemple : {currentDraft.kind === "choice" || currentDraft.kind === "audio"
+                            ? "vert | bleu | jaune"
+                            : "1/2 | 2/3 | 3/4"}
+                        </small>
+                      </div>
+                    )}
                   </div>
                 ) : null}
               </>
