@@ -3946,16 +3946,19 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
 
 .mission-studio-title-input {
   width: 100%;
-  border: 0;
-  background: transparent;
+  border: 2px solid #3d8f72;
+  border-radius: 10px;
+  background: #fff;
   font: inherit;
   font-size: 1.25rem;
   font-weight: 800;
-  padding: 0;
+  padding: 8px 12px;
 }
 
 .mission-studio-title-input:focus {
-  outline: none;
+  outline: 3px solid color-mix(in srgb, var(--action, #0f8f78) 28%, transparent);
+  outline-offset: 1px;
+  border-color: var(--action, #0f8f78);
 }
 
 .mission-publish-chip {
@@ -4183,9 +4186,122 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
   width: 100%;
 }
 
-.mission-studio-field-row {
+/* Cadre visible pour tous les champs saisie du studio (inputs, selects, rich text). */
+.mission-studio .field input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="file"]),
+.mission-studio .field select,
+.mission-studio .field textarea,
+.mission-studio-meta .field input:not([type="checkbox"]),
+.mission-studio-meta .field select,
+.mission-studio-search input {
+  border: 2px solid #3d8f72;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: inset 0 1px 2px rgb(15 45 35 / 6%);
+}
+
+.mission-studio .field input:not([type="checkbox"]):not([type="radio"]):focus,
+.mission-studio .field select:focus,
+.mission-studio .field textarea:focus {
+  border-color: var(--action, #0f8f78);
+  outline: 3px solid color-mix(in srgb, var(--action, #0f8f78) 28%, transparent);
+  outline-offset: 1px;
+}
+
+.rich-editor {
   display: grid;
-  grid-template-columns: minmax(0, 280px);
+  gap: 0;
+}
+
+.rich-editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 2px solid #3d8f72;
+  border-bottom: 1px solid #b7d9cb;
+  border-radius: 12px 12px 0 0;
+  background: #e4f3ec;
+}
+
+.rich-editor-toolbar button {
+  appearance: none;
+  min-width: 34px;
+  min-height: 34px;
+  padding: 4px 8px;
+  border: 1px solid #8fc4ae;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink, #1f2a24);
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.rich-editor-toolbar button:hover:not(:disabled) {
+  border-color: var(--action, #0f8f78);
+}
+
+.rich-editor-toolbar button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.rich-editor-sep {
+  width: 1px;
+  align-self: stretch;
+  margin: 2px 4px;
+  background: #8fc4ae;
+}
+
+.rich-editor-swatch {
+  width: 28px !important;
+  min-width: 28px !important;
+  padding: 0 !important;
+  border-radius: 999px !important;
+}
+
+.rich-editor-u {
+  text-decoration: underline;
+}
+
+.rich-editor-clear {
+  font-size: 0.95rem;
+}
+
+.rich-editor-surface {
+  width: 100%;
+  min-height: 120px;
+  padding: 12px 14px;
+  border: 2px solid #3d8f72;
+  border-top: 0;
+  border-radius: 0 0 12px 12px;
+  background: #fff;
+  color: var(--ink, #1f2a24);
+  font: inherit;
+  line-height: 1.45;
+  box-shadow: inset 0 1px 2px rgb(15 45 35 / 6%);
+  outline: none;
+  overflow-wrap: anywhere;
+}
+
+.rich-editor-surface:focus {
+  border-color: var(--action, #0f8f78);
+  box-shadow:
+    inset 0 1px 2px rgb(15 45 35 / 6%),
+    0 0 0 3px color-mix(in srgb, var(--action, #0f8f78) 28%, transparent);
+}
+
+.rich-editor-surface:empty::before {
+  content: attr(data-placeholder);
+  color: #6a7c74;
+  pointer-events: none;
+}
+
+.rich-editor.is-disabled .rich-editor-toolbar,
+.rich-editor.is-disabled .rich-editor-surface {
+  opacity: 0.65;
+  background: #f3f6f4;
 }
 
 .mission-studio-panel .field-statement {
@@ -4203,6 +4319,11 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
   min-height: 200px;
   line-height: 1.45;
   resize: vertical;
+}
+
+.mission-studio-field-row {
+  display: grid;
+  grid-template-columns: minmax(0, 280px);
 }
 
 .mission-studio-two {

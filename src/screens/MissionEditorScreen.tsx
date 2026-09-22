@@ -771,14 +771,14 @@ export function MissionEditorScreen() {
                         label="Note (optionnel)"
                         value={currentDraft.note}
                         disabled={readOnly}
-                        minHeight={88}
+                        minHeight={110}
                         onChange={(note) => updateStep(selectedStep, { note })}
                       />
                       <RichTextEditor
                         label="Indice (optionnel)"
                         value={currentDraft.hint}
                         disabled={readOnly}
-                        minHeight={88}
+                        minHeight={110}
                         onChange={(hint) => updateStep(selectedStep, { hint })}
                       />
                     </div>
