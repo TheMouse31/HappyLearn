@@ -4404,24 +4404,307 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
   gap: 8px;
 }
 
-@media (max-width: 1100px) {
+/* Wider canvas for admin / studio authoring tools */
+.app-shell:has(.mission-studio),
+.app-shell:has(.admin-space) {
+  --max: min(1200px, 100%);
+}
+
+/* —— Desktop (PC) —— */
+@media (min-width: 1100px) {
   .mission-studio-layout {
-    grid-template-columns: minmax(160px, 200px) minmax(0, 1fr);
+    grid-template-columns: 220px minmax(0, 1fr) 300px;
+    gap: 16px;
+  }
+
+  .mission-studio-preview {
+    position: sticky;
+    top: 12px;
+    max-height: calc(100vh - 24px);
+    overflow: auto;
+  }
+
+  .scene-picker-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+
+  .illust-library-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
+}
+
+/* —— Tablet —— */
+@media (max-width: 1099px) and (min-width: 761px) {
+  .mission-studio-layout {
+    grid-template-columns: 180px minmax(0, 1fr);
+    gap: 12px;
   }
 
   .mission-studio-preview {
     grid-column: 1 / -1;
     position: static;
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(220px, 0.9fr);
+    align-items: start;
+  }
+
+  .mission-studio-preview .mission-preview-head,
+  .mission-studio-preview .mission-preview-universes,
+  .mission-studio-preview .mission-preview-success {
+    grid-column: 1;
+  }
+
+  .mission-studio-preview .mission-preview-stage {
+    grid-column: 2;
+    grid-row: 1 / span 4;
+    min-height: 260px;
+  }
+
+  .mission-studio-catalog {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
+
+  .illust-create-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(180px, 240px);
+  }
+
+  .admin-illust-preview {
+    grid-template-columns: minmax(160px, 200px) minmax(0, 1fr);
   }
 }
 
+/* —— Smartphone —— */
 @media (max-width: 760px) {
+  .app-shell:has(.mission-studio),
+  .app-shell:has(.admin-space) {
+    --max: 100%;
+  }
+
+  .mission-studio,
+  .admin-space,
+  .illust-studio {
+    gap: 14px;
+  }
+
+  .mission-studio-hero,
+  .illust-studio-hero,
+  .admin-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .mission-studio-hero-actions,
+  .mission-studio-bar-actions,
+  .illust-library-toolbar .actions,
+  .admin-head-actions,
+  .admin-quick {
+    width: 100%;
+  }
+
+  .mission-studio-hero-actions > *,
+  .mission-studio-bar-actions > button,
+  .illust-library-toolbar .actions > *,
+  .admin-quick > * {
+    flex: 1 1 auto;
+  }
+
+  .mission-studio-bar {
+    align-items: stretch;
+    padding: 10px 12px;
+  }
+
+  .mission-studio-bar-main {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .mission-studio-title-input {
+    font-size: 1.1rem;
+  }
+
+  .mission-publish-chip {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .mission-studio-toolbar {
+    align-items: stretch;
+  }
+
+  .mission-studio-search {
+    max-width: none;
+    flex: 1 1 auto;
+  }
+
+  .mission-studio-catalog {
+    grid-template-columns: 1fr;
+  }
+
+  .mission-studio-catalog li .actions {
+    width: 100%;
+  }
+
+  .mission-studio-catalog li .actions > * {
+    flex: 1 1 auto;
+  }
+
+  .mission-studio-meta-grid {
+    grid-template-columns: 1fr;
+  }
+
   .mission-studio-layout {
     grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .mission-studio-rail {
+    order: 0;
+    padding: 10px;
+  }
+
+  .mission-studio-rail-head {
+    margin-bottom: 4px;
+  }
+
+  .mission-studio-steps {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mission-studio-steps li {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+  }
+
+  .mission-studio-steps button {
+    width: auto;
+    min-width: 148px;
+    grid-template-columns: 28px minmax(0, 1fr);
+  }
+
+  .mission-studio-workspace {
+    order: 1;
+  }
+
+  .mission-studio-preview {
+    order: 2;
+    position: static;
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .mission-studio-panes {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mission-studio-panes button {
+    flex: 0 0 auto;
+    padding: 0 14px;
+  }
+
+  .mission-studio-panel {
+    padding: 12px;
   }
 
   .mission-studio-two,
   .illust-create-grid {
     grid-template-columns: 1fr;
+  }
+
+  .mission-studio-illust-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .mission-studio-illust-head .field {
+    max-width: none !important;
+  }
+
+  .scene-picker-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .scene-pick-meta strong {
+    font-size: 0.82rem;
+  }
+
+  .scene-pick-meta span {
+    font-size: 0.7rem;
+  }
+
+  .illust-studio-tabs {
+    width: 100%;
+  }
+
+  .illust-studio-tabs button {
+    flex: 1 1 auto;
+    text-align: center;
+  }
+
+  .illust-library-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .illust-library-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .illust-library-card-actions > * {
+    flex: 1 1 auto;
+  }
+
+  .illust-create-stage {
+    min-height: 140px;
+  }
+
+  .admin-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-tabs button {
+    flex: 0 0 auto;
+  }
+
+  .admin-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-illust-preview {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-illust-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-custom-cards li,
+  .illust-library-editor {
+    padding: 12px;
+  }
+}
+
+/* —— Very small phones —— */
+@media (max-width: 420px) {
+  .scene-picker-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .mission-studio-steps button {
+    min-width: 132px;
   }
 }
