@@ -25,6 +25,7 @@ const files = [
   "supabase/migrations/20260915_happy_learn_course.sql",
   "supabase/migrations/20260917_eleves_classe.sql",
   "supabase/migrations/20260918_sessions_classe_live.sql",
+  "supabase/migrations/20260924_parents_foyers_abonnements.sql",
   "supabase/seed.sql",
 ];
 
