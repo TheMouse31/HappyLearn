@@ -71,6 +71,7 @@ export function MissionScreen() {
     subject,
     missionId,
     lockedSession,
+    hostMode,
     liveSession,
     liveParticipant,
     raiseHand,
@@ -148,15 +149,17 @@ export function MissionScreen() {
   useEffect(() => subscribeSpeech(setSpeaking), []);
 
   if (!prenom) return <Navigate to="/connexion/eleve" replace />;
-  if (!isCoursePlayable(grade, subject) && !lockedSession) return <Navigate to="/classe" replace />;
+  if (!isCoursePlayable(grade, subject) && !lockedSession && !hostMode) {
+    return <Navigate to="/classe" replace />;
+  }
   if (!universe || !mode) {
-    return <Navigate to={lockedSession ? "/salle-attente" : "/pret"} replace />;
+    return <Navigate to={lockedSession ? "/salle-attente" : hostMode ? "/espace-professeur/session" : "/pret"} replace />;
   }
   if (!sessionId) {
-    return <Navigate to={lockedSession ? "/salle-attente" : "/pret"} replace />;
+    return <Navigate to={lockedSession ? "/salle-attente" : hostMode ? "/espace-professeur/session" : "/pret"} replace />;
   }
   if (!step) {
-    return <Navigate to={lockedSession ? "/salle-attente" : "/recompense"} replace />;
+    return <Navigate to={lockedSession ? "/salle-attente" : hostMode ? "/espace-professeur/session" : "/recompense"} replace />;
   }
 
   const copy = step.copy[universe];
@@ -171,7 +174,13 @@ export function MissionScreen() {
   function goNext() {
     if (index >= steps.length - 1) {
       void completeMission().then(() => {
-        navigate(lockedSession ? "/salle-attente" : "/recompense");
+        navigate(
+          lockedSession
+            ? "/salle-attente"
+            : hostMode
+              ? "/espace-professeur/session"
+              : "/recompense",
+        );
       });
       return;
     }

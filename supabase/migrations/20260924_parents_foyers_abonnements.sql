@@ -8,10 +8,12 @@ create table if not exists profils_utilisateurs (
   user_id uuid primary key references auth.users (id) on delete cascade,
   role text not null check (role in ('parent', 'enseignant', 'admin')),
   display_name text,
+  email text,
   created_at timestamptz not null default now()
 );
 
 create index if not exists profils_utilisateurs_role_idx on profils_utilisateurs (role);
+create index if not exists profils_utilisateurs_email_idx on profils_utilisateurs (lower(email));
 
 insert into profils_utilisateurs (user_id, role, display_name, created_at)
 select

@@ -4,6 +4,9 @@ import { HomePage } from "./screens/HomePage";
 import { ConnexionScreen } from "./screens/ConnexionScreen";
 import { EleveLoginScreen } from "./screens/EleveLoginScreen";
 import { TeacherLoginScreen } from "./screens/TeacherLoginScreen";
+import { ParentLoginScreen } from "./screens/ParentLoginScreen";
+import { ParentSpaceScreen } from "./screens/ParentSpaceScreen";
+import { PaywallScreen } from "./screens/PaywallScreen";
 import { WelcomeScreen } from "./screens/WelcomeScreen";
 import { NicknameScreen } from "./screens/NicknameScreen";
 import { CourseScreen } from "./screens/CourseScreen";
@@ -34,6 +37,14 @@ function LockedGate({ children }: { children: ReactNode }) {
   return children;
 }
 
+function PremiumGate({ children }: { children: ReactNode }) {
+  const { role, premiumActive } = useSession();
+  if ((role === "enseignant" || role === "parent") && !premiumActive) {
+    return <Navigate to="/abonnement" replace />;
+  }
+  return children;
+}
+
 export default function App() {
   const { ready } = useSession();
   if (!ready) {
@@ -51,6 +62,16 @@ export default function App() {
         <Route path="/connexion" element={<ConnexionScreen />} />
         <Route path="/connexion/eleve" element={<EleveLoginScreen />} />
         <Route path="/connexion/enseignant" element={<TeacherLoginScreen />} />
+        <Route path="/connexion/parent" element={<ParentLoginScreen />} />
+        <Route path="/abonnement" element={<PaywallScreen />} />
+        <Route
+          path="/espace-parent"
+          element={
+            <PremiumGate>
+              <ParentSpaceScreen />
+            </PremiumGate>
+          }
+        />
         <Route path="/accueil" element={<WelcomeScreen />} />
         <Route path="/prenom" element={<NicknameScreen />} />
         <Route path="/classe" element={<CourseScreen />} />
@@ -60,11 +81,23 @@ export default function App() {
         <Route path="/pret" element={<ReadyScreen />} />
         <Route path="/mission" element={<MissionScreen />} />
         <Route path="/recompense" element={<RewardScreen />} />
-        <Route path="/espace-professeur" element={<TeacherSpaceScreen />} />
-        <Route path="/espace-professeur/session" element={<SessionControlScreen />} />
-        {/* Ancienne entrée prof → studio admin missions. */}
+        <Route
+          path="/espace-professeur"
+          element={
+            <PremiumGate>
+              <TeacherSpaceScreen />
+            </PremiumGate>
+          }
+        />
+        <Route
+          path="/espace-professeur/session"
+          element={
+            <PremiumGate>
+              <SessionControlScreen />
+            </PremiumGate>
+          }
+        />
         <Route path="/espace-professeur/missions" element={<Navigate to="/espace-admin/missions" replace />} />
-        {/* Hub admin (?tab=missions|illustrations|admins) + studio missions. */}
         <Route path="/espace-admin" element={<AdminSpaceScreen />} />
         <Route path="/espace-admin/missions" element={<MissionEditorScreen />} />
         <Route path="/salle-attente" element={<StudentWaitingScreen />} />

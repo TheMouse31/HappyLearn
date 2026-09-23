@@ -1,6 +1,6 @@
 export type UniverseSlug = "football" | "rugby" | "equitation" | "espace";
 export type PlayMode = "cahier" | "qcm";
-export type AppRole = "eleve" | "enseignant" | "admin";
+export type AppRole = "eleve" | "parent" | "enseignant" | "admin";
 export type GradeLevel = "cp" | "ce1" | "ce2" | "cm1" | "cm2";
 export type SubjectSlug =
   | "francais"
@@ -19,6 +19,45 @@ export type TeacherAccount = {
   email: string;
   backend: "local" | "supabase";
   isAdmin?: boolean;
+  /** Rôle adulte authentifié (parent ou enseignant/admin). */
+  accountRole?: "parent" | "enseignant" | "admin";
+};
+
+export type Foyer = {
+  id: string;
+  ownerId: string;
+  nom: string;
+  code: string;
+  createdAt: string;
+};
+
+export type EleveFoyer = {
+  id: string;
+  foyerId: string;
+  prenom: string;
+  nom: string;
+  niveau: GradeLevel | null;
+  createdAt: string;
+};
+
+export type AbonnementSubjectType = "enseignant" | "foyer";
+export type AbonnementStatus = "active" | "past_due" | "canceled" | "expired" | "trialing";
+export type AbonnementSource = "stripe" | "admin_grant" | "local";
+
+export type Abonnement = {
+  id: string;
+  subjectType: AbonnementSubjectType;
+  subjectId: string;
+  plan: "premium";
+  status: AbonnementStatus;
+  source: AbonnementSource;
+  stripeCustomerId: string | null;
+  stripeSubscriptionId: string | null;
+  currentPeriodEnd: string | null;
+  grantedBy: string | null;
+  grantedNote: string | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type ClassRecord = {
@@ -205,6 +244,8 @@ export type ChildSession = {
   classeSessionId?: string | null;
   eleveId?: string | null;
   missionId?: string | null;
+  foyerId?: string | null;
+  eleveFoyerId?: string | null;
 };
 
 export type StoredAnswer = {

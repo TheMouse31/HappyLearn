@@ -20,6 +20,14 @@ import {
   removeAdminEmail,
   SEED_ADMIN_EMAILS,
 } from "../lib/admins";
+import type { Abonnement } from "../data/types";
+import {
+  ensureFoyer,
+  findUserIdByEmail,
+  listAbonnementsAdmin,
+  upsertAbonnement,
+} from "../lib/familyStore";
+import { abonnementLabel } from "../lib/subscription";
 import {
   CUSTOM_ILLUSTRATIONS_EVENT,
   deleteCustomIllustration,
@@ -37,7 +45,7 @@ import { isMediaVideoUrl } from "../lib/mediaStorage";
 import { loadPlatformStats, type PlatformStats } from "../lib/platformStats";
 import { useSession } from "../lib/session";
 
-type AdminTab = "overview" | "missions" | "illustrations" | "admins";
+type AdminTab = "overview" | "missions" | "illustrations" | "admins" | "abonnements";
 /** Sous-onglets du studio visuel : bibliothèque d’étapes vs sprites Néo. */
 type IllustStudio = "library" | "characters";
 
@@ -50,6 +58,7 @@ export function AdminSpaceScreen() {
     tabParam === "missions" ||
     tabParam === "illustrations" ||
     tabParam === "admins" ||
+    tabParam === "abonnements" ||
     tabParam === "overview"
       ? tabParam
       : "overview";
@@ -60,6 +69,13 @@ export function AdminSpaceScreen() {
   const [newAdmin, setNewAdmin] = useState("");
   const [adminMessage, setAdminMessage] = useState("");
   const [adminError, setAdminError] = useState("");
+  const [grantEmail, setGrantEmail] = useState("");
+  const [grantDays, setGrantDays] = useState("365");
+  const [grantNote, setGrantNote] = useState("");
+  const [grantSubject, setGrantSubject] = useState<"enseignant" | "foyer">("enseignant");
+  const [grantMessage, setGrantMessage] = useState("");
+  const [grantError, setGrantError] = useState("");
+  const [grants, setGrants] = useState<Abonnement[]>([]);
   const [overrides, setOverrides] = useState<IllustrationOverrides>(() => loadIllustrationOverrides());
   const [illustMessage, setIllustMessage] = useState("");
   const [customItems, setCustomItems] = useState<CustomIllustration[]>(() => loadCustomIllustrations());
@@ -95,6 +111,11 @@ export function AdminSpaceScreen() {
     return () => {
       cancelled = true;
     };
+  }, [tab]);
+
+  useEffect(() => {
+    if (tab !== "abonnements") return;
+    void listAbonnementsAdmin().then(setGrants);
   }, [tab]);
 
   // Resync si une illustration est créée depuis le studio missions (même onglet ou autre).
@@ -178,6 +199,7 @@ export function AdminSpaceScreen() {
               ["missions", "Missions"],
               ["illustrations", "Illustrations"],
               ["admins", "Admins"],
+              ["abonnements", "Abonnements"],
             ] as const
           ).map(([id, label]) => (
             <button
@@ -579,6 +601,119 @@ export function AdminSpaceScreen() {
               <Link to="/espace-professeur/session">piloter une session live</Link> pour tester une
               classe.
             </p>
+          </div>
+        ) : null}
+
+        {tab === "abonnements" ? (
+          <div className="admin-panel">
+            <h2>Accorder le Premium</h2>
+            <p className="lead">
+              Offre ou prolonge un abonnement sans Stripe (enseignant ou foyer parent).
+            </p>
+            <form
+              className="login-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                setGrantError("");
+                setGrantMessage("");
+                void (async () => {
+                  const found = await findUserIdByEmail(grantEmail);
+                  if (!found) {
+                    setGrantError(
+                      "Utilisateur introuvable. Il doit s’être connecté au moins une fois (profil créé).",
+                    );
+                    return;
+                  }
+                  let subjectId = found.id;
+                  let subjectType: "enseignant" | "foyer" = grantSubject;
+                  if (grantSubject === "foyer") {
+                    if (found.role !== "parent") {
+                      setGrantError("Cet e-mail n’est pas un compte parent.");
+                      return;
+                    }
+                    const foyer = await ensureFoyer(found.id);
+                    subjectId = foyer.id;
+                    subjectType = "foyer";
+                  } else if (found.role === "parent") {
+                    setGrantError("Compte parent : choisis le sujet « Foyer ».");
+                    return;
+                  }
+                  const days = Math.max(1, Number(grantDays) || 365);
+                  const end = new Date(Date.now() + days * 24 * 3600 * 1000).toISOString();
+                  await upsertAbonnement({
+                    subjectType,
+                    subjectId,
+                    source: "admin_grant",
+                    status: "active",
+                    currentPeriodEnd: end,
+                    grantedBy: teacher?.id ?? null,
+                    grantedNote: grantNote.trim() || `Grant ${days}j`,
+                  });
+                  setGrantMessage(`Premium accordé jusqu’au ${new Date(end).toLocaleDateString("fr-FR")}.`);
+                  setGrants(await listAbonnementsAdmin());
+                })();
+              }}
+            >
+              <div className="field">
+                <label htmlFor="grant-email">E-mail du compte</label>
+                <input
+                  id="grant-email"
+                  type="email"
+                  value={grantEmail}
+                  onChange={(e) => setGrantEmail(e.target.value)}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="grant-subject">Sujet</label>
+                <select
+                  id="grant-subject"
+                  value={grantSubject}
+                  onChange={(e) => setGrantSubject(e.target.value as "enseignant" | "foyer")}
+                >
+                  <option value="enseignant">Enseignant</option>
+                  <option value="foyer">Foyer (parent)</option>
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="grant-days">Durée (jours)</label>
+                <input
+                  id="grant-days"
+                  type="number"
+                  min={1}
+                  value={grantDays}
+                  onChange={(e) => setGrantDays(e.target.value)}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="grant-note">Note</label>
+                <input
+                  id="grant-note"
+                  value={grantNote}
+                  onChange={(e) => setGrantNote(e.target.value)}
+                  placeholder="Offre partenaire, démo…"
+                />
+              </div>
+              <Button variant="primary" type="submit">
+                Accorder Premium
+              </Button>
+            </form>
+            {grantError ? <p className="error">{grantError}</p> : null}
+            {grantMessage ? <p className="feedback ok">{grantMessage}</p> : null}
+            <h3>Abonnements récents</h3>
+            <ul className="admin-email-list">
+              {grants.map((g) => (
+                <li key={g.id}>
+                  <strong>
+                    {g.subjectType} · {g.subjectId.slice(0, 8)}…
+                  </strong>{" "}
+                  {abonnementLabel(g)}
+                  {g.currentPeriodEnd
+                    ? ` · jusqu’au ${new Date(g.currentPeriodEnd).toLocaleDateString("fr-FR")}`
+                    : ""}
+                  {g.source === "admin_grant" ? " · grant" : ` · ${g.source}`}
+                </li>
+              ))}
+            </ul>
           </div>
         ) : null}
       </section>

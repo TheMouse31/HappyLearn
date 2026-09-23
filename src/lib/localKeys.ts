@@ -63,19 +63,31 @@ export function clearCourse(): void {
   localStorage.removeItem(COURSE_SUBJECT_KEY);
 }
 
-export function loadLocalTeacher(): { id: string; email: string } | null {
+export function loadLocalTeacher(): {
+  id: string;
+  email: string;
+  accountRole?: "parent" | "enseignant" | "admin";
+} | null {
   try {
     const raw = JSON.parse(localStorage.getItem(TEACHER_KEY) ?? "null") as unknown;
     if (!raw || typeof raw !== "object") return null;
-    const row = raw as { id?: unknown; email?: unknown };
+    const row = raw as { id?: unknown; email?: unknown; accountRole?: unknown };
     if (typeof row.id !== "string" || typeof row.email !== "string") return null;
-    return { id: row.id, email: row.email };
+    const accountRole =
+      row.accountRole === "parent" || row.accountRole === "enseignant" || row.accountRole === "admin"
+        ? row.accountRole
+        : undefined;
+    return { id: row.id, email: row.email, accountRole };
   } catch {
     return null;
   }
 }
 
-export function saveLocalTeacher(teacher: { id: string; email: string }): void {
+export function saveLocalTeacher(teacher: {
+  id: string;
+  email: string;
+  accountRole?: "parent" | "enseignant" | "admin";
+}): void {
   localStorage.setItem(TEACHER_KEY, JSON.stringify(teacher));
 }
 

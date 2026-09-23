@@ -37,6 +37,7 @@ export function SessionControlScreen() {
     endClassSession,
     refreshLiveSession,
     setClassActivity,
+    startHostMission,
     kick,
     clearHand,
     listClassMissionsDone,
@@ -457,6 +458,24 @@ export function SessionControlScreen() {
                     }}
                   >
                     {activityActive ? "Changer de mission" : "Lancer la mission"}
+                  </Button>
+                  <Button
+                    type="button"
+                    disabled={!canLaunchMission}
+                    onClick={() => {
+                      setBusy(true);
+                      void startHostMission({
+                        niveau: grade,
+                        matiere: subject,
+                        missionId,
+                        mode,
+                        universe: "football",
+                      })
+                        .then(() => navigate("/mission"))
+                        .finally(() => setBusy(false));
+                    }}
+                  >
+                    Animer au tableau
                   </Button>
                   {activityActive ? (
                     <Button

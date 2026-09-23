@@ -3,19 +3,32 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Button } from "../components/Button";
 import { Neo } from "../components/Neo";
 import { Shell } from "../components/Shell";
-import type { ClassStudent } from "../data/types";
+import type { ClassStudent, EleveFoyer } from "../data/types";
 import { formatStudentName } from "../data/types";
 import { isValidClassCode, normalizeClassCode } from "../lib/classCode";
+import { listElevesByFoyerCode } from "../lib/familyStore";
 import { useSession } from "../lib/session";
+
+type EntryMode = "ecole" | "maison";
 
 export function EleveLoginScreen() {
   const navigate = useNavigate();
-  const { role, loginEleve, listStudentsForSessionCode, lockedSession, kickedFromSession, clearKicked } =
-    useSession();
+  const {
+    role,
+    loginEleve,
+    loginEleveFoyer,
+    listStudentsForSessionCode,
+    lockedSession,
+    kickedFromSession,
+    clearKicked,
+  } = useSession();
+  const [entryMode, setEntryMode] = useState<EntryMode>("ecole");
   const [selectedId, setSelectedId] = useState("");
   const [prenom, setPrenom] = useState("");
   const [code, setCode] = useState("");
+  const [pin, setPin] = useState("");
   const [roster, setRoster] = useState<ClassStudent[] | null>(null);
+  const [foyerKids, setFoyerKids] = useState<EleveFoyer[] | null>(null);
   const [rosterError, setRosterError] = useState("");
   const [loadingRoster, setLoadingRoster] = useState(false);
   const [isLiveSession, setIsLiveSession] = useState(false);
@@ -33,9 +46,11 @@ export function EleveLoginScreen() {
     if (lockedSession) navigate("/salle-attente", { replace: true });
     else if (role === "eleve") navigate("/accueil", { replace: true });
     if (role === "enseignant") navigate("/espace-professeur", { replace: true });
+    if (role === "parent") navigate("/espace-parent", { replace: true });
   }, [role, lockedSession, navigate]);
 
   useEffect(() => {
+    if (entryMode !== "ecole") return;
     if (!hasCode) {
       setRoster(null);
       setRosterError("");
@@ -60,7 +75,6 @@ export function EleveLoginScreen() {
         setRoster(students);
         setSelectedId("");
         setPrenom("");
-        // Heuristic: if code matches an open live session, joinClassSession path is used via loginEleve
         setIsLiveSession(true);
         if (students.length === 0) {
           setRosterError(
@@ -75,36 +89,98 @@ export function EleveLoginScreen() {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [code, hasCode, codeLooksValid, listStudentsForSessionCode]);
+  }, [code, hasCode, codeLooksValid, listStudentsForSessionCode, entryMode]);
+
+  useEffect(() => {
+    if (entryMode !== "maison") return;
+    if (!codeLooksValid) {
+      setFoyerKids(null);
+      return;
+    }
+    let cancelled = false;
+    setLoadingRoster(true);
+    const timer = window.setTimeout(() => {
+      void listElevesByFoyerCode(code).then((result) => {
+        if (cancelled) return;
+        setLoadingRoster(false);
+        if (!result) {
+          setFoyerKids([]);
+          setRosterError("Aucun foyer avec ce code.");
+          return;
+        }
+        setFoyerKids(result.eleves);
+        setRosterError(result.eleves.length === 0 ? "Aucun enfant dans ce foyer." : "");
+        setSelectedId("");
+      });
+    }, 280);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [code, codeLooksValid, entryMode]);
 
   if (lockedSession) return <Navigate to="/salle-attente" replace />;
   if (role === "eleve") return <Navigate to="/accueil" replace />;
-  if (role === "enseignant") return <Navigate to="/espace-professeur" replace />;
 
   return (
     <Shell brand="Happy Learn" stepLabel="Élève" homeTo="/" backTo="/connexion">
       <div className="split login-layout">
         <aside className="mascot-stage">
           <p className="bubble">
-            {hasCode
-              ? "Entre le code de session, puis choisis ton nom dans la liste."
-              : "Sans code, écris ton prénom et on part en mission !"}
+            {entryMode === "maison"
+              ? "Code foyer + ton nom + ton PIN secret."
+              : hasCode
+                ? "Entre le code de session, puis choisis ton nom."
+                : "Sans code, écris ton prénom et on part !"}
           </p>
           <Neo pose="guide" />
         </aside>
         <section>
           <span className="kicker">Espace élève</span>
           <h1>Bienvenue</h1>
-          <p className="lead" data-listen>
-            Pas besoin d’e-mail. À l’école, utilise le code de session de ton professeur. Seul à la maison, laisse le
-            code vide.
-          </p>
+          <div className="role-tabs" role="tablist" aria-label="Mode">
+            <button
+              type="button"
+              role="tab"
+              className={entryMode === "ecole" ? "is-selected" : ""}
+              aria-selected={entryMode === "ecole"}
+              onClick={() => {
+                setEntryMode("ecole");
+                setError("");
+                setSelectedId("");
+              }}
+            >
+              À l’école
+            </button>
+            <button
+              type="button"
+              role="tab"
+              className={entryMode === "maison" ? "is-selected" : ""}
+              aria-selected={entryMode === "maison"}
+              onClick={() => {
+                setEntryMode("maison");
+                setError("");
+                setSelectedId("");
+                setPin("");
+              }}
+            >
+              À la maison
+            </button>
+          </div>
           <form
             className="login-form"
             onSubmit={(event) => {
               event.preventDefault();
               setBusy(true);
               setError("");
+              if (entryMode === "maison") {
+                void loginEleveFoyer(selectedId, pin).then((result) => {
+                  setBusy(false);
+                  if (!result.ok) setError(result.error);
+                  else navigate("/accueil");
+                });
+                return;
+              }
               const chosen = roster?.find((item) => item.id === selectedId);
               void loginEleve(chosen?.prenom ?? prenom, code, selectedId || undefined).then((result) => {
                 setBusy(false);
@@ -117,26 +193,24 @@ export function EleveLoginScreen() {
             }}
           >
             <div className="field">
-              <label htmlFor="code-classe">Code de session (facultatif)</label>
+              <label htmlFor="code-classe">
+                {entryMode === "maison" ? "Code foyer" : "Code de session (facultatif)"}
+              </label>
               <input
                 id="code-classe"
                 maxLength={8}
                 autoCapitalize="characters"
                 autoComplete="off"
                 value={code}
-                placeholder="Exemple : BLEU4K"
+                placeholder={entryMode === "maison" ? "Exemple : FAM4K2" : "Exemple : BLEU4K"}
                 onChange={(event) => {
                   setCode(normalizeClassCode(event.target.value));
                   setError("");
                 }}
               />
-              <p className="field-help">
-                Avec un code de session, tu choisis ton nom dans la liste. Sans code, tu peux écrire ton prénom
-                toi-même.
-              </p>
             </div>
 
-            {!hasCode ? (
+            {entryMode === "ecole" && !hasCode ? (
               <div className="field">
                 <label htmlFor="prenom">Prénom ou surnom</label>
                 <input
@@ -150,7 +224,7 @@ export function EleveLoginScreen() {
               </div>
             ) : null}
 
-            {hasCode && codeLooksValid ? (
+            {entryMode === "ecole" && hasCode && codeLooksValid ? (
               <div className="field">
                 <span className="field-label" id="roster-label">
                   Ton nom dans la classe
@@ -186,8 +260,40 @@ export function EleveLoginScreen() {
               </div>
             ) : null}
 
-            {hasCode && !codeLooksValid ? (
-              <p className="field-help">Le code a 4 à 8 lettres ou chiffres, sans espace.</p>
+            {entryMode === "maison" && codeLooksValid ? (
+              <>
+                <div className="field">
+                  <span className="field-label">Ton prénom</span>
+                  {loadingRoster ? <p className="field-help">Chargement…</p> : null}
+                  {foyerKids && foyerKids.length > 0 ? (
+                    <div className="roster-pick" role="listbox">
+                      {foyerKids.map((child) => (
+                        <button
+                          key={child.id}
+                          type="button"
+                          role="option"
+                          aria-selected={selectedId === child.id}
+                          className={`choice ${selectedId === child.id ? "is-selected" : ""}`}
+                          onClick={() => setSelectedId(child.id)}
+                        >
+                          {formatStudentName(child.prenom, child.nom)}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                  {rosterError ? <p className="field-help">{rosterError}</p> : null}
+                </div>
+                <div className="field">
+                  <label htmlFor="pin">PIN (4 chiffres)</label>
+                  <input
+                    id="pin"
+                    inputMode="numeric"
+                    maxLength={4}
+                    value={pin}
+                    onChange={(event) => setPin(event.target.value.replace(/\D/g, "").slice(0, 4))}
+                  />
+                </div>
+              </>
             ) : null}
 
             <p className="error" aria-live="polite">
@@ -199,9 +305,12 @@ export function EleveLoginScreen() {
                 type="submit"
                 disabled={
                   busy ||
-                  (hasCode &&
+                  (entryMode === "maison" &&
+                    (!codeLooksValid || !selectedId || pin.length !== 4 || loadingRoster)) ||
+                  (entryMode === "ecole" &&
+                    hasCode &&
                     (!codeLooksValid || loadingRoster || !selectedId || (roster?.length ?? 0) === 0)) ||
-                  (!hasCode && !prenom.trim())
+                  (entryMode === "ecole" && !hasCode && !prenom.trim())
                 }
               >
                 Entrer

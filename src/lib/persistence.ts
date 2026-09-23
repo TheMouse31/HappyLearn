@@ -34,6 +34,9 @@ export type CourseContext = {
   classeSessionId?: string | null;
   eleveId?: string | null;
   missionId?: string | null;
+  foyerId?: string | null;
+  eleveFoyerId?: string | null;
+  hostMode?: boolean;
 };
 
 export type JoinSessionResult =
@@ -261,6 +264,8 @@ function mapRemoteSession(row: {
   classe_session_id?: string | null;
   eleve_id?: string | null;
   mission_id?: string | null;
+  foyer_id?: string | null;
+  eleve_foyer_id?: string | null;
 }): ChildSession | null {
   if (!isUniverse(row.univers) || !isMode(row.mode)) return null;
   return {
@@ -279,6 +284,8 @@ function mapRemoteSession(row: {
     classeSessionId: row.classe_session_id ?? null,
     eleveId: row.eleve_id ?? null,
     missionId: row.mission_id ?? null,
+    foyerId: row.foyer_id ?? null,
+    eleveFoyerId: row.eleve_foyer_id ?? null,
   };
 }
 
@@ -301,6 +308,8 @@ export const localPersistence: Persistence = {
       classeSessionId: course?.classeSessionId ?? null,
       eleveId: course?.eleveId ?? null,
       missionId: course?.missionId ?? null,
+      foyerId: course?.foyerId ?? null,
+      eleveFoyerId: course?.eleveFoyerId ?? null,
     };
     const sessions = readJson<ChildSession[]>(SESSIONS_KEY, []);
     sessions.push(session);
@@ -687,6 +696,8 @@ export async function createPersistence(): Promise<Persistence> {
           classe_session_id: course?.classeSessionId ?? null,
           eleve_id: course?.eleveId ?? null,
           mission_id: course?.missionId ?? null,
+          foyer_id: course?.foyerId ?? null,
+          eleve_foyer_id: course?.eleveFoyerId ?? null,
         })
         .select("id")
         .single();
@@ -836,7 +847,7 @@ export async function createPersistence(): Promise<Persistence> {
       let query = client
         .from("sessions_enfant")
         .select(
-          "id, device_id, prenom, univers, mode, started_at, finished_at, recompense_obtenue, code_classe, niveau, matiere, class_id, classe_session_id, eleve_id, mission_id",
+          "id, device_id, prenom, univers, mode, started_at, finished_at, recompense_obtenue, code_classe, niveau, matiere, class_id, classe_session_id, eleve_id, mission_id, foyer_id, eleve_foyer_id",
         )
         .eq("code_classe", code)
         .order("started_at", { ascending: false });

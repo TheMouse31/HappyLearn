@@ -2,11 +2,13 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState, type R
 import { isGradeLevel, isSubjectSlug } from "../data/catalog";
 import { defaultMissionFor, findMission, resolveMission } from "../data/missions";
 import type {
+  Abonnement,
   AppRole,
   ClasseSession,
   ClassRecord,
   ClassStudent,
   ClassThemeCoverage,
+  Foyer,
   GradeLevel,
   PlayMode,
   SessionParticipant,
@@ -40,6 +42,14 @@ import { createPersistence, localPersistence, type Persistence } from "./persist
 import { canUseRealtime, subscribeClasseSession, subscribeSessionParticipants } from "./realtime";
 import { isAdminEmail } from "./admins";
 import { getSupabase } from "./supabase";
+import {
+  ensureFoyer,
+  ensureUserProfile,
+  getAbonnement,
+  getUserProfileRole,
+  verifyEleveFoyerPin,
+} from "./familyStore";
+import { isAbonnementActive } from "./subscription";
 
 type SessionState = {
   ready: boolean;
@@ -59,6 +69,15 @@ type SessionState = {
   sessionId: string | null;
   rewardPending: boolean;
   teacher: TeacherAccount | null;
+  /** Foyer maison (parent connecté). */
+  foyer: Foyer | null;
+  abonnement: Abonnement | null;
+  premiumActive: boolean;
+  /** Enfant foyer connecté (PIN). */
+  eleveFoyerId: string | null;
+  foyerId: string | null;
+  /** Prof anime au tableau sans élèves. */
+  hostMode: boolean;
   classes: ClassRecord[];
   /** Session de classe live (éphémère). */
   liveSession: ClasseSession | null;
@@ -75,6 +94,10 @@ type SessionState = {
     code: string,
     eleveId?: string,
   ) => Promise<{ ok: true; live: boolean } | { ok: false; error: string }>;
+  loginEleveFoyer: (
+    eleveId: string,
+    pin: string,
+  ) => Promise<{ ok: true } | { ok: false; error: string }>;
   joinClassSession: (code: string, eleveId: string) => Promise<string | null>;
   leaveClassSession: () => Promise<void>;
   launchClassSession: (classId: string) => Promise<ClasseSession | null>;
@@ -115,6 +138,22 @@ type SessionState = {
   ) => Promise<string | null>;
   loginTeacherMagic: (email: string) => Promise<string | null>;
   loginTeacherLocal: (email: string) => Promise<string | null>;
+  loginTeacherGoogle: () => Promise<string | null>;
+  loginParentPassword: (
+    email: string,
+    password: string,
+    mode: "connexion" | "inscription",
+  ) => Promise<string | null>;
+  loginParentGoogle: () => Promise<string | null>;
+  loginParentLocal: (email: string) => Promise<string | null>;
+  refreshAbonnement: () => Promise<void>;
+  startHostMission: (params: {
+    niveau: GradeLevel;
+    matiere: SubjectSlug;
+    missionId: string;
+    mode: PlayMode;
+    universe: UniverseSlug;
+  }) => Promise<void>;
   logout: () => Promise<void>;
   ensureClass: (nom?: string) => Promise<ClassRecord | null>;
   createClass: (nom: string) => Promise<ClassRecord | null>;
@@ -145,27 +184,68 @@ type SessionState = {
 
 const SessionContext = createContext<SessionState | null>(null);
 
-async function restoreTeacher(): Promise<TeacherAccount | null> {
+async function restoreAdult(): Promise<{
+  account: TeacherAccount;
+  role: "parent" | "enseignant" | "admin";
+  foyer: Foyer | null;
+  abonnement: Abonnement | null;
+} | null> {
   const client = getSupabase();
   if (client) {
     const { data } = await client.auth.getSession();
     const user = data.session?.user;
     if (user?.email) {
       const admin = isAdminEmail(user.email);
-      await client.from("profils_enseignants").upsert({
-        user_id: user.id,
-        display_name: user.email.split("@")[0],
-        ...(admin ? { is_admin: true } : {}),
-      });
-      return { id: user.id, email: user.email, backend: "supabase", isAdmin: admin };
+      let role = await getUserProfileRole(user.id);
+      const oauthHint = sessionStorage.getItem("hl-oauth-role");
+      sessionStorage.removeItem("hl-oauth-role");
+      if (!role) {
+        if (oauthHint === "parent") role = "parent";
+        else role = admin ? "admin" : "enseignant";
+      }
+      if (admin) role = "admin";
+      await ensureUserProfile(user.id, role, user.email.split("@")[0] ?? user.email, user.email);
+      const account: TeacherAccount = {
+        id: user.id,
+        email: user.email,
+        backend: "supabase",
+        isAdmin: role === "admin",
+        accountRole: role,
+      };
+      let foyer: Foyer | null = null;
+      let abonnement: Abonnement | null = null;
+      if (role === "parent") {
+        foyer = await ensureFoyer(user.id);
+        abonnement = await getAbonnement("foyer", foyer.id);
+      } else {
+        abonnement = await getAbonnement("enseignant", user.id);
+      }
+      return { account, role, foyer, abonnement };
     }
   }
   const local = loadLocalTeacher();
   if (!local) return null;
+  const admin = isAdminEmail(local.email);
+  const role = (local as { accountRole?: "parent" | "enseignant" | "admin" }).accountRole
+    ?? (admin ? "admin" : "enseignant");
+  let foyer: Foyer | null = null;
+  let abonnement: Abonnement | null = null;
+  if (role === "parent") {
+    foyer = await ensureFoyer(local.id);
+    abonnement = await getAbonnement("foyer", foyer.id);
+  } else {
+    abonnement = await getAbonnement("enseignant", local.id);
+  }
   return {
-    ...local,
-    backend: "local",
-    isAdmin: isAdminEmail(local.email),
+    account: {
+      ...local,
+      backend: "local",
+      isAdmin: admin || role === "admin",
+      accountRole: role,
+    },
+    role,
+    foyer,
+    abonnement,
   };
 }
 
@@ -186,6 +266,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [rewardPending, setRewardPending] = useState(false);
   const [teacher, setTeacher] = useState<TeacherAccount | null>(null);
+  const [foyer, setFoyer] = useState<Foyer | null>(null);
+  const [abonnement, setAbonnement] = useState<Abonnement | null>(null);
+  const [eleveFoyerId, setEleveFoyerId] = useState<string | null>(null);
+  const [foyerId, setFoyerId] = useState<string | null>(null);
+  const [hostMode, setHostMode] = useState(false);
   const [classes, setClasses] = useState<ClassRecord[]>([]);
   const [activeClassId, setActiveClassIdState] = useState<string | null>(null);
   const [liveSession, setLiveSession] = useState<ClasseSession | null>(null);
@@ -195,6 +280,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [eleveId, setEleveId] = useState<string | null>(null);
   const persistenceRef = useRef<Persistence | null>(null);
   const liveParticipantRef = useRef<SessionParticipant | null>(null);
+
+  const premiumActive = isAbonnementActive(abonnement);
 
   useEffect(() => {
     persistenceRef.current = persistence;
@@ -209,32 +296,40 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     void (async () => {
       const store = await createPersistence();
       const saved = await store.loadCollection();
-      const teacherAccount = await restoreTeacher();
+      const restored = await restoreAdult();
       if (cancelled) return;
       setPersistence(store);
       setCollection(saved);
-      if (teacherAccount) {
-        let list = await store.listClasses(teacherAccount.id);
-        if (cancelled) return;
-        if (list.length === 0) {
-          const created = await store.createClass(teacherAccount.id, "Ma classe");
-          list = [created];
-        }
-        setTeacher(teacherAccount);
-        setClasses(list);
-        const savedActive = loadActiveClassId();
-        const validActive = list.some((item) => item.id === savedActive)
-          ? savedActive
-          : (list[0]?.id ?? null);
-        setActiveClassIdState(validActive);
-        if (validActive) saveActiveClassId(validActive);
-        setRole(teacherAccount.isAdmin ? "admin" : "enseignant");
-        if (validActive) {
-          const active = await store.getActiveClassSession(validActive);
-          if (!cancelled && active) {
-            setLiveSession(active);
-            const parts = await store.listParticipants(active.id);
-            if (!cancelled) setLiveParticipants(parts);
+      if (restored) {
+        const { account, role: accountRole, foyer: restoredFoyer, abonnement: restoredSub } = restored;
+        setTeacher(account);
+        setFoyer(restoredFoyer);
+        setAbonnement(restoredSub);
+        setRole(accountRole);
+        if (accountRole === "parent") {
+          setClasses([]);
+          setActiveClassIdState(null);
+        } else {
+          let list = await store.listClasses(account.id);
+          if (cancelled) return;
+          if (list.length === 0) {
+            const created = await store.createClass(account.id, "Ma classe");
+            list = [created];
+          }
+          setClasses(list);
+          const savedActive = loadActiveClassId();
+          const validActive = list.some((item) => item.id === savedActive)
+            ? savedActive
+            : (list[0]?.id ?? null);
+          setActiveClassIdState(validActive);
+          if (validActive) saveActiveClassId(validActive);
+          if (validActive) {
+            const active = await store.getActiveClassSession(validActive);
+            if (!cancelled && active) {
+              setLiveSession(active);
+              const parts = await store.listParticipants(active.id);
+              if (!cancelled) setLiveParticipants(parts);
+            }
           }
         }
       } else {
@@ -435,6 +530,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       sessionId,
       rewardPending,
       teacher,
+      foyer,
+      abonnement,
+      premiumActive,
+      eleveFoyerId,
+      foyerId,
+      hostMode,
       classes,
       liveSession,
       liveParticipant,
@@ -750,16 +851,15 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             ? "Compte créé. Confirme l’e-mail reçu, puis reconnecte-toi."
             : "Connexion incomplète. Réessaie.";
         }
-        await client.from("profils_enseignants").upsert({
-          user_id: user.id,
-          display_name: user.email.split("@")[0],
-          ...(isAdminEmail(user.email) ? { is_admin: true } : {}),
-        });
+        const admin = isAdminEmail(user.email);
+        const accountRole = admin ? "admin" : "enseignant";
+        await ensureUserProfile(user.id, accountRole, user.email.split("@")[0] ?? user.email, user.email);
         const account: TeacherAccount = {
           id: user.id,
           email: user.email,
           backend: "supabase",
-          isAdmin: isAdminEmail(user.email),
+          isAdmin: admin,
+          accountRole,
         };
         const store = persistence ?? (await createPersistence());
         setPersistence(store);
@@ -770,9 +870,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         }
         setTeacher(account);
         setClasses(list);
+        setFoyer(null);
+        setAbonnement(await getAbonnement("enseignant", account.id));
         setActiveClassIdState(list[0]?.id ?? null);
         if (list[0]) saveActiveClassId(list[0].id);
-        setRole(account.isAdmin ? "admin" : "enseignant");
+        setRole(accountRole);
         return null;
       },
       loginTeacherMagic: async (email) => {
@@ -794,6 +896,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           email: normalized,
           backend: "local",
           isAdmin: isAdminEmail(normalized),
+          accountRole: isAdminEmail(normalized) ? "admin" : "enseignant",
         };
         saveLocalTeacher(account);
         const store = persistence ?? localPersistence;
@@ -804,10 +907,139 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         }
         setTeacher(account);
         setClasses(list);
+        setFoyer(null);
+        setAbonnement(await getAbonnement("enseignant", account.id));
         setActiveClassIdState(list[0]?.id ?? null);
         if (list[0]) saveActiveClassId(list[0].id);
         setRole(account.isAdmin ? "admin" : "enseignant");
         return null;
+      },
+      loginTeacherGoogle: async () => {
+        const client = getSupabase();
+        if (!client) return "Google nécessite Supabase.";
+        const { error } = await client.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo: `${window.location.origin}/connexion/enseignant`,
+            queryParams: { access_type: "offline", prompt: "consent" },
+          },
+        });
+        if (error) return teacherAuthMessage(error.message);
+        return null;
+      },
+      loginParentPassword: async (email, password, authMode) => {
+        if (!isEmail(email)) return "Indique un e-mail valide.";
+        if (password.length < 8) return "Le mot de passe doit contenir au moins 8 caractères.";
+        const client = getSupabase();
+        if (!client) return "local";
+        const result =
+          authMode === "inscription"
+            ? await client.auth.signUp({ email: email.trim(), password })
+            : await client.auth.signInWithPassword({ email: email.trim(), password });
+        if (result.error) return teacherAuthMessage(result.error.message);
+        const user = result.data.user;
+        const session = result.data.session;
+        if (!session || !user?.email) {
+          return authMode === "inscription"
+            ? "Compte créé. Confirme l’e-mail reçu, puis reconnecte-toi."
+            : "Connexion incomplète. Réessaie.";
+        }
+        await ensureUserProfile(user.id, "parent", user.email.split("@")[0] ?? user.email, user.email);
+        const account: TeacherAccount = {
+          id: user.id,
+          email: user.email,
+          backend: "supabase",
+          accountRole: "parent",
+        };
+        const createdFoyer = await ensureFoyer(user.id);
+        setTeacher(account);
+        setFoyer(createdFoyer);
+        setAbonnement(await getAbonnement("foyer", createdFoyer.id));
+        setClasses([]);
+        setActiveClassIdState(null);
+        setRole("parent");
+        return null;
+      },
+      loginParentGoogle: async () => {
+        const client = getSupabase();
+        if (!client) return "Google nécessite Supabase.";
+        sessionStorage.setItem("hl-oauth-role", "parent");
+        const { error } = await client.auth.signInWithOAuth({
+          provider: "google",
+          options: { redirectTo: `${window.location.origin}/connexion/parent` },
+        });
+        if (error) return teacherAuthMessage(error.message);
+        return null;
+      },
+      loginParentLocal: async (email) => {
+        if (!isEmail(email)) return "Indique un e-mail valide.";
+        const normalized = email.trim().toLowerCase();
+        const account: TeacherAccount = {
+          id: `local-parent-${normalized}`,
+          email: normalized,
+          backend: "local",
+          accountRole: "parent",
+        };
+        saveLocalTeacher(account);
+        const createdFoyer = await ensureFoyer(account.id);
+        setTeacher(account);
+        setFoyer(createdFoyer);
+        setAbonnement(await getAbonnement("foyer", createdFoyer.id));
+        setClasses([]);
+        setRole("parent");
+        return null;
+      },
+      loginEleveFoyer: async (childId, pin) => {
+        const child = await verifyEleveFoyerPin(childId, pin);
+        if (!child) return { ok: false, error: "Code PIN incorrect." };
+        setPrenomState(child.prenom);
+        setNom(child.nom);
+        savePrenom(child.prenom);
+        setEleveFoyerId(child.id);
+        setFoyerId(child.foyerId);
+        setEleveId(null);
+        setLiveSession(null);
+        setLiveParticipant(null);
+        if (child.niveau) setGrade(child.niveau);
+        setRole("eleve");
+        return { ok: true };
+      },
+      refreshAbonnement: async () => {
+        if (!teacher) return;
+        if (role === "parent" && foyer) {
+          setAbonnement(await getAbonnement("foyer", foyer.id));
+        } else if (role === "enseignant" || role === "admin") {
+          setAbonnement(await getAbonnement("enseignant", teacher.id));
+        }
+      },
+      startHostMission: async (params) => {
+        if (!persistence || !teacher) return;
+        setHostMode(true);
+        setGrade(params.niveau);
+        setSubject(params.matiere);
+        setMissionId(params.missionId);
+        setMode(params.mode);
+        setUniverse(params.universe);
+        setPrenomState("Tableau");
+        const id = await persistence.startSession("Tableau", params.universe, params.mode, null, {
+          grade: params.niveau,
+          subject: params.matiere,
+          classId: liveSession?.classId ?? activeClassId,
+          classeSessionId: liveSession?.id ?? null,
+          missionId: params.missionId,
+          hostMode: true,
+        });
+        setSessionId(id);
+        setRewardPending(false);
+        if (liveSession) {
+          await persistence.setSessionActivity(liveSession.id, {
+            niveau: params.niveau,
+            matiere: params.matiere,
+            missionId: params.missionId,
+            mode: params.mode,
+            univers: null,
+          });
+        }
       },
       logout: async () => {
         const store = persistence ?? localPersistence;
@@ -821,6 +1053,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         saveActiveClassId(null);
         saveLiveParticipant(null);
         setTeacher(null);
+        setFoyer(null);
+        setAbonnement(null);
+        setEleveFoyerId(null);
+        setFoyerId(null);
+        setHostMode(false);
         setClasses([]);
         setActiveClassIdState(null);
         setPrenomState("");
@@ -902,6 +1139,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         const chosenUniverse = override?.universe ?? universe;
         if (override?.universe) setUniverse(override.universe);
         if (!persistence || !prenom || !chosenUniverse || !mode) return;
+        setHostMode(false);
         const mission =
           (await resolveMission(missionId)) ??
           defaultMissionFor(grade, subject) ??
@@ -913,6 +1151,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           classeSessionId: liveSession?.id ?? null,
           eleveId: eleveId ?? liveParticipant?.eleveId ?? null,
           missionId: mission?.id ?? null,
+          foyerId: foyerId ?? null,
+          eleveFoyerId: eleveFoyerId ?? null,
         });
         if (mission) setMissionId(mission.id);
         setSessionId(id);
@@ -970,6 +1210,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       sessionId,
       rewardPending,
       teacher,
+      foyer,
+      abonnement,
+      premiumActive,
+      eleveFoyerId,
+      foyerId,
+      hostMode,
       classes,
       activeClassId,
       liveSession,
