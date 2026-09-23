@@ -1,15 +1,26 @@
 import { gradeLabel, subjectLabel } from "../data/catalog";
+import { findMission } from "../data/missions";
 import type {
   ChildSession,
   ClassStudent,
   SessionStatsFilters,
   StoredAnswer,
+  StoredHint,
   UniverseSlug,
 } from "../data/types";
 import { formatStudentName } from "../data/types";
 import { UNIVERSES } from "../data/universes";
 
 export type ActivityStatus = "recent" | "pause" | "never";
+
+export type QcmExhaustedStep = {
+  sessionId: string;
+  stepId: string;
+  optionsTried: number;
+  optionCount: number;
+  correct: boolean;
+  hintUsed: boolean;
+};
 
 export type StudentStats = {
   key: string;
@@ -25,6 +36,17 @@ export type StudentStats = {
   answersTotal: number;
   answersCorrect: number;
   successRate: number | null;
+  /** Tentatives moyennes sur les questions finalement réussies. */
+  avgAttemptsOnCorrect: number | null;
+  /** Ouvertures d’indice (clics) sur toutes les séances. */
+  hintsOpened: number;
+  /** Questions distinctes où au moins un indice a été ouvert. */
+  stepsWithHint: number;
+  /** Réponses correctes obtenues après avoir ouvert un indice. */
+  correctWithHint: number;
+  /** Étapes QCM où toutes les propositions ont été essayées. */
+  qcmExhaustedCount: number;
+  qcmExhaustedSteps: QcmExhaustedStep[];
   lastActivityAt: string;
   parcours: string[];
   activityStatus: ActivityStatus;
@@ -35,11 +57,17 @@ export type ClassSummary = {
   missionsCompleted: number;
   missionsInProgress: number;
   avgSuccessRate: number | null;
+  hintsOpened: number;
+  qcmExhaustedCount: number;
 };
 
 const RECENT_MS = 7 * 24 * 60 * 60 * 1000;
 
 function normalizePrenom(value: string): string {
+  return value.trim().toLocaleLowerCase("fr-FR");
+}
+
+function normalizeRaw(value: string): string {
   return value.trim().toLocaleLowerCase("fr-FR");
 }
 
@@ -73,10 +101,99 @@ export function filterSessions(
   });
 }
 
+/**
+ * Une étape QCM est « épuisée » si l’élève a essayé autant de propositions
+ * distinctes que le nombre d’options affichées (signal de test systématique).
+ */
+export function detectQcmExhaustedSteps(
+  answers: StoredAnswer[],
+  sessions: ChildSession[] = [],
+): QcmExhaustedStep[] {
+  const sessionById = new Map(sessions.map((session) => [session.id, session]));
+  const byStep = new Map<string, StoredAnswer[]>();
+  for (const answer of answers) {
+    const key = `${answer.sessionId}::${answer.stepId}`;
+    const list = byStep.get(key) ?? [];
+    list.push(answer);
+    byStep.set(key, list);
+  }
+
+  const exhausted: QcmExhaustedStep[] = [];
+  for (const [, list] of byStep) {
+    const first = list[0];
+    const session = sessionById.get(first.sessionId);
+    let optionCount =
+      list.find((item) => item.qcmOptionCount != null && item.qcmOptionCount >= 2)
+        ?.qcmOptionCount ?? null;
+
+    if (optionCount == null && session?.missionId) {
+      const mission = findMission(session.missionId);
+      const step = mission?.steps.find((item) => item.id === first.stepId);
+      if (step?.expected && (step.distractors?.length ?? 0) > 0) {
+        optionCount = 1 + (step.distractors?.length ?? 0);
+      }
+    }
+
+    // Heuristique : séances QCM sans métadonnée → seuil typique 3 propositions.
+    if (optionCount == null && session?.mode === "qcm") {
+      optionCount = 3;
+    }
+
+    if (optionCount == null || optionCount < 2) continue;
+
+    const distinct = new Set(list.map((item) => normalizeRaw(item.raw)).filter(Boolean));
+    if (distinct.size < optionCount) continue;
+
+    exhausted.push({
+      sessionId: first.sessionId,
+      stepId: first.stepId,
+      optionsTried: distinct.size,
+      optionCount,
+      correct: list.some((item) => item.correct),
+      hintUsed: list.some((item) => Boolean(item.hintUsed)),
+    });
+  }
+  return exhausted;
+}
+
+function emptyStudentStats(
+  key: string,
+  prenom: string,
+  nom: string,
+  displayName: string,
+  eleveId: string | null,
+): StudentStats {
+  return {
+    key,
+    prenom,
+    nom,
+    displayName,
+    eleveId,
+    sessionsStarted: 0,
+    missionsCompleted: 0,
+    missionsAbandoned: 0,
+    missionsInProgress: 0,
+    universesCompleted: [],
+    answersTotal: 0,
+    answersCorrect: 0,
+    successRate: null,
+    avgAttemptsOnCorrect: null,
+    hintsOpened: 0,
+    stepsWithHint: 0,
+    correctWithHint: 0,
+    qcmExhaustedCount: 0,
+    qcmExhaustedSteps: [],
+    lastActivityAt: "",
+    parcours: [],
+    activityStatus: "never",
+  };
+}
+
 function statsFromSessions(
   key: string,
   list: ChildSession[],
   answersBySession: Map<string, StoredAnswer[]>,
+  hintsBySession: Map<string, StoredHint[]>,
   rosterById: Map<string, ClassStudent>,
 ): StudentStats {
   const sorted = [...list].sort((a, b) => b.startedAt.localeCompare(a.startedAt));
@@ -95,6 +212,12 @@ function statsFromSessions(
   const parcours = new Set<string>();
   let answersTotal = 0;
   let answersCorrect = 0;
+  let attemptsOnCorrectSum = 0;
+  let correctCountForAttempts = 0;
+  let hintsOpened = 0;
+  const stepsWithHint = new Set<string>();
+  let correctWithHint = 0;
+  const allAnswers: StoredAnswer[] = [];
 
   for (const session of sorted) {
     if (session.rewardEarned) {
@@ -107,13 +230,35 @@ function statsFromSessions(
     }
     const label = parcoursLabel(session);
     if (label) parcours.add(label);
-    for (const answer of answersBySession.get(session.id) ?? []) {
+
+    const sessionAnswers = answersBySession.get(session.id) ?? [];
+    allAnswers.push(...sessionAnswers);
+
+    for (const answer of sessionAnswers) {
       answersTotal += 1;
-      if (answer.correct) answersCorrect += 1;
+      if (answer.correct) {
+        answersCorrect += 1;
+        attemptsOnCorrectSum += answer.attempts;
+        correctCountForAttempts += 1;
+        if (answer.hintUsed) correctWithHint += 1;
+      }
+    }
+
+    for (const hint of hintsBySession.get(session.id) ?? []) {
+      hintsOpened += 1;
+      stepsWithHint.add(`${session.id}::${hint.stepId}`);
+    }
+    // Fallback : indices déduits des réponses si pas encore de table hints.
+    for (const answer of sessionAnswers) {
+      if (answer.hintUsed) stepsWithHint.add(`${session.id}::${answer.stepId}`);
     }
   }
 
+  const qcmExhaustedSteps = detectQcmExhaustedSteps(allAnswers, sorted);
   const lastActivityAt = sorted[0]?.startedAt ?? "";
+  const stepsWithHintCount = stepsWithHint.size;
+  // Ancien jeu de données : pas de table hints, seulement hint_used sur les réponses.
+  const hintsOpenedEffective = Math.max(hintsOpened, stepsWithHintCount);
 
   return {
     key,
@@ -129,6 +274,15 @@ function statsFromSessions(
     answersTotal,
     answersCorrect,
     successRate: answersTotal > 0 ? Math.round((answersCorrect / answersTotal) * 100) : null,
+    avgAttemptsOnCorrect:
+      correctCountForAttempts > 0
+        ? Math.round((attemptsOnCorrectSum / correctCountForAttempts) * 10) / 10
+        : null,
+    hintsOpened: hintsOpenedEffective,
+    stepsWithHint: stepsWithHintCount,
+    correctWithHint,
+    qcmExhaustedCount: qcmExhaustedSteps.length,
+    qcmExhaustedSteps,
     lastActivityAt,
     parcours: [...parcours],
     activityStatus: activityStatusFor(lastActivityAt),
@@ -140,12 +294,20 @@ export function buildStudentStats(
   sessions: ChildSession[],
   answers: StoredAnswer[],
   roster: ClassStudent[] = [],
+  hints: StoredHint[] = [],
 ): StudentStats[] {
   const answersBySession = new Map<string, StoredAnswer[]>();
   for (const answer of answers) {
     const list = answersBySession.get(answer.sessionId) ?? [];
     list.push(answer);
     answersBySession.set(answer.sessionId, list);
+  }
+
+  const hintsBySession = new Map<string, StoredHint[]>();
+  for (const hint of hints) {
+    const list = hintsBySession.get(hint.sessionId) ?? [];
+    list.push(hint);
+    hintsBySession.set(hint.sessionId, list);
   }
 
   const rosterById = new Map(roster.map((student) => [student.id, student]));
@@ -164,29 +326,20 @@ export function buildStudentStats(
 
   const stats: StudentStats[] = [];
   for (const [key, list] of byStudent) {
-    stats.push(statsFromSessions(key, list, answersBySession, rosterById));
+    stats.push(statsFromSessions(key, list, answersBySession, hintsBySession, rosterById));
   }
 
   for (const student of roster) {
     if (seenEleveIds.has(student.id)) continue;
-    stats.push({
-      key: `eleve::${student.id}`,
-      prenom: student.prenom.trim() || "Élève",
-      nom: student.nom.trim(),
-      displayName: formatStudentName(student.prenom, student.nom),
-      eleveId: student.id,
-      sessionsStarted: 0,
-      missionsCompleted: 0,
-      missionsAbandoned: 0,
-      missionsInProgress: 0,
-      universesCompleted: [],
-      answersTotal: 0,
-      answersCorrect: 0,
-      successRate: null,
-      lastActivityAt: "",
-      parcours: [],
-      activityStatus: "never",
-    });
+    stats.push(
+      emptyStudentStats(
+        `eleve::${student.id}`,
+        student.prenom.trim() || "Élève",
+        student.nom.trim(),
+        formatStudentName(student.prenom, student.nom),
+        student.id,
+      ),
+    );
   }
 
   return stats.sort((a, b) => {
@@ -208,12 +361,16 @@ export function buildClassSummary(stats: StudentStats[]): ClassSummary {
     rated.length === 0
       ? null
       : Math.round(rated.reduce((sum, item) => sum + (item.successRate ?? 0), 0) / rated.length);
+  const hintsOpened = stats.reduce((sum, item) => sum + item.hintsOpened, 0);
+  const qcmExhaustedCount = stats.reduce((sum, item) => sum + item.qcmExhaustedCount, 0);
 
   return {
     activeStudents: withActivity.length,
     missionsCompleted,
     missionsInProgress,
     avgSuccessRate,
+    hintsOpened,
+    qcmExhaustedCount,
   };
 }
 

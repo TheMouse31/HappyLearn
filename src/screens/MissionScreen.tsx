@@ -65,6 +65,7 @@ export function MissionScreen() {
     mode,
     sessionId,
     recordAnswer,
+    recordHint,
     completeMission,
     quitMission,
     grade,
@@ -83,6 +84,7 @@ export function MissionScreen() {
   const [feedback, setFeedback] = useState("");
   const [kind, setKind] = useState<"ok" | "retry" | "hint" | "info">("info");
   const [hint, setHint] = useState("");
+  const [hintOpened, setHintOpened] = useState(false);
   const [showPouce, setShowPouce] = useState(false);
   const [blankValues, setBlankValues] = useState<string[]>([]);
   const [audioHeard, setAudioHeard] = useState(false);
@@ -138,6 +140,7 @@ export function MissionScreen() {
     setFeedback("");
     setKind("info");
     setHint("");
+    setHintOpened(false);
     setShowPouce(false);
     setAudioHeard(false);
     stopSpeech();
@@ -193,7 +196,10 @@ export function MissionScreen() {
     const nextAttempts = attempts + 1;
     setAttempts(nextAttempts);
     const result = validateAnswer(step, currentValue);
-    await recordAnswer(step.id, currentValue, result.ok, nextAttempts);
+    await recordAnswer(step.id, currentValue, result.ok, nextAttempts, {
+      hintUsed: hintOpened,
+      qcmOptionCount: qcm ? options.length : null,
+    });
     if (result.ok) succeed(result.message);
     else {
       setKind("retry");
@@ -445,6 +451,10 @@ export function MissionScreen() {
                   onClick={() => {
                     setHint(copy.hint ?? "Commence par trouver la valeur d’une seule part.");
                     setKind("hint");
+                    if (!hintOpened) {
+                      setHintOpened(true);
+                      void recordHint(step.id);
+                    }
                   }}
                 >
                   Un indice

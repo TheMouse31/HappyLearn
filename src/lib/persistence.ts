@@ -10,6 +10,7 @@ import type {
   SessionParticipant,
   SessionStatsFilters,
   StoredAnswer,
+  StoredHint,
   SubjectSlug,
   UniverseSlug,
 } from "../data/types";
@@ -104,6 +105,7 @@ export type Persistence = {
     course?: CourseContext,
   ) => Promise<string>;
   saveAnswer: (answer: Omit<StoredAnswer, "createdAt">) => Promise<void>;
+  saveHint: (hint: Omit<StoredHint, "openedAt">) => Promise<void>;
   finishSession: (sessionId: string, rewardEarned: boolean) => Promise<void>;
   loadCollection: () => Promise<UniverseSlug[]>;
   saveReward: (sessionId: string, universe: UniverseSlug) => Promise<UniverseSlug[]>;
@@ -129,6 +131,7 @@ export type Persistence = {
     filters?: SessionStatsFilters,
   ) => Promise<ChildSession[]>;
   listAnswersBySessionIds: (sessionIds: string[]) => Promise<StoredAnswer[]>;
+  listHintsBySessionIds: (sessionIds: string[]) => Promise<StoredHint[]>;
   openClassSession: (classId: string) => Promise<ClasseSession>;
   closeClassSession: (sessionId: string) => Promise<void>;
   getActiveClassSession: (classId: string) => Promise<ClasseSession | null>;
@@ -164,6 +167,7 @@ export type Persistence = {
 
 const SESSIONS_KEY = "mission-maths-sessions";
 const ANSWERS_KEY = "mission-maths-answers";
+const HINTS_KEY = "mission-maths-hints";
 
 function applySessionFilters(
   sessions: ChildSession[],
@@ -309,8 +313,18 @@ export const localPersistence: Persistence = {
   },
   async saveAnswer(answer) {
     const answers = readJson<StoredAnswer[]>(ANSWERS_KEY, []);
-    answers.push({ ...answer, createdAt: new Date().toISOString() });
+    answers.push({
+      ...answer,
+      hintUsed: Boolean(answer.hintUsed),
+      qcmOptionCount: answer.qcmOptionCount ?? null,
+      createdAt: new Date().toISOString(),
+    });
     localStorage.setItem(ANSWERS_KEY, JSON.stringify(answers));
+  },
+  async saveHint(hint) {
+    const hints = readJson<StoredHint[]>(HINTS_KEY, []);
+    hints.push({ ...hint, openedAt: new Date().toISOString() });
+    localStorage.setItem(HINTS_KEY, JSON.stringify(hints));
   },
   async finishSession(sessionId, rewardEarned) {
     const sessions = readJson<ChildSession[]>(SESSIONS_KEY, []);
@@ -431,6 +445,11 @@ export const localPersistence: Persistence = {
     if (sessionIds.length === 0) return [];
     const wanted = new Set(sessionIds);
     return readJson<StoredAnswer[]>(ANSWERS_KEY, []).filter((answer) => wanted.has(answer.sessionId));
+  },
+  async listHintsBySessionIds(sessionIds) {
+    if (sessionIds.length === 0) return [];
+    const wanted = new Set(sessionIds);
+    return readJson<StoredHint[]>(HINTS_KEY, []).filter((hint) => wanted.has(hint.sessionId));
   },
   async openClassSession(classId) {
     const sessions = readJson<ClasseSession[]>(LOCAL_CLASSE_SESSIONS_KEY, []).map(mapLocalClasseSession);
@@ -702,8 +721,17 @@ export async function createPersistence(): Promise<Persistence> {
         brut: answer.raw,
         correct: answer.correct,
         attempts: answer.attempts,
+        hint_used: Boolean(answer.hintUsed),
+        qcm_option_count: answer.qcmOptionCount ?? null,
       });
       if (error) await localPersistence.saveAnswer(answer);
+    },
+    async saveHint(hint) {
+      const { error } = await client.from("session_hints").insert({
+        session_id: hint.sessionId,
+        etape_id: hint.stepId,
+      });
+      if (error) await localPersistence.saveHint(hint);
     },
     async finishSession(sessionId, rewardEarned) {
       const { error } = await client
@@ -857,7 +885,7 @@ export async function createPersistence(): Promise<Persistence> {
       if (sessionIds.length === 0) return [];
       const { data, error } = await client
         .from("reponses")
-        .select("session_id, etape_id, brut, correct, attempts, created_at")
+        .select("session_id, etape_id, brut, correct, attempts, created_at, hint_used, qcm_option_count")
         .in("session_id", sessionIds);
       if (error || !data) return localPersistence.listAnswersBySessionIds(sessionIds);
       return data.map((row) => ({
@@ -867,6 +895,22 @@ export async function createPersistence(): Promise<Persistence> {
         correct: Boolean(row.correct),
         attempts: Number(row.attempts ?? 1),
         createdAt: (row.created_at as string) ?? new Date().toISOString(),
+        hintUsed: Boolean(row.hint_used),
+        qcmOptionCount:
+          row.qcm_option_count == null ? null : Number(row.qcm_option_count),
+      }));
+    },
+    async listHintsBySessionIds(sessionIds) {
+      if (sessionIds.length === 0) return [];
+      const { data, error } = await client
+        .from("session_hints")
+        .select("session_id, etape_id, opened_at")
+        .in("session_id", sessionIds);
+      if (error || !data) return localPersistence.listHintsBySessionIds(sessionIds);
+      return data.map((row) => ({
+        sessionId: row.session_id as string,
+        stepId: row.etape_id as string,
+        openedAt: (row.opened_at as string) ?? new Date().toISOString(),
       }));
     },
     async openClassSession(classId) {
