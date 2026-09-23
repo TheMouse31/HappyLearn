@@ -23,6 +23,7 @@ import {
 import {
   CUSTOM_ILLUSTRATIONS_EVENT,
   deleteCustomIllustration,
+  fetchCustomIllustrations,
   loadCustomIllustrations,
   type CustomIllustration,
 } from "../lib/customIllustrations";
@@ -100,6 +101,7 @@ export function AdminSpaceScreen() {
     function sync() {
       setCustomItems(loadCustomIllustrations());
     }
+    void fetchCustomIllustrations().then(setCustomItems);
     window.addEventListener(CUSTOM_ILLUSTRATIONS_EVENT, sync);
     window.addEventListener("storage", sync);
     return () => {
@@ -382,10 +384,11 @@ export function AdminSpaceScreen() {
                             type="button"
                             onClick={() => {
                               if (!window.confirm(`Supprimer « ${item.label} » ?`)) return;
-                              deleteCustomIllustration(item.id);
-                              setCustomItems(loadCustomIllustrations());
-                              if (editingCustomId === item.id) resetCustomForm();
-                              setCustomMessage("Illustration supprimée.");
+                              void deleteCustomIllustration(item.id).then(() => {
+                                setCustomItems(loadCustomIllustrations());
+                                if (editingCustomId === item.id) resetCustomForm();
+                                setCustomMessage("Illustration supprimée.");
+                              });
                             }}
                           >
                             Supprimer

@@ -1,6 +1,6 @@
 /**
  * Formulaire création / édition d’une illustration personnalisée.
- * Image = URL HTTPS/chemin site, ou data-URL via fichier (max 2,5 Mo).
+ * Fichier → upload Supabase Storage (`media`), sinon data-URL locale.
  */
 import { useState } from "react";
 import { Button } from "./Button";
@@ -8,6 +8,8 @@ import {
   upsertCustomIllustration,
   type CustomIllustration,
 } from "../lib/customIllustrations";
+import { uploadImageFile } from "../lib/mediaStorage";
+import { useSession } from "../lib/session";
 
 export type IllustrationFormState = {
   label: string;
@@ -40,39 +42,46 @@ export function IllustrationCreatePanel({
   compact,
   submitLabel,
 }: Props) {
+  const { teacher } = useSession();
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [uploadNote, setUploadNote] = useState("");
 
-  function readImageFile(file: File | null) {
+  async function readImageFile(file: File | null) {
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setError("Choisis un fichier image (PNG, JPG, WebP…).");
-      return;
+    setBusy(true);
+    setError("");
+    setUploadNote("Envoi de l’image…");
+    try {
+      const uploaded = await uploadImageFile(file);
+      onChange({ ...form, imageUrl: uploaded.url });
+      setUploadNote(
+        uploaded.via === "supabase"
+          ? "Image stockée sur Supabase Storage."
+          : "Image en local (data-URL) — Supabase indisponible ou refus RLS.",
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload impossible.");
+      setUploadNote("");
+    } finally {
+      setBusy(false);
     }
-    if (file.size > 2_500_000) {
-      setError("Image trop lourde (max. 2,5 Mo). Compresse-la ou utilise une URL.");
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = typeof reader.result === "string" ? reader.result : "";
-      if (!result) {
-        setError("Lecture du fichier impossible.");
-        return;
-      }
-      onChange({ ...form, imageUrl: result });
-      setError("");
-    };
-    reader.onerror = () => setError("Lecture du fichier impossible.");
-    reader.readAsDataURL(file);
   }
 
-  function submit() {
+  async function submit() {
+    setBusy(true);
+    setError("");
     try {
-      const item = upsertCustomIllustration(form, editingId ?? undefined);
-      setError("");
+      const item = await upsertCustomIllustration(
+        form,
+        editingId ?? undefined,
+        teacher?.id ?? null,
+      );
       onSaved(item);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Enregistrement impossible.");
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -81,7 +90,7 @@ export function IllustrationCreatePanel({
       className={`illust-create${compact ? " is-compact" : ""}`}
       onSubmit={(event) => {
         event.preventDefault();
-        submit();
+        void submit();
       }}
     >
       <div className="illust-create-grid">
@@ -95,6 +104,7 @@ export function IllustrationCreatePanel({
               onChange={(event) => onChange({ ...form, label: event.target.value })}
               placeholder="Ex. Partage de pizza"
               required
+              disabled={busy}
             />
           </div>
           <div className="field">
@@ -105,6 +115,7 @@ export function IllustrationCreatePanel({
               value={form.blurb}
               onChange={(event) => onChange({ ...form, blurb: event.target.value })}
               placeholder="Courte aide pour le créateur de missions"
+              disabled={busy}
             />
           </div>
           <div className="field">
@@ -112,15 +123,21 @@ export function IllustrationCreatePanel({
             <input
               id="illust-create-url"
               type="text"
-              // Masque la data-URL (trop longue) ; le fichier reste dans form.imageUrl.
-              value={form.imageUrl.startsWith("data:") ? "" : form.imageUrl}
+              value={
+                form.imageUrl.startsWith("data:") || form.imageUrl.includes("/storage/v1/object/")
+                  ? ""
+                  : form.imageUrl
+              }
               onChange={(event) => onChange({ ...form, imageUrl: event.target.value })}
               placeholder="/images/ma-scene.webp ou https://…"
+              disabled={busy}
             />
             <small className="field-help">
               {form.imageUrl.startsWith("data:")
-                ? "Fichier local chargé."
-                : "Chemin du site ou lien HTTPS."}
+                ? "Fichier local (data-URL)."
+                : form.imageUrl.includes("/storage/v1/object/")
+                  ? "Fichier sur Supabase Storage."
+                  : "Chemin du site, lien HTTPS, ou importe un fichier ci-dessous."}
             </small>
           </div>
           <div className="field">
@@ -128,9 +145,11 @@ export function IllustrationCreatePanel({
             <input
               id="illust-create-file"
               type="file"
-              accept="image/*"
-              onChange={(event) => readImageFile(event.target.files?.[0] ?? null)}
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              disabled={busy}
+              onChange={(event) => void readImageFile(event.target.files?.[0] ?? null)}
             />
+            {uploadNote ? <small className="field-help">{uploadNote}</small> : null}
           </div>
         </div>
         <div className={`illust-create-stage${form.imageUrl ? " has-image" : ""}`}>
@@ -142,11 +161,13 @@ export function IllustrationCreatePanel({
         </div>
       </div>
       <div className="actions">
-        <Button variant="primary" type="submit">
-          {submitLabel ?? (editingId ? "Enregistrer" : "Ajouter à la bibliothèque")}
+        <Button variant="primary" type="submit" disabled={busy}>
+          {busy
+            ? "Enregistrement…"
+            : (submitLabel ?? (editingId ? "Enregistrer" : "Ajouter à la bibliothèque"))}
         </Button>
         {onCancel ? (
-          <Button type="button" onClick={onCancel}>
+          <Button type="button" onClick={onCancel} disabled={busy}>
             Annuler
           </Button>
         ) : null}
