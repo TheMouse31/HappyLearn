@@ -364,21 +364,33 @@ export function TeacherSpaceScreen() {
 
   const showSetupHint = rosterReady && roster.length === 0;
   const showActivityFilters = mode === "eleves" || mode === "seances";
+  const isAdmin = role === "admin";
 
   return (
     <Shell
       brand="Happy Learn"
       stepLabel="Espace enseignant"
-      homeTo="/espace-professeur"
-      backTo="/"
+      homeTo={isAdmin ? "/espace-admin" : "/espace-professeur"}
+      backTo={isAdmin ? "/espace-admin" : "/"}
       extra={
-        <Button
-          onClick={() => {
-            void logout().then(() => navigate("/"));
-          }}
-        >
-          Se déconnecter
-        </Button>
+        <>
+          {isAdmin ? (
+            <Button type="button" onClick={() => navigate("/espace-admin")}>
+              Administration
+            </Button>
+          ) : null}
+          <Button type="button" onClick={() => navigate("/espace-professeur/session")}>
+            Session live
+          </Button>
+          <Button
+            type="button"
+            onClick={() => {
+              void logout().then(() => navigate("/"));
+            }}
+          >
+            Se déconnecter
+          </Button>
+        </>
       }
     >
       <section className="teacher-space suivi-classe">

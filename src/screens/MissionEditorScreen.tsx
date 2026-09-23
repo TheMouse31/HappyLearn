@@ -422,7 +422,22 @@ export function MissionEditorScreen() {
 
   if (mode === "list") {
     return (
-      <Shell brand="Happy Learn" stepLabel="Missions" homeTo="/espace-admin" backTo="/espace-admin">
+      <Shell
+        brand="Happy Learn"
+        stepLabel="Missions"
+        homeTo="/espace-admin"
+        backTo="/espace-admin"
+        extra={
+          <>
+            <Button type="button" onClick={() => navigate("/espace-professeur/session")}>
+              Session live
+            </Button>
+            <Button type="button" onClick={() => navigate("/espace-admin")}>
+              Administration
+            </Button>
+          </>
+        }
+      >
         <section className="mission-studio">
           <header className="mission-studio-hero">
             <div>
@@ -508,6 +523,16 @@ export function MissionEditorScreen() {
         // Nettoyer ?new=1 / ?id= pour un catalogue propre.
         navigate("/espace-admin/missions", { replace: true });
       }}
+      extra={
+        <>
+          <Button type="button" onClick={() => navigate("/espace-professeur/session")}>
+            Session live
+          </Button>
+          <Button type="button" onClick={() => navigate("/espace-admin")}>
+            Administration
+          </Button>
+        </>
+      }
     >
       <section className={`mission-studio is-editing${previewOpen ? " has-preview" : ""}`}>
         <header className="mission-studio-bar">

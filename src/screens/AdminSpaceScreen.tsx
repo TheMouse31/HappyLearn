@@ -144,6 +144,16 @@ export function AdminSpaceScreen() {
               setTab("overview");
             }
       }
+      extra={
+        <>
+          <Button type="button" onClick={() => navigate("/espace-professeur/session")}>
+            Session live
+          </Button>
+          <Button type="button" onClick={() => navigate("/espace-professeur")}>
+            Espace professeur
+          </Button>
+        </>
+      }
     >
       <section className="admin-space">
         <header className="admin-head">

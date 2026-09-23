@@ -200,21 +200,47 @@ export function SessionControlScreen() {
     void endClassSession().finally(() => setBusy(false));
   };
 
+  const isAdmin = role === "admin";
+  const staffHome = isAdmin ? "/espace-admin" : "/espace-professeur";
+
   return (
     <Shell
       brand="Happy Learn"
       stepLabel="Session live"
-      homeTo="/espace-professeur"
-      backTo="/espace-professeur"
+      homeTo={staffHome}
+      backTo={staffHome}
+      extra={
+        isAdmin ? (
+          <>
+            <Button type="button" onClick={() => navigate("/espace-admin")}>
+              Administration
+            </Button>
+            <Button type="button" onClick={() => navigate("/espace-professeur")}>
+              Espace professeur
+            </Button>
+          </>
+        ) : (
+          <Button type="button" onClick={() => navigate("/espace-professeur")}>
+            Espace professeur
+          </Button>
+        )
+      }
     >
       <section className="session-pilot">
         {!current ? (
           <div className="pilot-idle">
             <h1>Pilotage</h1>
             <p className="lead">Crée d’abord une classe dans l’espace professeur.</p>
-            <Button variant="primary" type="button" onClick={() => navigate("/espace-professeur")}>
-              Aller à l’espace professeur
-            </Button>
+            <div className="pilot-idle-actions">
+              <Button variant="primary" type="button" onClick={() => navigate("/espace-professeur")}>
+                Aller à l’espace professeur
+              </Button>
+              {isAdmin ? (
+                <Button type="button" onClick={() => navigate("/espace-admin")}>
+                  Administration
+                </Button>
+              ) : null}
+            </div>
           </div>
         ) : !liveSession ? (
           <div className="pilot-idle">
