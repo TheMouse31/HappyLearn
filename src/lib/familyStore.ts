@@ -21,6 +21,26 @@ const LOCAL_ELEVES_FOYER_KEY = "happy-learn-eleves-foyer";
 const LOCAL_ABONNEMENTS_KEY = "happy-learn-abonnements";
 const LOCAL_PIN_HASH_KEY = "happy-learn-eleves-foyer-pins";
 
+/** Comptes « Essayer en local » : ids non-UUID, forcer le stockage navigateur. */
+function isLocalSubjectId(id: string): boolean {
+  return id.startsWith("local-") || id.startsWith("local-parent-");
+}
+
+function useLocalStore(subjectId?: string | null): boolean {
+  if (!getSupabase()) return true;
+  if (subjectId && isLocalSubjectId(subjectId)) return true;
+  if (subjectId && localFoyerById(subjectId)) return true;
+  return false;
+}
+
+function localFoyerById(foyerId: string): Foyer | undefined {
+  return readJson<Foyer[]>(LOCAL_FOYERS_KEY, []).find((f) => f.id === foyerId);
+}
+
+function localFoyerByCode(code: string): Foyer | undefined {
+  return readJson<Foyer[]>(LOCAL_FOYERS_KEY, []).find((f) => f.code === code.trim().toUpperCase());
+}
+
 function readJson<T>(key: string, fallback: T): T {
   try {
     return JSON.parse(localStorage.getItem(key) ?? "") as T;
@@ -127,8 +147,7 @@ export async function getUserProfileRole(
 }
 
 export async function ensureFoyer(ownerId: string, nom = "Ma famille"): Promise<Foyer> {
-  const client = getSupabase();
-  if (!client) {
+  if (useLocalStore(ownerId)) {
     const foyers = readJson<Foyer[]>(LOCAL_FOYERS_KEY, []);
     const existing = foyers.find((f) => f.ownerId === ownerId);
     if (existing) return existing;
@@ -144,6 +163,7 @@ export async function ensureFoyer(ownerId: string, nom = "Ma famille"): Promise<
     return created;
   }
 
+  const client = getSupabase()!;
   const { data: existing } = await client
     .from("foyers")
     .select("*")
@@ -164,17 +184,16 @@ export async function ensureFoyer(ownerId: string, nom = "Ma famille"): Promise<
 }
 
 export async function getFoyerForOwner(ownerId: string): Promise<Foyer | null> {
-  const client = getSupabase();
-  if (!client) {
+  if (useLocalStore(ownerId)) {
     return readJson<Foyer[]>(LOCAL_FOYERS_KEY, []).find((f) => f.ownerId === ownerId) ?? null;
   }
+  const client = getSupabase()!;
   const { data } = await client.from("foyers").select("*").eq("owner_id", ownerId).maybeSingle();
   return data ? mapFoyer(data as Record<string, unknown>) : null;
 }
 
 export async function regenerateFoyerCode(foyerId: string, ownerId: string): Promise<Foyer | null> {
-  const client = getSupabase();
-  if (!client) {
+  if (useLocalStore(ownerId) || localFoyerById(foyerId)) {
     const foyers = readJson<Foyer[]>(LOCAL_FOYERS_KEY, []);
     const next = foyers.map((f) =>
       f.id === foyerId && f.ownerId === ownerId ? { ...f, code: generateClassCode() } : f,
@@ -182,6 +201,7 @@ export async function regenerateFoyerCode(foyerId: string, ownerId: string): Pro
     writeJson(LOCAL_FOYERS_KEY, next);
     return next.find((f) => f.id === foyerId) ?? null;
   }
+  const client = getSupabase()!;
   for (let i = 0; i < 8; i += 1) {
     const code = generateClassCode();
     const { data, error } = await client
@@ -197,10 +217,10 @@ export async function regenerateFoyerCode(foyerId: string, ownerId: string): Pro
 }
 
 export async function listElevesFoyer(foyerId: string): Promise<EleveFoyer[]> {
-  const client = getSupabase();
-  if (!client) {
+  if (localFoyerById(foyerId) || !getSupabase()) {
     return readJson<EleveFoyer[]>(LOCAL_ELEVES_FOYER_KEY, []).filter((e) => e.foyerId === foyerId);
   }
+  const client = getSupabase()!;
   const { data, error } = await client
     .from("eleves_foyer")
     .select("id, foyer_id, prenom, nom, niveau, created_at")
@@ -212,13 +232,13 @@ export async function listElevesFoyer(foyerId: string): Promise<EleveFoyer[]> {
 
 export async function listElevesByFoyerCode(code: string): Promise<{ foyer: Foyer; eleves: EleveFoyer[] } | null> {
   const normalized = code.trim().toUpperCase();
-  const client = getSupabase();
-  if (!client) {
-    const foyer = readJson<Foyer[]>(LOCAL_FOYERS_KEY, []).find((f) => f.code === normalized);
-    if (!foyer) return null;
-    const eleves = await listElevesFoyer(foyer.id);
-    return { foyer, eleves };
+  const local = localFoyerByCode(normalized);
+  if (local) {
+    const eleves = await listElevesFoyer(local.id);
+    return { foyer: local, eleves };
   }
+  const client = getSupabase();
+  if (!client) return null;
   const { data: foyerRow } = await client
     .from("foyers")
     .select("*")
@@ -245,8 +265,7 @@ export async function addEleveFoyer(
   if (!cleanPrenom) return "Indique un prénom.";
   if (!/^\d{4}$/.test(pin.trim())) return "Le code PIN doit contenir 4 chiffres.";
 
-  const client = getSupabase();
-  if (!client) {
+  if (localFoyerById(foyerId) || !getSupabase()) {
     const id = newId();
     const pinHash = await hashChildPin(pin, id);
     const created: EleveFoyer = {
@@ -266,6 +285,7 @@ export async function addEleveFoyer(
     return created;
   }
 
+  const client = getSupabase()!;
   const { data, error } = await client
     .from("eleves_foyer")
     .insert({
@@ -287,20 +307,20 @@ export async function addEleveFoyer(
 export async function updateEleveFoyerPin(eleveId: string, pin: string): Promise<string | null> {
   if (!/^\d{4}$/.test(pin.trim())) return "Le code PIN doit contenir 4 chiffres.";
   const pinHash = await hashChildPin(pin, eleveId);
-  const client = getSupabase();
-  if (!client) {
+  const localEleve = readJson<EleveFoyer[]>(LOCAL_ELEVES_FOYER_KEY, []).find((e) => e.id === eleveId);
+  if (localEleve || !getSupabase()) {
     const pins = readJson<Record<string, string>>(LOCAL_PIN_HASH_KEY, {});
     pins[eleveId] = pinHash;
     writeJson(LOCAL_PIN_HASH_KEY, pins);
     return null;
   }
-  const { error } = await client.from("eleves_foyer").update({ pin_hash: pinHash }).eq("id", eleveId);
+  const { error } = await getSupabase()!.from("eleves_foyer").update({ pin_hash: pinHash }).eq("id", eleveId);
   return error?.message ?? null;
 }
 
 export async function removeEleveFoyer(eleveId: string): Promise<void> {
-  const client = getSupabase();
-  if (!client) {
+  const localEleve = readJson<EleveFoyer[]>(LOCAL_ELEVES_FOYER_KEY, []).find((e) => e.id === eleveId);
+  if (localEleve || !getSupabase()) {
     writeJson(
       LOCAL_ELEVES_FOYER_KEY,
       readJson<EleveFoyer[]>(LOCAL_ELEVES_FOYER_KEY, []).filter((e) => e.id !== eleveId),
@@ -310,23 +330,23 @@ export async function removeEleveFoyer(eleveId: string): Promise<void> {
     writeJson(LOCAL_PIN_HASH_KEY, pins);
     return;
   }
-  await client.from("eleves_foyer").delete().eq("id", eleveId);
+  await getSupabase()!.from("eleves_foyer").delete().eq("id", eleveId);
 }
 
 export async function verifyEleveFoyerPin(
   eleveId: string,
   pin: string,
 ): Promise<EleveFoyer | null> {
-  const client = getSupabase();
-  if (!client) {
+  const localEleve = readJson<EleveFoyer[]>(LOCAL_ELEVES_FOYER_KEY, []).find((e) => e.id === eleveId);
+  if (localEleve || !getSupabase()) {
     const pins = readJson<Record<string, string>>(LOCAL_PIN_HASH_KEY, {});
     const expected = pins[eleveId];
     if (!expected) return null;
     const actual = await hashChildPin(pin, eleveId);
     if (actual !== expected) return null;
-    return readJson<EleveFoyer[]>(LOCAL_ELEVES_FOYER_KEY, []).find((e) => e.id === eleveId) ?? null;
+    return localEleve ?? null;
   }
-  const { data, error } = await client.rpc("verify_eleve_foyer_pin", {
+  const { data, error } = await getSupabase()!.rpc("verify_eleve_foyer_pin", {
     p_eleve_id: eleveId,
     p_pin: pin.trim(),
   });
@@ -338,14 +358,14 @@ export async function getAbonnement(
   subjectType: AbonnementSubjectType,
   subjectId: string,
 ): Promise<Abonnement | null> {
-  const client = getSupabase();
-  if (!client) {
+  if (useLocalStore(subjectId)) {
     return (
       readJson<Abonnement[]>(LOCAL_ABONNEMENTS_KEY, []).find(
         (a) => a.subjectType === subjectType && a.subjectId === subjectId,
       ) ?? null
     );
   }
+  const client = getSupabase()!;
   const { data } = await client
     .from("abonnements")
     .select("*")
@@ -367,8 +387,7 @@ export async function upsertAbonnement(input: {
   stripeSubscriptionId?: string | null;
 }): Promise<Abonnement> {
   const now = new Date().toISOString();
-  const client = getSupabase();
-  if (!client) {
+  if (useLocalStore(input.subjectId) || input.source === "local") {
     const list = readJson<Abonnement[]>(LOCAL_ABONNEMENTS_KEY, []);
     const idx = list.findIndex(
       (a) => a.subjectType === input.subjectType && a.subjectId === input.subjectId,
@@ -394,6 +413,7 @@ export async function upsertAbonnement(input: {
     return base;
   }
 
+  const client = getSupabase()!;
   const { data, error } = await client
     .from("abonnements")
     .upsert(
@@ -522,8 +542,7 @@ export async function createPortalSession(params: {
 }
 
 export async function listSessionsByFoyerId(foyerId: string): Promise<ChildSession[]> {
-  const client = getSupabase();
-  if (!client) {
+  if (localFoyerById(foyerId) || !getSupabase()) {
     try {
       const sessions = JSON.parse(localStorage.getItem("mission-maths-sessions") ?? "[]") as ChildSession[];
       return sessions.filter((s) => s.foyerId === foyerId);
@@ -531,6 +550,7 @@ export async function listSessionsByFoyerId(foyerId: string): Promise<ChildSessi
       return [];
     }
   }
+  const client = getSupabase()!;
   const { data, error } = await client
     .from("sessions_enfant")
     .select(

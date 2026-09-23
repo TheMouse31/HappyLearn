@@ -167,6 +167,24 @@ export function TeacherLoginScreen() {
                   Continuer avec Google
                 </Button>
               ) : null}
+              {hasServer ? (
+                <Button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => {
+                    setBusy(true);
+                    setError("");
+                    setInfo("");
+                    void loginTeacherLocal(email).then((message) => {
+                      setBusy(false);
+                      if (message) setError(message);
+                      else navigate("/espace-professeur");
+                    });
+                  }}
+                >
+                  Essayer en local (cet appareil)
+                </Button>
+              ) : null}
               <Link className="text-link" to="/">
                 Accueil du site
               </Link>

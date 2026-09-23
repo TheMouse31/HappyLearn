@@ -314,6 +314,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setCollection(saved);
       if (restored) {
         const { account, role: accountRole, foyer: restoredFoyer, abonnement: restoredSub } = restored;
+        const effectiveStore =
+          account.backend === "local" || account.id.startsWith("local-") ? localPersistence : store;
+        if (effectiveStore !== store) setPersistence(effectiveStore);
         setTeacher(account);
         setFoyer(restoredFoyer);
         setAbonnement(restoredSub);
@@ -322,10 +325,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           setClasses([]);
           setActiveClassIdState(null);
         } else {
-          let list = await store.listClasses(account.id);
+          let list = await effectiveStore.listClasses(account.id);
           if (cancelled) return;
           if (list.length === 0) {
-            const created = await store.createClass(account.id, "Ma classe");
+            const created = await effectiveStore.createClass(account.id, "Ma classe");
             list = [created];
           }
           setClasses(list);
@@ -336,10 +339,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           setActiveClassIdState(validActive);
           if (validActive) saveActiveClassId(validActive);
           if (validActive) {
-            const active = await store.getActiveClassSession(validActive);
+            const active = await effectiveStore.getActiveClassSession(validActive);
             if (!cancelled && active) {
               setLiveSession(active);
-              const parts = await store.listParticipants(active.id);
+              const parts = await effectiveStore.listParticipants(active.id);
               if (!cancelled) setLiveParticipants(parts);
             }
           }
@@ -923,29 +926,35 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       },
       loginTeacherLocal: async (email) => {
         if (!isEmail(email)) return "Indique un e-mail valide pour retrouver cet espace sur l’appareil.";
-        const normalized = email.trim().toLowerCase();
-        const account: TeacherAccount = {
-          id: `local-${normalized}`,
-          email: normalized,
-          backend: "local",
-          isAdmin: isAdminEmail(normalized),
-          accountRole: isAdminEmail(normalized) ? "admin" : "enseignant",
-        };
-        saveLocalTeacher(account);
-        const store = persistence ?? localPersistence;
-        let list = await store.listClasses(account.id);
-        if (list.length === 0) {
-          const created = await store.createClass(account.id, "Ma classe");
-          list = [created];
+        try {
+          const normalized = email.trim().toLowerCase();
+          const account: TeacherAccount = {
+            id: `local-${normalized}`,
+            email: normalized,
+            backend: "local",
+            isAdmin: isAdminEmail(normalized),
+            accountRole: isAdminEmail(normalized) ? "admin" : "enseignant",
+          };
+          saveLocalTeacher(account);
+          // Toujours le store navigateur pour les ids local-* (même si Supabase est branché).
+          const store = localPersistence;
+          setPersistence(store);
+          let list = await store.listClasses(account.id);
+          if (list.length === 0) {
+            const created = await store.createClass(account.id, "Ma classe");
+            list = [created];
+          }
+          setTeacher(account);
+          setClasses(list);
+          setFoyer(null);
+          setAbonnement(await getAbonnement("enseignant", account.id));
+          setActiveClassIdState(list[0]?.id ?? null);
+          if (list[0]) saveActiveClassId(list[0].id);
+          setRole(account.isAdmin ? "admin" : "enseignant");
+          return null;
+        } catch (err) {
+          return err instanceof Error ? err.message : "Impossible d’ouvrir l’espace local.";
         }
-        setTeacher(account);
-        setClasses(list);
-        setFoyer(null);
-        setAbonnement(await getAbonnement("enseignant", account.id));
-        setActiveClassIdState(list[0]?.id ?? null);
-        if (list[0]) saveActiveClassId(list[0].id);
-        setRole(account.isAdmin ? "admin" : "enseignant");
-        return null;
       },
       loginTeacherGoogle: async () => {
         const client = getSupabase();
@@ -1014,21 +1023,25 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       },
       loginParentLocal: async (email) => {
         if (!isEmail(email)) return "Indique un e-mail valide.";
-        const normalized = email.trim().toLowerCase();
-        const account: TeacherAccount = {
-          id: `local-parent-${normalized}`,
-          email: normalized,
-          backend: "local",
-          accountRole: "parent",
-        };
-        saveLocalTeacher(account);
-        const createdFoyer = await ensureFoyer(account.id);
-        setTeacher(account);
-        setFoyer(createdFoyer);
-        setAbonnement(await getAbonnement("foyer", createdFoyer.id));
-        setClasses([]);
-        setRole("parent");
-        return null;
+        try {
+          const normalized = email.trim().toLowerCase();
+          const account: TeacherAccount = {
+            id: `local-parent-${normalized}`,
+            email: normalized,
+            backend: "local",
+            accountRole: "parent",
+          };
+          saveLocalTeacher(account);
+          const createdFoyer = await ensureFoyer(account.id);
+          setTeacher(account);
+          setFoyer(createdFoyer);
+          setAbonnement(await getAbonnement("foyer", createdFoyer.id));
+          setClasses([]);
+          setRole("parent");
+          return null;
+        } catch (err) {
+          return err instanceof Error ? err.message : "Impossible d’ouvrir le foyer local.";
+        }
       },
       loginEleveFoyer: async (childId, pin) => {
         const child = await verifyEleveFoyerPin(childId, pin);

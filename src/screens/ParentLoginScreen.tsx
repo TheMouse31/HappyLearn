@@ -140,6 +140,23 @@ export function ParentLoginScreen() {
                   Continuer avec Google
                 </Button>
               ) : null}
+              {hasServer ? (
+                <Button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => {
+                    setBusy(true);
+                    setError("");
+                    void loginParentLocal(email).then((message) => {
+                      setBusy(false);
+                      if (message) setError(message);
+                      else navigate("/espace-parent");
+                    });
+                  }}
+                >
+                  Essayer en local (cet appareil)
+                </Button>
+              ) : null}
               <Link className="text-link" to="/">
                 Accueil du site
               </Link>
