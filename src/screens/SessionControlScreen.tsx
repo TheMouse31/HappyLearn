@@ -175,10 +175,7 @@ export function SessionControlScreen() {
   const handsUp = presenceRows.filter((row) => row.participant?.handRaised).length;
   const activityActive = Boolean(liveSession?.missionId);
   const canLaunchMission =
-    !busy &&
-    Boolean(missionId) &&
-    missions.length > 0 &&
-    missions.some((m) => m.id === missionId && (m.available || m.source === "builtin"));
+    !busy && Boolean(missionId) && missions.some((m) => m.id === missionId);
 
   const launchSession = () => {
     if (!current) return;
