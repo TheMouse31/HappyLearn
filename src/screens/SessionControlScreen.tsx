@@ -4,6 +4,7 @@ import { Button } from "../components/Button";
 import { Shell } from "../components/Shell";
 import { GRADES, SUBJECTS, gradeLabel, subjectLabel } from "../data/catalog";
 import { listResolvedMissions } from "../data/missions";
+import { listBuiltinMissions } from "../data/missions/catalog";
 import type { ClassStudent, GradeLevel, MissionDef, PlayMode, SubjectSlug } from "../data/types";
 import { formatStudentName } from "../data/types";
 import { useSession } from "../lib/session";
@@ -68,7 +69,9 @@ export function SessionControlScreen() {
   useEffect(() => {
     let cancelled = false;
     void listResolvedMissions(grade, subject).then((rows) => {
-      if (!cancelled) setMissions(rows);
+      if (cancelled) return;
+      // Si le catalogue distant a tout dépublié, retomber sur le catalogue embarqué pour le pilotage.
+      setMissions(rows.length > 0 ? rows : listBuiltinMissions(grade, subject));
     });
     return () => {
       cancelled = true;
@@ -173,8 +176,9 @@ export function SessionControlScreen() {
   const activityActive = Boolean(liveSession?.missionId);
   const canLaunchMission =
     !busy &&
+    Boolean(missionId) &&
     missions.length > 0 &&
-    missions.some((m) => m.id === missionId && m.available);
+    missions.some((m) => m.id === missionId && (m.available || m.source === "builtin"));
 
   const launchSession = () => {
     if (!current) return;
