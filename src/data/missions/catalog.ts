@@ -275,8 +275,8 @@ export async function fetchRemoteMissions(filters?: {
   if (!filters?.includeDrafts) query = query.eq("available", true);
   const { data, error } = await query;
   if (error || !data) return local;
-  const remote = data
-    .filter(isMissionRow)
+  const rows = (data as unknown[]).filter(isMissionRow);
+  const remote = rows
     .map((row) => mapRemoteMission(row))
     .filter((item): item is MissionDef => item !== null);
   return mergeMissions(remote, local);
@@ -293,8 +293,10 @@ export async function resolveMission(id: string | null | undefined): Promise<Mis
     .select(MISSION_SELECT)
     .eq("id", id)
     .maybeSingle();
-  if (error || !data || !isMissionRow(data)) return local ?? builtin;
-  const remote = mapRemoteMission(data);
+  if (error || !data) return local ?? builtin;
+  const row = data as unknown;
+  if (!isMissionRow(row)) return local ?? builtin;
+  const remote = mapRemoteMission(row);
   return remote ?? local ?? builtin;
 }
 
