@@ -38,6 +38,7 @@ import {
 } from "./localKeys";
 import { createPersistence, localPersistence, type Persistence } from "./persistence";
 import { canUseRealtime, subscribeClasseSession, subscribeSessionParticipants } from "./realtime";
+import { agentDebugLog } from "./agentDebugLog";
 import { isAdminEmail } from "./admins";
 import { getSupabase } from "./supabase";
 
@@ -328,6 +329,19 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     const refreshSession = () => {
       void persistence.getClasseSessionById(sessionIdLive).then((next) => {
         if (!next || next.statut === "fermee") {
+          // #region agent log
+          agentDebugLog({
+            hypothesisId: "A",
+            location: "session.tsx:realtime.refreshSession",
+            message: "Realtime/poll cleared liveSession",
+            data: {
+              sessionIdLive,
+              nextFound: Boolean(next),
+              nextStatut: next?.statut ?? null,
+              backend: persistence.backend,
+            },
+          });
+          // #endregion
           setLiveSession(null);
           setLiveParticipant(null);
           setLiveParticipants([]);
@@ -601,7 +615,34 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       },
       launchClassSession: async (classId) => {
         const store = persistence ?? localPersistence;
+        // #region agent log
+        agentDebugLog({
+          hypothesisId: "A,D",
+          location: "session.tsx:launchClassSession",
+          message: "launchClassSession enter",
+          data: {
+            classId,
+            backend: store.backend,
+            role,
+            activeClassId,
+            teacherId: teacher?.id ?? null,
+          },
+        });
+        // #endregion
         const created = await store.openClassSession(classId);
+        // #region agent log
+        agentDebugLog({
+          hypothesisId: "A,D",
+          location: "session.tsx:launchClassSession",
+          message: "launchClassSession after open",
+          data: {
+            classId,
+            createdId: created?.id ?? null,
+            createdCode: created?.code ?? null,
+            createdClassId: created?.classId ?? null,
+          },
+        });
+        // #endregion
         setLiveSession(created);
         setLiveParticipants([]);
         return created;
@@ -617,6 +658,20 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         const store = persistence ?? localPersistence;
         if (role === "enseignant" && activeClassId) {
           const active = await store.getActiveClassSession(activeClassId);
+          // #region agent log
+          agentDebugLog({
+            hypothesisId: "A,B",
+            location: "session.tsx:refreshLiveSession:enseignant",
+            message: "Teacher refresh path",
+            data: {
+              role,
+              activeClassId,
+              activeId: active?.id ?? null,
+              activeCode: active?.code ?? null,
+              activeStatut: active?.statut ?? null,
+            },
+          });
+          // #endregion
           setLiveSession((prev) => {
             if (!active && !prev) return prev;
             if (
@@ -633,6 +688,18 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             ) {
               return prev;
             }
+            // #region agent log
+            agentDebugLog({
+              hypothesisId: "A,B",
+              location: "session.tsx:refreshLiveSession:setLiveSession",
+              message: "Replacing liveSession from teacher refresh",
+              data: {
+                prevId: prev?.id ?? null,
+                nextId: active?.id ?? null,
+                cleared: !active && Boolean(prev),
+              },
+            });
+            // #endregion
             return active;
           });
           if (active) {
@@ -643,6 +710,19 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           }
           return;
         }
+        // #region agent log
+        agentDebugLog({
+          hypothesisId: "B",
+          location: "session.tsx:refreshLiveSession:non-enseignant",
+          message: "Skipped teacher refresh branch",
+          data: {
+            role,
+            activeClassId,
+            hasLiveSession: Boolean(liveSession),
+            liveSessionId: liveSession?.id ?? null,
+          },
+        });
+        // #endregion
         if (liveSession) {
           const next = await store.getClasseSessionById(liveSession.id);
           setLiveSession(next && next.statut === "ouverte" ? next : null);
