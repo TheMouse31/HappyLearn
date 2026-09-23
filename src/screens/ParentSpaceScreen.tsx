@@ -28,6 +28,7 @@ export function ParentSpaceScreen() {
     abonnement,
     premiumActive,
     refreshAbonnement,
+    setFoyerState,
     logout,
   } = useSession();
   const [eleves, setEleves] = useState<EleveFoyer[]>([]);
@@ -113,6 +114,7 @@ export function ParentSpaceScreen() {
                     setBusy(false);
                     if (next) {
                       setFoyerCode(next.code);
+                      setFoyerState(next);
                       setInfo("Nouveau code foyer généré.");
                     }
                   });

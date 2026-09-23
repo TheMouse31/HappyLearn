@@ -77,22 +77,31 @@ export async function ensureUserProfile(
   role: "parent" | "enseignant" | "admin",
   displayName: string,
   email?: string,
-): Promise<void> {
+): Promise<"parent" | "enseignant" | "admin"> {
   const client = getSupabase();
-  if (!client) return;
+  if (!client) return role;
+  const existing = await getUserProfileRole(userId);
+  // Ne pas écraser un rôle déjà fixé (sauf promotion admin).
+  const effective =
+    existing && !(role === "admin" && existing !== "admin") && existing !== role
+      ? existing
+      : existing === "admin"
+        ? "admin"
+        : role;
   await client.from("profils_utilisateurs").upsert({
     user_id: userId,
-    role,
+    role: effective,
     display_name: displayName,
     email: email?.trim().toLowerCase() || null,
   });
-  if (role === "enseignant" || role === "admin") {
+  if (effective === "enseignant" || effective === "admin") {
     await client.from("profils_enseignants").upsert({
       user_id: userId,
       display_name: displayName,
-      ...(role === "admin" ? { is_admin: true } : {}),
+      ...(effective === "admin" ? { is_admin: true } : {}),
     });
   }
+  return effective;
 }
 
 export async function getUserProfileRole(
@@ -425,8 +434,31 @@ export async function findUserIdByEmail(email: string): Promise<{ id: string; ro
   const cleaned = email.trim().toLowerCase();
   const client = getSupabase();
   if (!client) {
-    const id = `local-${cleaned}`;
-    return { id, role: "enseignant" };
+    const parentId = `local-parent-${cleaned}`;
+    const teacherId = `local-${cleaned}`;
+    const foyers = readJson<Foyer[]>(LOCAL_FOYERS_KEY, []);
+    if (foyers.some((f) => f.ownerId === parentId)) {
+      return { id: parentId, role: "parent" };
+    }
+    try {
+      const raw = JSON.parse(localStorage.getItem("mission-maths-teacher") ?? "null") as {
+        id?: string;
+        email?: string;
+        accountRole?: string;
+      } | null;
+      if (raw?.email?.toLowerCase() === cleaned && raw.id) {
+        return {
+          id: raw.id,
+          role: raw.accountRole === "parent" ? "parent" : raw.accountRole === "admin" ? "admin" : "enseignant",
+        };
+      }
+    } catch {
+      /* ignore */
+    }
+    if (foyers.some((f) => f.ownerId === teacherId)) {
+      return { id: teacherId, role: "enseignant" };
+    }
+    return { id: teacherId, role: "enseignant" };
   }
   const { data } = await client
     .from("profils_utilisateurs")

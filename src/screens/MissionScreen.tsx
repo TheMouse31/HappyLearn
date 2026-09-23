@@ -327,7 +327,7 @@ export function MissionScreen() {
       stepLabel={`Mission ${copy.title}`}
       confirmLeaveMission={!lockedSession}
       homeTo={lockedSession ? "/salle-attente" : "/accueil"}
-      backTo={lockedSession ? undefined : "/pret"}
+      backTo={lockedSession ? undefined : hostMode ? "/espace-professeur/session" : "/pret"}
       extra={
         lockedSession ? (
           liveParticipant ? (
@@ -345,9 +345,14 @@ export function MissionScreen() {
         ) : (
           <Button
             onClick={() => {
-              const ok = window.confirm("Quitter la mission et revenir à l’accueil ?");
+              const dest = hostMode ? "/espace-professeur/session" : "/accueil";
+              const ok = window.confirm(
+                hostMode
+                  ? "Quitter la projection et revenir au pilotage ?"
+                  : "Quitter la mission et revenir à l’accueil ?",
+              );
               if (!ok) return;
-              void quitMission().then(() => navigate("/accueil"));
+              void quitMission().then(() => navigate(dest));
             }}
           >
             Quitter

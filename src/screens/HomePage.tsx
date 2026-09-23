@@ -6,9 +6,21 @@ import { useSkin } from "../lib/useSkin";
 
 function ClassicHomeBody() {
   const navigate = useNavigate();
-  const { role, logout } = useSession();
+  const { role, premiumActive, logout } = useSession();
   const continueTo =
-    role === "eleve" ? "/accueil" : role === "enseignant" ? "/espace-professeur" : null;
+    role === "eleve"
+      ? "/accueil"
+      : role === "parent"
+        ? premiumActive
+          ? "/espace-parent"
+          : "/abonnement"
+        : role === "enseignant"
+          ? premiumActive
+            ? "/espace-professeur"
+            : "/abonnement"
+          : role === "admin"
+            ? "/espace-admin"
+            : null;
 
   return (
     <>
@@ -41,6 +53,10 @@ function ClassicHomeBody() {
                 <span className="role-card-label">Je suis un élève</span>
                 <span className="role-card-hint">Prénom · école ou maison · pas d’e-mail</span>
               </Link>
+              <Link className="role-card" to="/connexion/parent">
+                <span className="role-card-label">Je suis parent</span>
+                <span className="role-card-hint">Foyer · enfants · abonnement</span>
+              </Link>
               <Link className="role-card role-card-teacher" to="/connexion/enseignant">
                 <span className="role-card-label">Je suis professeur</span>
                 <span className="role-card-hint">E-mail · classes · suivi des élèves</span>
@@ -59,15 +75,15 @@ function ClassicHomeBody() {
         <ol className="how-steps">
           <li>
             <strong>Choisis qui tu es</strong>
-            <span>Élève avec un prénom, ou professeur avec un e-mail.</span>
+            <span>Élève, parent à la maison, ou professeur à l’école.</span>
           </li>
           <li>
             <strong>Pars en mission avec Néo</strong>
             <span>Univers, indices et progression à ton rythme.</span>
           </li>
           <li>
-            <strong>Le prof suit la classe</strong>
-            <span>Code classe, séances et réussites — sans classement.</span>
+            <strong>Le prof ou le parent suit</strong>
+            <span>Sessions live, foyer maison et réussites — sans classement.</span>
           </li>
         </ol>
       </section>
@@ -77,9 +93,21 @@ function ClassicHomeBody() {
 
 function NewFrontHomeBody() {
   const navigate = useNavigate();
-  const { role, logout } = useSession();
+  const { role, premiumActive, logout } = useSession();
   const continueTo =
-    role === "eleve" ? "/accueil" : role === "enseignant" ? "/espace-professeur" : null;
+    role === "eleve"
+      ? "/accueil"
+      : role === "parent"
+        ? premiumActive
+          ? "/espace-parent"
+          : "/abonnement"
+        : role === "enseignant"
+          ? premiumActive
+            ? "/espace-professeur"
+            : "/abonnement"
+          : role === "admin"
+            ? "/espace-admin"
+            : null;
 
   return (
     <div className="hl-home">
@@ -111,6 +139,9 @@ function NewFrontHomeBody() {
               <Link className="primary hl-cta" to="/connexion/eleve">
                 Je suis élève
               </Link>
+              <Link className="ghost-btn hl-cta-secondary" to="/connexion/parent">
+                Je suis parent
+              </Link>
               <Link className="ghost-btn hl-cta-secondary" to="/connexion/enseignant">
                 Je suis professeur
               </Link>
@@ -135,7 +166,7 @@ function NewFrontHomeBody() {
               1
             </span>
             <strong>Choisis ton rôle</strong>
-            <span>Élève avec un prénom, ou professeur avec un e-mail.</span>
+            <span>Élève, parent à la maison, ou professeur à l’école.</span>
           </li>
           <li>
             <span className="hl-how-num" aria-hidden="true">
@@ -148,8 +179,8 @@ function NewFrontHomeBody() {
             <span className="hl-how-num" aria-hidden="true">
               3
             </span>
-            <strong>Le prof pilote</strong>
-            <span>Session live, suivi et programme — sans classement.</span>
+            <strong>Suivi famille ou classe</strong>
+            <span>Session live, foyer maison et programme — sans classement.</span>
           </li>
         </ol>
       </section>

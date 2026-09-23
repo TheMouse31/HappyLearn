@@ -34,6 +34,58 @@ export function clearPrenom(): void {
   localStorage.removeItem(PRENOM_KEY);
 }
 
+const FOYER_CHILD_KEY = "happy-learn-foyer-child";
+const HOST_MODE_KEY = "happy-learn-host-mode";
+
+export type SavedFoyerChild = {
+  eleveFoyerId: string;
+  foyerId: string;
+  prenom: string;
+  nom: string;
+  niveau?: string | null;
+};
+
+export function loadFoyerChild(): SavedFoyerChild | null {
+  try {
+    const raw = JSON.parse(localStorage.getItem(FOYER_CHILD_KEY) ?? "null") as unknown;
+    if (!raw || typeof raw !== "object") return null;
+    const row = raw as Partial<SavedFoyerChild>;
+    if (
+      typeof row.eleveFoyerId !== "string" ||
+      typeof row.foyerId !== "string" ||
+      typeof row.prenom !== "string"
+    ) {
+      return null;
+    }
+    return {
+      eleveFoyerId: row.eleveFoyerId,
+      foyerId: row.foyerId,
+      prenom: row.prenom,
+      nom: typeof row.nom === "string" ? row.nom : "",
+      niveau: typeof row.niveau === "string" ? row.niveau : null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function saveFoyerChild(child: SavedFoyerChild): void {
+  localStorage.setItem(FOYER_CHILD_KEY, JSON.stringify(child));
+}
+
+export function clearFoyerChild(): void {
+  localStorage.removeItem(FOYER_CHILD_KEY);
+}
+
+export function loadHostMode(): boolean {
+  return sessionStorage.getItem(HOST_MODE_KEY) === "1";
+}
+
+export function saveHostMode(active: boolean): void {
+  if (active) sessionStorage.setItem(HOST_MODE_KEY, "1");
+  else sessionStorage.removeItem(HOST_MODE_KEY);
+}
+
 export function loadClassCode(): string {
   return localStorage.getItem(CLASS_CODE_KEY) ?? "";
 }

@@ -22,18 +22,23 @@ import { isValidClassCode, normalizeClassCode } from "./classCode";
 import { teacherAuthMessage, isEmail } from "./authMessages";
 import {
   clearCourse,
+  clearFoyerChild,
   clearLocalTeacher,
   clearPrenom,
   loadActiveClassId,
   loadClassCode,
   loadCourseGrade,
   loadCourseSubject,
+  loadFoyerChild,
+  loadHostMode,
   loadLiveParticipant,
   loadLocalTeacher,
   loadPrenom,
   saveActiveClassId,
   saveClassCode,
   saveCourse,
+  saveFoyerChild,
+  saveHostMode,
   saveLiveParticipant,
   saveLocalTeacher,
   savePrenom,
@@ -147,6 +152,8 @@ type SessionState = {
   loginParentGoogle: () => Promise<string | null>;
   loginParentLocal: (email: string) => Promise<string | null>;
   refreshAbonnement: () => Promise<void>;
+  /** Met à jour le foyer en mémoire (ex. après régénération du code). */
+  setFoyerState: (next: Foyer | null) => void;
   startHostMission: (params: {
     niveau: GradeLevel;
     matiere: SubjectSlug;
@@ -204,7 +211,12 @@ async function restoreAdult(): Promise<{
         else role = admin ? "admin" : "enseignant";
       }
       if (admin) role = "admin";
-      await ensureUserProfile(user.id, role, user.email.split("@")[0] ?? user.email, user.email);
+      role = await ensureUserProfile(
+        user.id,
+        role,
+        user.email.split("@")[0] ?? user.email,
+        user.email,
+      );
       const account: TeacherAccount = {
         id: user.id,
         email: user.email,
@@ -335,11 +347,24 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       } else {
         const savedPrenom = loadPrenom();
         const savedCode = loadClassCode();
+        const savedFoyerChild = loadFoyerChild();
         setPrenomState(savedPrenom);
         setClassCode(savedCode);
         setGrade(loadCourseGrade());
         setSubject(loadCourseSubject());
-        if (savedPrenom) setRole("eleve");
+        if (savedFoyerChild) {
+          setPrenomState(savedFoyerChild.prenom);
+          setNom(savedFoyerChild.nom);
+          setEleveFoyerId(savedFoyerChild.eleveFoyerId);
+          setFoyerId(savedFoyerChild.foyerId);
+          if (savedFoyerChild.niveau && isGradeLevel(savedFoyerChild.niveau)) {
+            setGrade(savedFoyerChild.niveau);
+          }
+          setRole("eleve");
+        } else if (savedPrenom) {
+          setRole("eleve");
+        }
+        if (loadHostMode()) setHostMode(true);
 
         const savedLive = loadLiveParticipant();
         if (savedLive) {
@@ -852,13 +877,21 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             : "Connexion incomplète. Réessaie.";
         }
         const admin = isAdminEmail(user.email);
-        const accountRole = admin ? "admin" : "enseignant";
-        await ensureUserProfile(user.id, accountRole, user.email.split("@")[0] ?? user.email, user.email);
+        const requestedRole = admin ? "admin" : "enseignant";
+        const accountRole = await ensureUserProfile(
+          user.id,
+          requestedRole,
+          user.email.split("@")[0] ?? user.email,
+          user.email,
+        );
+        if (accountRole === "parent") {
+          return "Ce compte est déjà un compte parent. Utilise la connexion parent.";
+        }
         const account: TeacherAccount = {
           id: user.id,
           email: user.email,
           backend: "supabase",
-          isAdmin: admin,
+          isAdmin: accountRole === "admin",
           accountRole,
         };
         const store = persistence ?? (await createPersistence());
@@ -944,7 +977,15 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             ? "Compte créé. Confirme l’e-mail reçu, puis reconnecte-toi."
             : "Connexion incomplète. Réessaie.";
         }
-        await ensureUserProfile(user.id, "parent", user.email.split("@")[0] ?? user.email, user.email);
+        const accountRole = await ensureUserProfile(
+          user.id,
+          "parent",
+          user.email.split("@")[0] ?? user.email,
+          user.email,
+        );
+        if (accountRole !== "parent") {
+          return "Ce compte est déjà un compte professeur. Utilise la connexion enseignant.";
+        }
         const account: TeacherAccount = {
           id: user.id,
           email: user.email,
@@ -997,6 +1038,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         savePrenom(child.prenom);
         setEleveFoyerId(child.id);
         setFoyerId(child.foyerId);
+        saveFoyerChild({
+          eleveFoyerId: child.id,
+          foyerId: child.foyerId,
+          prenom: child.prenom,
+          nom: child.nom,
+          niveau: child.niveau,
+        });
         setEleveId(null);
         setLiveSession(null);
         setLiveParticipant(null);
@@ -1012,15 +1060,20 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           setAbonnement(await getAbonnement("enseignant", teacher.id));
         }
       },
+      setFoyerState: (next) => {
+        setFoyer(next);
+      },
       startHostMission: async (params) => {
         if (!persistence || !teacher) return;
         setHostMode(true);
+        saveHostMode(true);
         setGrade(params.niveau);
         setSubject(params.matiere);
         setMissionId(params.missionId);
         setMode(params.mode);
         setUniverse(params.universe);
         setPrenomState("Tableau");
+        // Projection tableau : pas de broadcast élèves (écran prof seul).
         const id = await persistence.startSession("Tableau", params.universe, params.mode, null, {
           grade: params.niveau,
           subject: params.matiere,
@@ -1031,15 +1084,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         });
         setSessionId(id);
         setRewardPending(false);
-        if (liveSession) {
-          await persistence.setSessionActivity(liveSession.id, {
-            niveau: params.niveau,
-            matiere: params.matiere,
-            missionId: params.missionId,
-            mode: params.mode,
-            univers: null,
-          });
-        }
       },
       logout: async () => {
         const store = persistence ?? localPersistence;
@@ -1048,7 +1092,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         if (client) await client.auth.signOut();
         clearLocalTeacher();
         clearPrenom();
+        clearFoyerChild();
         clearCourse();
+        saveHostMode(false);
         saveClassCode("");
         saveActiveClassId(null);
         saveLiveParticipant(null);
@@ -1178,6 +1224,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         }
         setSessionId(null);
         setRewardPending(false);
+        setHostMode(false);
+        saveHostMode(false);
       },
       resetToHome: () => {
         setUniverse(null);

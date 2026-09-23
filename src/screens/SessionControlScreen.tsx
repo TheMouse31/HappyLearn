@@ -235,6 +235,105 @@ export function SessionControlScreen() {
                 {busy ? "Ouverture…" : "Ouvrir la session"}
               </Button>
             </div>
+
+            <section className="pilot-pane pilot-mission" aria-label="Projection tableau" style={{ marginTop: "1.5rem" }}>
+              <div className="pilot-pane-head">
+                <h2>Sans élèves connectés</h2>
+              </div>
+              <p className="pilot-hint">
+                Anime la mission au tableau (projection professeur). Aucun élève n’est requis.
+              </p>
+              <div className="pilot-fields">
+                <div className="field">
+                  <label htmlFor="host-niveau">Niveau</label>
+                  <select
+                    id="host-niveau"
+                    value={grade}
+                    onChange={(event) => setGrade(event.target.value as GradeLevel)}
+                  >
+                    {GRADES.map((item) => (
+                      <option key={item.slug} value={item.slug}>
+                        {item.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="field">
+                  <label htmlFor="host-matiere">Matière</label>
+                  <select
+                    id="host-matiere"
+                    value={subject}
+                    onChange={(event) => setSubject(event.target.value as SubjectSlug)}
+                  >
+                    {SUBJECTS.map((item) => (
+                      <option key={item.slug} value={item.slug}>
+                        {item.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="field pilot-field-span">
+                  <label htmlFor="host-mission">Mission</label>
+                  <select
+                    id="host-mission"
+                    value={missionId}
+                    onChange={(event) => setMissionId(event.target.value)}
+                  >
+                    {missions.length === 0 ? (
+                      <option value="">Aucune mission</option>
+                    ) : (
+                      missions.map((item) => (
+                        <option key={item.id} value={item.id} disabled={!item.available}>
+                          {item.title}
+                          {!item.available ? " · bientôt" : ""}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </div>
+                <div className="field">
+                  <span className="pilot-field-label" id="host-mode-label">
+                    Mode
+                  </span>
+                  <div className="pilot-mode" role="group" aria-labelledby="host-mode-label">
+                    <button
+                      type="button"
+                      className={mode === "qcm" ? "is-selected" : ""}
+                      onClick={() => setMode("qcm")}
+                    >
+                      QCM
+                    </button>
+                    <button
+                      type="button"
+                      className={mode === "cahier" ? "is-selected" : ""}
+                      onClick={() => setMode("cahier")}
+                    >
+                      Cahier
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="pilot-mission-actions">
+                <Button
+                  type="button"
+                  disabled={!canLaunchMission || busy}
+                  onClick={() => {
+                    setBusy(true);
+                    void startHostMission({
+                      niveau: grade,
+                      matiere: subject,
+                      missionId,
+                      mode,
+                      universe: "football",
+                    })
+                      .then(() => navigate("/mission"))
+                      .finally(() => setBusy(false));
+                  }}
+                >
+                  Animer au tableau
+                </Button>
+              </div>
+            </section>
           </div>
         ) : (
           <>
