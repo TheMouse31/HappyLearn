@@ -232,6 +232,12 @@ export function AdminSpaceScreen() {
               <Button type="button" onClick={() => setTab("illustrations")}>
                 Bibliothèque d’illustrations
               </Button>
+              <Button type="button" onClick={() => navigate("/espace-professeur/session")}>
+                Piloter une session live
+              </Button>
+              <Button type="button" onClick={() => navigate("/espace-professeur")}>
+                Espace professeur
+              </Button>
             </div>
           </div>
         ) : null}
@@ -560,8 +566,10 @@ export function AdminSpaceScreen() {
             {adminError ? <p className="error">{adminError}</p> : null}
             {adminMessage ? <p className="feedback ok">{adminMessage}</p> : null}
             <p className="field-help">
-              Astuce : un admin peut aussi ouvrir l’{" "}
-              <Link to="/espace-professeur">espace professeur</Link> pour tester une classe.
+              Astuce : un admin peut ouvrir l’{" "}
+              <Link to="/espace-professeur">espace professeur</Link> ou{" "}
+              <Link to="/espace-professeur/session">piloter une session live</Link> pour tester une
+              classe.
             </p>
           </div>
         ) : null}

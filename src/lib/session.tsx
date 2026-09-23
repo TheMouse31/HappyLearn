@@ -626,26 +626,44 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             role,
             activeClassId,
             teacherId: teacher?.id ?? null,
+            runId: "post-fix",
           },
         });
         // #endregion
-        const created = await store.openClassSession(classId);
-        // #region agent log
-        agentDebugLog({
-          hypothesisId: "A,D",
-          location: "session.tsx:launchClassSession",
-          message: "launchClassSession after open",
-          data: {
-            classId,
-            createdId: created?.id ?? null,
-            createdCode: created?.code ?? null,
-            createdClassId: created?.classId ?? null,
-          },
-        });
-        // #endregion
-        setLiveSession(created);
-        setLiveParticipants([]);
-        return created;
+        try {
+          const created = await store.openClassSession(classId);
+          // #region agent log
+          agentDebugLog({
+            hypothesisId: "A,D",
+            location: "session.tsx:launchClassSession",
+            message: "launchClassSession after open",
+            data: {
+              classId,
+              createdId: created?.id ?? null,
+              createdCode: created?.code ?? null,
+              createdClassId: created?.classId ?? null,
+              runId: "post-fix",
+            },
+          });
+          // #endregion
+          setLiveSession(created);
+          setLiveParticipants([]);
+          return created;
+        } catch (err) {
+          // #region agent log
+          agentDebugLog({
+            hypothesisId: "A,F",
+            location: "session.tsx:launchClassSession",
+            message: "launchClassSession failed",
+            data: {
+              classId,
+              error: err instanceof Error ? err.message : String(err),
+              runId: "post-fix",
+            },
+          });
+          // #endregion
+          throw err;
+        }
       },
       endClassSession: async () => {
         const store = persistence ?? localPersistence;
@@ -656,19 +674,21 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       },
       refreshLiveSession: async () => {
         const store = persistence ?? localPersistence;
-        if (role === "enseignant" && activeClassId) {
+        const canPilotClass = (role === "enseignant" || role === "admin") && Boolean(activeClassId);
+        if (canPilotClass && activeClassId) {
           const active = await store.getActiveClassSession(activeClassId);
           // #region agent log
           agentDebugLog({
             hypothesisId: "A,B",
-            location: "session.tsx:refreshLiveSession:enseignant",
-            message: "Teacher refresh path",
+            location: "session.tsx:refreshLiveSession:staff",
+            message: "Staff refresh path (enseignant|admin)",
             data: {
               role,
               activeClassId,
               activeId: active?.id ?? null,
               activeCode: active?.code ?? null,
               activeStatut: active?.statut ?? null,
+              runId: "post-fix",
             },
           });
           // #endregion
@@ -692,11 +712,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             agentDebugLog({
               hypothesisId: "A,B",
               location: "session.tsx:refreshLiveSession:setLiveSession",
-              message: "Replacing liveSession from teacher refresh",
+              message: "Replacing liveSession from staff refresh",
               data: {
                 prevId: prev?.id ?? null,
                 nextId: active?.id ?? null,
                 cleared: !active && Boolean(prev),
+                runId: "post-fix",
               },
             });
             // #endregion
@@ -713,13 +734,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         // #region agent log
         agentDebugLog({
           hypothesisId: "B",
-          location: "session.tsx:refreshLiveSession:non-enseignant",
-          message: "Skipped teacher refresh branch",
+          location: "session.tsx:refreshLiveSession:non-staff",
+          message: "Skipped staff refresh branch",
           data: {
             role,
             activeClassId,
             hasLiveSession: Boolean(liveSession),
             liveSessionId: liveSession?.id ?? null,
+            runId: "post-fix",
           },
         });
         // #endregion

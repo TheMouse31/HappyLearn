@@ -246,15 +246,19 @@ export function SessionControlScreen() {
         if (!created) setError("Impossible de lancer la session.");
       })
       .catch((err: unknown) => {
+        const message =
+          err instanceof Error && err.message.trim()
+            ? err.message
+            : "Impossible de lancer la session.";
         // #region agent log
         agentDebugLog({
           hypothesisId: "F",
           location: "SessionControlScreen.tsx:launchSession.catch",
           message: "Launch promise rejected",
-          data: { error: err instanceof Error ? err.message : String(err) },
+          data: { error: message, runId: "post-fix" },
         });
         // #endregion
-        setError("Impossible de lancer la session.");
+        setError(message);
       })
       .finally(() => setBusy(false));
   };

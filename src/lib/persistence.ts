@@ -877,7 +877,7 @@ export async function createPersistence(): Promise<Persistence> {
         hypothesisId: "A,D",
         location: "persistence.ts:openClassSession",
         message: "Remote openClassSession start",
-        data: { classId },
+        data: { classId, runId: "post-fix" },
       });
       // #endregion
       const closeRes = await client
@@ -904,10 +904,17 @@ export async function createPersistence(): Promise<Persistence> {
           errorCode: closeRes.error?.code ?? null,
           status: closeRes.status ?? null,
           count: closeRes.count ?? null,
+          runId: "post-fix",
         },
       });
       // #endregion
+      if (closeRes.error) {
+        throw new Error(
+          closeRes.error.message || "Impossible de fermer la session précédente.",
+        );
+      }
 
+      let lastInsertError: string | null = null;
       for (let attempt = 0; attempt < 8; attempt += 1) {
         const code = generateClassCode();
         const { data, error } = await client
@@ -931,23 +938,35 @@ export async function createPersistence(): Promise<Persistence> {
             errorCode: error?.code ?? null,
             errorDetails: error?.details ?? null,
             dataId: data?.id ?? null,
+            runId: "post-fix",
           },
         });
         // #endregion
         if (!error && data) {
           const mapped = mapRemoteClasseSession(data as Parameters<typeof mapRemoteClasseSession>[0]);
           if (mapped) return mapped;
+          lastInsertError = "Réponse session invalide.";
+          continue;
         }
+        lastInsertError = error?.message ?? "Insertion refusée.";
+        // Collision de code → réessayer ; autres erreurs (RLS, contrainte) → arrêter.
+        const isCodeCollision =
+          error?.code === "23505" ||
+          /duplicate|unique|code/i.test(error?.message ?? "");
+        if (!isCodeCollision) break;
       }
       // #region agent log
       agentDebugLog({
         hypothesisId: "A",
-        location: "persistence.ts:openClassSession:fallback",
-        message: "Falling back to localPersistence.openClassSession",
-        data: { classId },
+        location: "persistence.ts:openClassSession:fail",
+        message: "Remote open failed — no local fallback",
+        data: { classId, lastInsertError, runId: "post-fix" },
       });
       // #endregion
-      return localPersistence.openClassSession(classId);
+      throw new Error(
+        lastInsertError ||
+          "Impossible d’ouvrir la session live (Supabase). Réessaie ou reconnecte-toi.",
+      );
     },
     async closeClassSession(sessionId) {
       const { error } = await client
