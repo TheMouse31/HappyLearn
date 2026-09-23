@@ -1,32 +1,56 @@
-import { isSpeaking, toggleSpeech, stopSpeech, canSpeak } from "../lib/speech";
+import { canSpeak, stopSpeech, subscribeSpeech, toggleSpeech } from "../lib/speech";
 import { useEffect, useState } from "react";
 
-export function ListenButton() {
+type Props = {
+  /** Place the control in the topbar instead of floating. */
+  variant?: "float" | "nav";
+};
+
+export function ListenButton({ variant = "nav" }: Props) {
   const [on, setOn] = useState(false);
+  const [supported, setSupported] = useState(false);
+  const [hint, setHint] = useState("");
 
   useEffect(() => {
-    const stop = () => setOn(false);
-    window.addEventListener("pagehide", stop);
+    setSupported(canSpeak());
+    const unsubscribe = subscribeSpeech(setOn);
+    const onHide = () => stopSpeech();
+    window.addEventListener("pagehide", onHide);
     return () => {
-      window.removeEventListener("pagehide", stop);
+      unsubscribe();
+      window.removeEventListener("pagehide", onHide);
       stopSpeech();
     };
   }, []);
 
-  if (!canSpeak()) return null;
+  if (!supported) return null;
+
+  const label = on ? "Arrêter" : hint || "Écouter";
+  const fullLabel = on ? "Arrêter la lecture" : hint || "Écouter cette page";
 
   return (
     <button
       type="button"
-      className="listen"
+      className={
+        variant === "nav"
+          ? `nav-icon-btn listen-nav ${on ? "is-on" : ""}`
+          : `listen ${on ? "is-on" : ""}`
+      }
       aria-pressed={on}
-      aria-label="Lire à voix haute les textes de cette page"
+      aria-label={fullLabel}
+      title={hint || fullLabel}
       onClick={() => {
-        toggleSpeech();
-        setOn(isSpeaking());
+        const started = toggleSpeech();
+        if (!started && !on) {
+          setHint("Rien à lire sur cette page pour le moment.");
+          window.setTimeout(() => setHint(""), 2500);
+        } else {
+          setHint("");
+        }
       }}
     >
-      {on ? "Arrêter la lecture" : "Écouter cette page"}
+      <span aria-hidden="true">{on ? "■" : "▶"}</span>
+      <span className="listen-nav-label">{label}</span>
     </button>
   );
 }

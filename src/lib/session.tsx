@@ -1,11 +1,12 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { isGradeLevel, isSubjectSlug } from "../data/catalog";
-import { defaultMissionFor, findMission } from "../data/missions";
+import { defaultMissionFor, findMission, resolveMission } from "../data/missions";
 import type {
   AppRole,
   ClasseSession,
   ClassRecord,
   ClassStudent,
+  ClassThemeCoverage,
   GradeLevel,
   PlayMode,
   SessionParticipant,
@@ -36,7 +37,8 @@ import {
   savePrenom,
 } from "./localKeys";
 import { createPersistence, localPersistence, type Persistence } from "./persistence";
-import { subscribeClasseSession, subscribeSessionParticipants } from "./realtime";
+import { canUseRealtime, subscribeClasseSession, subscribeSessionParticipants } from "./realtime";
+import { isAdminEmail } from "./admins";
 import { getSupabase } from "./supabase";
 
 type SessionState = {
@@ -82,10 +84,15 @@ type SessionState = {
     niveau: GradeLevel;
     matiere: SubjectSlug;
     missionId: string;
-    univers: UniverseSlug;
+    /** Optionnel : l'élève choisit l'univers. */
+    univers?: UniverseSlug | null;
     mode: PlayMode;
   } | null) => Promise<void>;
   kick: (participantId: string) => Promise<void>;
+  /** Élève : lever / baisser la main. */
+  raiseHand: (raised: boolean) => Promise<void>;
+  /** Professeur : baisser la main d’un élève. */
+  clearHand: (participantId: string) => Promise<void>;
   clearKicked: () => void;
   listStudentsByClassCode: (code: string) => Promise<ClassStudent[]>;
   listStudentsForSessionCode: (code: string) => Promise<ClassStudent[]>;
@@ -119,9 +126,16 @@ type SessionState = {
   loadClassAnswers: (sessionIds: string[]) => ReturnType<Persistence["listAnswersBySessionIds"]>;
   listClassMissionsDone: (classId: string) => Promise<string[]>;
   listClassSessionsHistory: (classId: string) => Promise<ClasseSession[]>;
+  listClassThemeCoverage: (classId: string) => Promise<ClassThemeCoverage[]>;
+  setThemeCoveredInClass: (
+    classId: string,
+    themeId: string,
+    covered: boolean,
+    note?: string,
+  ) => Promise<ClassThemeCoverage | null>;
   activeClassId: string | null;
   setActiveClassId: (classId: string) => void;
-  startMission: () => Promise<void>;
+  startMission: (override?: { universe?: UniverseSlug }) => Promise<void>;
   recordAnswer: (stepId: string, raw: string, correct: boolean, attempts: number) => Promise<void>;
   completeMission: () => Promise<void>;
   quitMission: () => Promise<void>;
@@ -137,16 +151,22 @@ async function restoreTeacher(): Promise<TeacherAccount | null> {
     const { data } = await client.auth.getSession();
     const user = data.session?.user;
     if (user?.email) {
+      const admin = isAdminEmail(user.email);
       await client.from("profils_enseignants").upsert({
         user_id: user.id,
         display_name: user.email.split("@")[0],
+        ...(admin ? { is_admin: true } : {}),
       });
-      return { id: user.id, email: user.email, backend: "supabase" };
+      return { id: user.id, email: user.email, backend: "supabase", isAdmin: admin };
     }
   }
   const local = loadLocalTeacher();
   if (!local) return null;
-  return { ...local, backend: "local" };
+  return {
+    ...local,
+    backend: "local",
+    isAdmin: isAdminEmail(local.email),
+  };
 }
 
 export function SessionProvider({ children }: { children: ReactNode }) {
@@ -194,8 +214,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setPersistence(store);
       setCollection(saved);
       if (teacherAccount) {
-        const list = await store.listClasses(teacherAccount.id);
+        let list = await store.listClasses(teacherAccount.id);
         if (cancelled) return;
+        if (list.length === 0) {
+          const created = await store.createClass(teacherAccount.id, "Ma classe");
+          list = [created];
+        }
         setTeacher(teacherAccount);
         setClasses(list);
         const savedActive = loadActiveClassId();
@@ -204,7 +228,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           : (list[0]?.id ?? null);
         setActiveClassIdState(validActive);
         if (validActive) saveActiveClassId(validActive);
-        setRole("enseignant");
+        setRole(teacherAccount.isAdmin ? "admin" : "enseignant");
         if (validActive) {
           const active = await store.getActiveClassSession(validActive);
           if (!cancelled && active) {
@@ -298,6 +322,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!liveSession || !persistence) return;
     const sessionIdLive = liveSession.id;
+    let lastSessionKey = "";
+    let lastPartsKey = "";
 
     const refreshSession = () => {
       void persistence.getClasseSessionById(sessionIdLive).then((next) => {
@@ -308,17 +334,45 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           saveLiveParticipant(null);
           return;
         }
+        const key = [
+          next.id,
+          next.statut,
+          next.missionId,
+          next.niveau,
+          next.matiere,
+          next.mode,
+          next.univers,
+          next.code,
+        ].join("|");
+        if (key === lastSessionKey) return;
+        const prevMission = lastSessionKey ? lastSessionKey.split("|")[2] ?? "" : null;
+        lastSessionKey = key;
         setLiveSession(next);
         if (next.niveau) setGrade(next.niveau);
         if (next.matiere) setSubject(next.matiere);
-        if (next.univers) setUniverse(next.univers);
+        // L'univers est choisi par l'élève : ne pas l'imposer depuis la session.
         if (next.mode) setMode(next.mode);
         setMissionId(next.missionId);
+        // Nouvelle activité (changement réel) → l'élève rechoisit son univers.
+        if (prevMission !== null && (next.missionId ?? "") !== prevMission) {
+          setUniverse(null);
+          setSessionId(null);
+          setRewardPending(false);
+        }
       });
     };
 
     const refreshParticipants = () => {
       void persistence.listParticipants(sessionIdLive).then((parts) => {
+        const key = parts
+          .map(
+            (item) =>
+              `${item.id}:${item.statut}:${item.lastSeenAt}:${item.handRaised ? "1" : "0"}:${item.handRaisedAt ?? ""}`,
+          )
+          .sort()
+          .join(",");
+        if (key === lastPartsKey) return;
+        lastPartsKey = key;
         setLiveParticipants(parts);
         const mine = liveParticipantRef.current;
         if (mine) {
@@ -328,7 +382,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             setLiveParticipant(null);
             setLiveSession(null);
             saveLiveParticipant(null);
-          } else {
+          } else if (
+            stillThere.statut !== mine.statut ||
+            stillThere.lastSeenAt !== mine.lastSeenAt ||
+            stillThere.handRaised !== mine.handRaised ||
+            stillThere.handRaisedAt !== mine.handRaisedAt
+          ) {
             setLiveParticipant(stillThere);
           }
         }
@@ -336,14 +395,22 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     };
 
     refreshParticipants();
+    refreshSession();
     const unsubSession = subscribeClasseSession(sessionIdLive, refreshSession);
-    const unsubParts = subscribeSessionParticipants(sessionIdLive, () => {
-      refreshParticipants();
-      refreshSession();
-    });
+    // Heartbeats ne doivent pas recharger toute la session (évite les re-renders inutiles).
+    const unsubParts = subscribeSessionParticipants(sessionIdLive, refreshParticipants);
+    // Sans Realtime (mode local), poll pour la main levée / présence / activité.
+    let pollTimer: number | undefined;
+    if (!canUseRealtime()) {
+      pollTimer = window.setInterval(() => {
+        refreshParticipants();
+        refreshSession();
+      }, 2000);
+    }
     return () => {
       unsubSession();
       unsubParts();
+      if (pollTimer !== undefined) window.clearInterval(pollTimer);
     };
   }, [liveSession?.id, persistence]);
 
@@ -548,11 +615,33 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       },
       refreshLiveSession: async () => {
         const store = persistence ?? localPersistence;
-        if (role === "enseignant" && activeClassId) {
+        const canPilotClass = (role === "enseignant" || role === "admin") && Boolean(activeClassId);
+        if (canPilotClass && activeClassId) {
           const active = await store.getActiveClassSession(activeClassId);
-          setLiveSession(active);
-          if (active) setLiveParticipants(await store.listParticipants(active.id));
-          else setLiveParticipants([]);
+          setLiveSession((prev) => {
+            if (!active && !prev) return prev;
+            if (
+              active &&
+              prev &&
+              active.id === prev.id &&
+              active.code === prev.code &&
+              active.statut === prev.statut &&
+              active.missionId === prev.missionId &&
+              active.niveau === prev.niveau &&
+              active.matiere === prev.matiere &&
+              active.mode === prev.mode &&
+              active.univers === prev.univers
+            ) {
+              return prev;
+            }
+            return active;
+          });
+          if (active) {
+            const parts = await store.listParticipants(active.id);
+            setLiveParticipants(parts);
+          } else {
+            setLiveParticipants([]);
+          }
           return;
         }
         if (liveSession) {
@@ -564,23 +653,51 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setClassActivity: async (activity) => {
         const store = persistence ?? localPersistence;
         if (!liveSession) return;
-        const next = await store.setSessionActivity(liveSession.id, activity);
+        const payload = activity
+          ? { ...activity, univers: activity.univers ?? null }
+          : null;
+        const next = await store.setSessionActivity(liveSession.id, payload);
         if (next) {
           setLiveSession(next);
           if (activity) {
             setGrade(activity.niveau);
             setSubject(activity.matiere);
-            setUniverse(activity.univers);
             setMode(activity.mode);
             setMissionId(activity.missionId);
+            // Univers laissé au choix de chaque élève.
+            setUniverse(null);
+            setSessionId(null);
+            setRewardPending(false);
           } else {
             setMissionId(null);
+            setUniverse(null);
+            setSessionId(null);
+            setRewardPending(false);
           }
         }
       },
       kick: async (participantId) => {
         const store = persistence ?? localPersistence;
         await store.kickParticipant(participantId);
+        if (liveSession) {
+          setLiveParticipants(await store.listParticipants(liveSession.id));
+        }
+      },
+      raiseHand: async (raised) => {
+        const store = persistence ?? localPersistence;
+        const mine = liveParticipantRef.current;
+        if (!mine) return;
+        const updated = await store.setHandRaised(mine.id, raised);
+        if (updated) {
+          setLiveParticipant(updated);
+        }
+        if (liveSession) {
+          setLiveParticipants(await store.listParticipants(liveSession.id));
+        }
+      },
+      clearHand: async (participantId) => {
+        const store = persistence ?? localPersistence;
+        await store.setHandRaised(participantId, false);
         if (liveSession) {
           setLiveParticipants(await store.listParticipants(liveSession.id));
         }
@@ -636,8 +753,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         await client.from("profils_enseignants").upsert({
           user_id: user.id,
           display_name: user.email.split("@")[0],
+          ...(isAdminEmail(user.email) ? { is_admin: true } : {}),
         });
-        const account: TeacherAccount = { id: user.id, email: user.email, backend: "supabase" };
+        const account: TeacherAccount = {
+          id: user.id,
+          email: user.email,
+          backend: "supabase",
+          isAdmin: isAdminEmail(user.email),
+        };
         const store = persistence ?? (await createPersistence());
         setPersistence(store);
         let list = await store.listClasses(account.id);
@@ -649,7 +772,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         setClasses(list);
         setActiveClassIdState(list[0]?.id ?? null);
         if (list[0]) saveActiveClassId(list[0].id);
-        setRole("enseignant");
+        setRole(account.isAdmin ? "admin" : "enseignant");
         return null;
       },
       loginTeacherMagic: async (email) => {
@@ -665,10 +788,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       },
       loginTeacherLocal: async (email) => {
         if (!isEmail(email)) return "Indique un e-mail valide pour retrouver cet espace sur l’appareil.";
+        const normalized = email.trim().toLowerCase();
         const account: TeacherAccount = {
-          id: `local-${email.trim().toLowerCase()}`,
-          email: email.trim().toLowerCase(),
+          id: `local-${normalized}`,
+          email: normalized,
           backend: "local",
+          isAdmin: isAdminEmail(normalized),
         };
         saveLocalTeacher(account);
         const store = persistence ?? localPersistence;
@@ -681,7 +806,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         setClasses(list);
         setActiveClassIdState(list[0]?.id ?? null);
         if (list[0]) saveActiveClassId(list[0].id);
-        setRole("enseignant");
+        setRole(account.isAdmin ? "admin" : "enseignant");
         return null;
       },
       logout: async () => {
@@ -760,16 +885,28 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         const store = persistence ?? localPersistence;
         return store.listClassSessionsHistory(classId);
       },
+      listClassThemeCoverage: async (classId) => {
+        const store = persistence ?? localPersistence;
+        return store.listClassThemeCoverage(classId);
+      },
+      setThemeCoveredInClass: async (classId, themeId, covered, note) => {
+        const store = persistence ?? localPersistence;
+        return store.setThemeCoveredInClass(classId, themeId, covered, note);
+      },
       activeClassId,
       setActiveClassId: (classId) => {
         setActiveClassIdState(classId);
         saveActiveClassId(classId);
       },
-      startMission: async () => {
-        if (!persistence || !prenom || !universe || !mode) return;
+      startMission: async (override) => {
+        const chosenUniverse = override?.universe ?? universe;
+        if (override?.universe) setUniverse(override.universe);
+        if (!persistence || !prenom || !chosenUniverse || !mode) return;
         const mission =
-          findMission(missionId) ?? defaultMissionFor(grade, subject) ?? findMission("cm2-maths-fractions-01");
-        const id = await persistence.startSession(prenom, universe, mode, classCode || null, {
+          (await resolveMission(missionId)) ??
+          defaultMissionFor(grade, subject) ??
+          findMission("cm2-maths-fractions-01");
+        const id = await persistence.startSession(prenom, chosenUniverse, mode, classCode || null, {
           grade,
           subject,
           classId: liveSession?.classId ?? null,

@@ -1,15 +1,27 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "../components/Button";
 import { Shell } from "../components/Shell";
 import { GRADES, SUBJECTS, gradeLabel, subjectLabel } from "../data/catalog";
-import { listMissions } from "../data/missions";
-import type { GradeLevel, PlayMode, SubjectSlug, UniverseSlug } from "../data/types";
+import { listResolvedMissions } from "../data/missions";
+import type { ClassStudent, GradeLevel, MissionDef, PlayMode, SubjectSlug } from "../data/types";
 import { formatStudentName } from "../data/types";
-import { UNIVERSES } from "../data/universes";
 import { useSession } from "../lib/session";
 
-const UNIVERSE_OPTIONS = Object.values(UNIVERSES);
+type PresenceStatus = "connecte" | "deconnecte" | "absent";
+
+function presenceLabel(status: PresenceStatus): string {
+  if (status === "connecte") return "En ligne";
+  if (status === "deconnecte") return "Hors ligne";
+  return "Absent";
+}
+
+function presenceRank(status: PresenceStatus, handRaised: boolean): number {
+  if (handRaised) return 0;
+  if (status === "connecte") return 1;
+  if (status === "deconnecte") return 2;
+  return 3;
+}
 
 export function SessionControlScreen() {
   const navigate = useNavigate();
@@ -26,7 +38,9 @@ export function SessionControlScreen() {
     refreshLiveSession,
     setClassActivity,
     kick,
+    clearHand,
     listClassMissionsDone,
+    listClassStudents,
   } = useSession();
 
   const current = classes.find((item) => item.id === activeClassId) ?? classes[0] ?? null;
@@ -34,17 +48,74 @@ export function SessionControlScreen() {
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const [doneMissions, setDoneMissions] = useState<string[]>([]);
+  const [roster, setRoster] = useState<ClassStudent[]>([]);
+  const [rosterReady, setRosterReady] = useState(false);
   const [grade, setGrade] = useState<GradeLevel>("cm2");
   const [subject, setSubject] = useState<SubjectSlug>("maths");
   const [missionId, setMissionId] = useState("cm2-maths-fractions-01");
-  const [universe, setUniverse] = useState<UniverseSlug>("football");
   const [mode, setMode] = useState<PlayMode>("qcm");
+  const [missions, setMissions] = useState<MissionDef[]>([]);
+  const [activeMissionTitle, setActiveMissionTitle] = useState<string | null>(null);
 
-  const missions = useMemo(() => listMissions(grade, subject), [grade, subject]);
+  const refreshLiveSessionRef = useRef(refreshLiveSession);
+  const listClassMissionsDoneRef = useRef(listClassMissionsDone);
+  const listClassStudentsRef = useRef(listClassStudents);
+  refreshLiveSessionRef.current = refreshLiveSession;
+  listClassMissionsDoneRef.current = listClassMissionsDone;
+  listClassStudentsRef.current = listClassStudents;
 
   useEffect(() => {
-    void refreshLiveSession();
-  }, [current?.id, refreshLiveSession]);
+    let cancelled = false;
+    void listResolvedMissions(grade, subject).then((rows) => {
+      if (!cancelled) setMissions(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [grade, subject]);
+
+  useEffect(() => {
+    const id = liveSession?.missionId;
+    if (!id) {
+      setActiveMissionTitle(null);
+      return;
+    }
+    const local = missions.find((item) => item.id === id);
+    if (local) {
+      setActiveMissionTitle(local.title);
+      return;
+    }
+    let cancelled = false;
+    void listResolvedMissions().then((rows) => {
+      if (cancelled) return;
+      setActiveMissionTitle(rows.find((item) => item.id === id)?.title ?? id);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [liveSession?.missionId, missions]);
+
+  useEffect(() => {
+    void refreshLiveSessionRef.current();
+  }, [current?.id]);
+
+  useEffect(() => {
+    if (!current) {
+      setRoster([]);
+      setRosterReady(true);
+      return;
+    }
+    let cancelled = false;
+    setRosterReady(false);
+    void listClassStudentsRef.current(current.id).then((rows) => {
+      if (cancelled) return;
+      setRoster(rows);
+      setRosterReady(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [current?.id]);
 
   useEffect(() => {
     if (!current) {
@@ -52,13 +123,13 @@ export function SessionControlScreen() {
       return;
     }
     let cancelled = false;
-    void listClassMissionsDone(current.id).then((ids) => {
+    void listClassMissionsDoneRef.current(current.id).then((ids) => {
       if (!cancelled) setDoneMissions(ids);
     });
     return () => {
       cancelled = true;
     };
-  }, [current?.id, listClassMissionsDone, liveSession?.missionId]);
+  }, [current?.id, liveSession?.missionId]);
 
   useEffect(() => {
     if (missions.length === 0) return;
@@ -67,257 +138,367 @@ export function SessionControlScreen() {
     }
   }, [missions, missionId]);
 
-  if (role !== "enseignant" || !teacher) {
+  const presenceRows = useMemo(() => {
+    const byEleve = new Map(liveParticipants.map((item) => [item.eleveId, item]));
+    return roster
+      .map((student) => {
+        const participant = byEleve.get(student.id) ?? null;
+        const status: PresenceStatus = !participant
+          ? "absent"
+          : participant.statut === "connecte"
+            ? "connecte"
+            : "deconnecte";
+        return { student, participant, status };
+      })
+      .sort((a, b) => {
+        const rank =
+          presenceRank(a.status, Boolean(a.participant?.handRaised)) -
+          presenceRank(b.status, Boolean(b.participant?.handRaised));
+        if (rank !== 0) return rank;
+        return formatStudentName(a.student.prenom, a.student.nom).localeCompare(
+          formatStudentName(b.student.prenom, b.student.nom),
+          "fr",
+          { sensitivity: "base" },
+        );
+      });
+  }, [roster, liveParticipants]);
+
+  if ((role !== "enseignant" && role !== "admin") || !teacher) {
     return <Navigate to="/connexion/enseignant" replace />;
   }
 
-  const connected = liveParticipants.filter((item) => item.statut === "connecte");
+  const connectedCount = presenceRows.filter((row) => row.status === "connecte").length;
+  const handsUp = presenceRows.filter((row) => row.participant?.handRaised).length;
   const activityActive = Boolean(liveSession?.missionId);
+  const canLaunchMission =
+    !busy &&
+    missions.length > 0 &&
+    missions.some((m) => m.id === missionId && m.available);
+
+  const launchSession = () => {
+    if (!current) return;
+    setBusy(true);
+    setError("");
+    void launchClassSession(current.id)
+      .then((created) => {
+        if (!created) setError("Impossible de lancer la session.");
+      })
+      .catch((err: unknown) => {
+        const message =
+          err instanceof Error && err.message.trim()
+            ? err.message
+            : "Impossible de lancer la session.";
+        setError(message);
+      })
+      .finally(() => setBusy(false));
+  };
+
+  const stopSession = () => {
+    const ok = window.confirm("Terminer la session ? Le code ne fonctionnera plus.");
+    if (!ok) return;
+    setBusy(true);
+    void endClassSession().finally(() => setBusy(false));
+  };
+
+  const isAdmin = role === "admin";
+  const staffHome = isAdmin ? "/espace-admin" : "/espace-professeur";
 
   return (
     <Shell
       brand="Happy Learn"
       stepLabel="Session live"
-      homeTo="/espace-professeur"
-      backTo="/espace-professeur"
-    >
-      <section className="teacher-space session-control">
-        <span className="kicker">Pilotage de session</span>
-        <h1>Session de classe</h1>
-        <p className="lead" data-listen>
-          Lance une session pour {current?.nom ?? "ta classe"} : un nouveau code à chaque démarrage. Les élèves
-          rejoignent, tu lances les missions, tu vois qui est connecté.
-        </p>
-
-        {backend === "local" ? (
-          <div className="teacher-banner" role="status">
-            <strong>Mode local :</strong> les fonctions live (verrou entre appareils, présence temps réel, exclusion)
-            nécessitent Supabase. Sur cet appareil, tu peux tout de même tester le flux de base.
-          </div>
-        ) : null}
-
-        {!current ? (
-          <p>Crée d’abord une classe dans l’espace professeur.</p>
-        ) : (
+      homeTo={staffHome}
+      backTo={staffHome}
+      extra={
+        isAdmin ? (
           <>
-            <div className="actions" style={{ marginBottom: "1rem" }}>
-              <Button
-                variant="primary"
-                type="button"
-                disabled={busy}
-                onClick={() => {
-                  setBusy(true);
-                  setError("");
-                  void launchClassSession(current.id)
-                    .then((created) => {
-                      if (!created) setError("Impossible de lancer la session.");
-                    })
-                    .finally(() => setBusy(false));
-                }}
-              >
-                {liveSession ? "Relancer une nouvelle session" : "Lancer une session"}
+            <Button type="button" onClick={() => navigate("/espace-admin")}>
+              Administration
+            </Button>
+            <Button type="button" onClick={() => navigate("/espace-professeur")}>
+              Espace professeur
+            </Button>
+          </>
+        ) : (
+          <Button type="button" onClick={() => navigate("/espace-professeur")}>
+            Espace professeur
+          </Button>
+        )
+      }
+    >
+      <section className="session-pilot">
+        {!current ? (
+          <div className="pilot-idle">
+            <h1>Pilotage</h1>
+            <p className="lead">Crée d’abord une classe dans l’espace professeur.</p>
+            <div className="pilot-idle-actions">
+              <Button variant="primary" type="button" onClick={() => navigate("/espace-professeur")}>
+                Aller à l’espace professeur
               </Button>
-              {liveSession ? (
-                <Button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => {
-                    setBusy(true);
-                    void endClassSession().finally(() => setBusy(false));
-                  }}
-                >
-                  Terminer la session
+              {isAdmin ? (
+                <Button type="button" onClick={() => navigate("/espace-admin")}>
+                  Administration
                 </Button>
               ) : null}
-              <Button type="button" onClick={() => navigate("/espace-professeur")}>
-                Retour à la classe
+            </div>
+          </div>
+        ) : !liveSession ? (
+          <div className="pilot-idle">
+            <p className="pilot-eyebrow">{current.nom}</p>
+            <h1>Lancer une session</h1>
+            <p className="lead" data-listen>
+              Un code s’affiche pour le tableau. Les élèves se connectent, tu lances une mission.
+            </p>
+            {backend === "local" ? (
+              <p className="pilot-note" role="status">
+                Mode local : présence temps réel limitée sans Supabase.
+              </p>
+            ) : null}
+            {error ? <p className="error">{error}</p> : null}
+            <div className="pilot-idle-actions">
+              <Button variant="primary" type="button" disabled={busy} onClick={launchSession}>
+                {busy ? "Ouverture…" : "Ouvrir la session"}
               </Button>
             </div>
+          </div>
+        ) : (
+          <>
+            <header className="pilot-head">
+              <div className="pilot-head-main">
+                <p className="pilot-eyebrow">{current.nom}</p>
+                <h1>Session en cours</h1>
+              </div>
+              <div className="pilot-head-meta">
+                <span className="pilot-live-dot" aria-hidden="true" />
+                <span className="pilot-live-label">Live</span>
+                <Button type="button" className="ghost-btn pilot-end" disabled={busy} onClick={stopSession}>
+                  Terminer
+                </Button>
+              </div>
+            </header>
+
             {error ? <p className="error">{error}</p> : null}
 
-            {liveSession ? (
-              <>
-                <div className="code-hero" aria-label="Code de session">
-                  <span>Code de session · {current.nom}</span>
-                  <strong>{liveSession.code}</strong>
-                  <div className="actions">
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        void navigator.clipboard.writeText(liveSession.code).then(() => {
-                          setCopied(true);
-                          window.setTimeout(() => setCopied(false), 2000);
-                        });
-                      }}
-                    >
-                      {copied ? "Code copié" : "Copier le code"}
-                    </Button>
-                  </div>
+            <div className="pilot-code" aria-label="Code de session">
+              <div className="pilot-code-copy">
+                <span className="pilot-code-label">Code à écrire au tableau</span>
+                <strong className="pilot-code-value">{liveSession.code}</strong>
+              </div>
+              <Button
+                type="button"
+                className="pilot-code-btn"
+                onClick={() => {
+                  void navigator.clipboard.writeText(liveSession.code).then(() => {
+                    setCopied(true);
+                    window.setTimeout(() => setCopied(false), 2000);
+                  });
+                }}
+              >
+                {copied ? "Copié" : "Copier"}
+              </Button>
+            </div>
+
+            <div className="pilot-board">
+              <section className="pilot-pane pilot-roster" aria-label="Présence des élèves">
+                <div className="pilot-pane-head">
+                  <h2>Classe</h2>
+                  <p className="pilot-stat">
+                    <strong>{connectedCount}</strong>/{roster.length} en ligne
+                    {handsUp > 0 ? (
+                      <>
+                        {" · "}
+                        <span className="pilot-hand-stat">{handsUp} main{handsUp > 1 ? "s" : ""}</span>
+                      </>
+                    ) : null}
+                  </p>
                 </div>
 
-                <section className="roster-panel" aria-label="Élèves connectés">
-                  <h2>
-                    Élèves connectés ({connected.length}/{liveParticipants.length})
-                  </h2>
-                  {liveParticipants.length === 0 ? (
-                    <p className="field-help">En attente des élèves… Partage le code ci-dessus.</p>
-                  ) : (
-                    <ul className="roster-list">
-                      {liveParticipants.map((participant) => (
-                        <li key={participant.id}>
-                          <div className="roster-row">
-                            <strong>
-                              {formatStudentName(participant.prenom, participant.nom)}
-                              <span className="field-help" style={{ marginLeft: "0.5rem" }}>
-                                {participant.statut === "connecte" ? "· connecté" : "· déconnecté"}
-                              </span>
-                            </strong>
-                            <div className="roster-row-actions">
+                {!rosterReady ? <p className="pilot-empty">Chargement…</p> : null}
+                {rosterReady && roster.length === 0 ? (
+                  <p className="pilot-empty">
+                    Aucun élève. Ajoute-les dans l’espace professeur.
+                  </p>
+                ) : null}
+                {rosterReady && roster.length > 0 ? (
+                  <ul className="pilot-list">
+                    {presenceRows.map(({ student, participant, status }) => {
+                      const hand = Boolean(participant?.handRaised);
+                      return (
+                        <li
+                          key={student.id}
+                          className={`pilot-row status-${status}${hand ? " is-hand" : ""}`}
+                        >
+                          <div className="pilot-row-main">
+                            <span className={`pilot-dot presence-${status}`} aria-hidden="true" />
+                            <span className="pilot-name">
+                              {formatStudentName(student.prenom, student.nom)}
+                            </span>
+                            {hand ? <span className="pilot-hand-badge">Main</span> : null}
+                            <span className="pilot-status-label">{presenceLabel(status)}</span>
+                          </div>
+                          <div className="pilot-row-actions">
+                            {hand && participant ? (
                               <Button
                                 type="button"
+                                className="hand-clear-btn pilot-mini"
                                 onClick={() => {
-                                  const label = formatStudentName(participant.prenom, participant.nom);
-                                  const ok = window.confirm(`Déconnecter ${label} ? Le nom redeviendra libre.`);
+                                  void clearHand(participant.id);
+                                }}
+                              >
+                                Vu
+                              </Button>
+                            ) : null}
+                            {participant ? (
+                              <button
+                                type="button"
+                                className="pilot-kick"
+                                title="Déconnecter"
+                                onClick={() => {
+                                  const label = formatStudentName(student.prenom, student.nom);
+                                  const ok = window.confirm(
+                                    `Déconnecter ${label} ? Le nom redeviendra libre.`,
+                                  );
                                   if (!ok) return;
                                   void kick(participant.id);
                                 }}
                               >
-                                Déconnecter
-                              </Button>
-                            </div>
+                                Retirer
+                              </button>
+                            ) : null}
                           </div>
                         </li>
-                      ))}
-                    </ul>
-                  )}
-                </section>
+                      );
+                    })}
+                  </ul>
+                ) : null}
+              </section>
 
-                <section className="roster-panel" aria-label="Lancer une activité">
-                  <h2>Activité</h2>
-                  <p className="field-help">
-                    Les élèves en salle d’attente sont poussés dans la mission. Tu peux enchaîner plusieurs exercices
-                    dans la même session.
+              <section className="pilot-pane pilot-mission" aria-label="Mission">
+                <div className="pilot-pane-head">
+                  <h2>Mission</h2>
+                  <p className="pilot-stat">
+                    {activityActive ? "En cours chez les élèves" : "En attente"}
                   </p>
-                  <div className="activity-grid">
-                    <div className="field">
-                      <label htmlFor="act-niveau">Niveau</label>
-                      <select
-                        id="act-niveau"
-                        value={grade}
-                        onChange={(event) => setGrade(event.target.value as GradeLevel)}
-                      >
-                        {GRADES.map((item) => (
-                          <option key={item.slug} value={item.slug}>
-                            {item.label}
+                </div>
+
+                {activityActive && liveSession ? (
+                  <div className="pilot-active" role="status">
+                    <strong>{activeMissionTitle ?? liveSession.missionId}</strong>
+                    <span>
+                      {gradeLabel(liveSession.niveau)} · {subjectLabel(liveSession.matiere)} ·{" "}
+                      {liveSession.mode === "cahier" ? "Cahier" : "QCM"}
+                    </span>
+                  </div>
+                ) : (
+                  <p className="pilot-hint">Choisis une mission, puis lance-la. Les élèves choisissent leur univers.</p>
+                )}
+
+                <div className="pilot-fields">
+                  <div className="field">
+                    <label htmlFor="act-niveau">Niveau</label>
+                    <select
+                      id="act-niveau"
+                      value={grade}
+                      onChange={(event) => setGrade(event.target.value as GradeLevel)}
+                    >
+                      {GRADES.map((item) => (
+                        <option key={item.slug} value={item.slug}>
+                          {item.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="field">
+                    <label htmlFor="act-matiere">Matière</label>
+                    <select
+                      id="act-matiere"
+                      value={subject}
+                      onChange={(event) => setSubject(event.target.value as SubjectSlug)}
+                    >
+                      {SUBJECTS.map((item) => (
+                        <option key={item.slug} value={item.slug}>
+                          {item.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="field pilot-field-span">
+                    <label htmlFor="act-mission">Mission</label>
+                    <select
+                      id="act-mission"
+                      value={missionId}
+                      onChange={(event) => setMissionId(event.target.value)}
+                    >
+                      {missions.length === 0 ? (
+                        <option value="">Aucune mission</option>
+                      ) : (
+                        missions.map((item) => (
+                          <option key={item.id} value={item.id} disabled={!item.available}>
+                            {item.title}
+                            {doneMissions.includes(item.id) ? " · déjà faite" : ""}
+                            {!item.available ? " · bientôt" : ""}
                           </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="field">
-                      <label htmlFor="act-matiere">Matière</label>
-                      <select
-                        id="act-matiere"
-                        value={subject}
-                        onChange={(event) => setSubject(event.target.value as SubjectSlug)}
+                        ))
+                      )}
+                    </select>
+                  </div>
+                  <div className="field">
+                    <span className="pilot-field-label" id="act-mode-label">
+                      Mode
+                    </span>
+                    <div className="pilot-mode" role="group" aria-labelledby="act-mode-label">
+                      <button
+                        type="button"
+                        className={mode === "qcm" ? "is-selected" : ""}
+                        onClick={() => setMode("qcm")}
                       >
-                        {SUBJECTS.map((item) => (
-                          <option key={item.slug} value={item.slug}>
-                            {item.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="field">
-                      <label htmlFor="act-mission">Mission</label>
-                      <select
-                        id="act-mission"
-                        value={missionId}
-                        onChange={(event) => setMissionId(event.target.value)}
+                        QCM
+                      </button>
+                      <button
+                        type="button"
+                        className={mode === "cahier" ? "is-selected" : ""}
+                        onClick={() => setMode("cahier")}
                       >
-                        {missions.length === 0 ? (
-                          <option value="">Aucune mission</option>
-                        ) : (
-                          missions.map((item) => (
-                            <option key={item.id} value={item.id} disabled={!item.available}>
-                              {item.title}
-                              {doneMissions.includes(item.id) ? " · déjà faite" : ""}
-                              {!item.available ? " · bientôt" : ""}
-                            </option>
-                          ))
-                        )}
-                      </select>
-                    </div>
-                    <div className="field">
-                      <label htmlFor="act-univers">Univers</label>
-                      <select
-                        id="act-univers"
-                        value={universe}
-                        onChange={(event) => setUniverse(event.target.value as UniverseSlug)}
-                      >
-                        {UNIVERSE_OPTIONS.map((item) => (
-                          <option key={item.slug} value={item.slug}>
-                            {item.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="field">
-                      <label htmlFor="act-mode">Mode</label>
-                      <select
-                        id="act-mode"
-                        value={mode}
-                        onChange={(event) => setMode(event.target.value as PlayMode)}
-                      >
-                        <option value="qcm">QCM</option>
-                        <option value="cahier">Cahier</option>
-                      </select>
+                        Cahier
+                      </button>
                     </div>
                   </div>
-                  <div className="actions">
+                </div>
+
+                <div className="pilot-mission-actions">
+                  <Button
+                    variant="primary"
+                    type="button"
+                    disabled={!canLaunchMission}
+                    onClick={() => {
+                      setBusy(true);
+                      void setClassActivity({
+                        niveau: grade,
+                        matiere: subject,
+                        missionId,
+                        mode,
+                      })
+                        .then(() => listClassMissionsDoneRef.current(current.id).then(setDoneMissions))
+                        .finally(() => setBusy(false));
+                    }}
+                  >
+                    {activityActive ? "Changer de mission" : "Lancer la mission"}
+                  </Button>
+                  {activityActive ? (
                     <Button
-                      variant="primary"
                       type="button"
-                      disabled={busy || missions.length === 0 || !missions.some((m) => m.id === missionId && m.available)}
+                      disabled={busy}
                       onClick={() => {
                         setBusy(true);
-                        void setClassActivity({
-                          niveau: grade,
-                          matiere: subject,
-                          missionId,
-                          univers: universe,
-                          mode,
-                        })
-                          .then(() => listClassMissionsDone(current.id).then(setDoneMissions))
-                          .finally(() => setBusy(false));
+                        void setClassActivity(null).finally(() => setBusy(false));
                       }}
                     >
-                      {activityActive ? "Changer / relancer l’activité" : "Lancer l’activité"}
+                      Pause — salle d’attente
                     </Button>
-                    {activityActive ? (
-                      <Button
-                        type="button"
-                        disabled={busy}
-                        onClick={() => {
-                          setBusy(true);
-                          void setClassActivity(null).finally(() => setBusy(false));
-                        }}
-                      >
-                        Arrêter l’activité (salle d’attente)
-                      </Button>
-                    ) : null}
-                  </div>
-                  {activityActive && liveSession ? (
-                    <p className="field-help">
-                      En cours : {gradeLabel(liveSession.niveau)} · {subjectLabel(liveSession.matiere)} ·{" "}
-                      {listMissions().find((item) => item.id === liveSession.missionId)?.title ??
-                        liveSession.missionId}
-                    </p>
                   ) : null}
-                </section>
-              </>
-            ) : (
-              <p className="field-help">Aucune session ouverte. Clique sur « Lancer une session » pour générer un code.</p>
-            )}
+                </div>
+              </section>
+            </div>
           </>
         )}
       </section>

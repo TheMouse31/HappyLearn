@@ -4,6 +4,7 @@ import type {
   ClasseSession,
   ClassRecord,
   ClassStudent,
+  ClassThemeCoverage,
   GradeLevel,
   PlayMode,
   SessionParticipant,
@@ -61,6 +62,7 @@ function sortStudents(items: ClassStudent[]): ClassStudent[] {
 
 const LOCAL_CLASSE_SESSIONS_KEY = "happy-learn-classe-sessions";
 const LOCAL_PARTICIPANTS_KEY = "happy-learn-session-participants";
+const LOCAL_THEME_COVERAGE_KEY = "happy-learn-class-theme-coverage";
 
 function readJson<T>(key: string, fallback: T): T {
   try {
@@ -138,7 +140,8 @@ export type Persistence = {
       niveau: GradeLevel;
       matiere: SubjectSlug;
       missionId: string;
-      univers: UniverseSlug;
+      /** Laissé null : l'élève choisit son univers. */
+      univers?: UniverseSlug | null;
       mode: PlayMode;
     } | null,
   ) => Promise<ClasseSession | null>;
@@ -147,8 +150,16 @@ export type Persistence = {
   leaveSession: (participantId: string) => Promise<void>;
   listParticipants: (sessionId: string) => Promise<SessionParticipant[]>;
   kickParticipant: (participantId: string) => Promise<void>;
+  setHandRaised: (participantId: string, raised: boolean) => Promise<SessionParticipant | null>;
   listClassMissionsDone: (classId: string) => Promise<string[]>;
   listClassSessionsHistory: (classId: string) => Promise<ClasseSession[]>;
+  listClassThemeCoverage: (classId: string) => Promise<ClassThemeCoverage[]>;
+  setThemeCoveredInClass: (
+    classId: string,
+    themeId: string,
+    covered: boolean,
+    note?: string,
+  ) => Promise<ClassThemeCoverage>;
 };
 
 const SESSIONS_KEY = "mission-maths-sessions";
@@ -202,6 +213,9 @@ function mapRemoteClasseSession(row: {
   };
 }
 
+const PARTICIPANT_COLUMNS =
+  "id, session_id, eleve_id, prenom, nom, device_id, statut, joined_at, last_seen_at, hand_raised, hand_raised_at";
+
 function mapRemoteParticipant(row: {
   id: string;
   session_id: string;
@@ -212,6 +226,8 @@ function mapRemoteParticipant(row: {
   statut: string;
   joined_at: string;
   last_seen_at: string;
+  hand_raised?: boolean | null;
+  hand_raised_at?: string | null;
 }): SessionParticipant | null {
   if (row.statut !== "connecte" && row.statut !== "deconnecte") return null;
   return {
@@ -224,6 +240,8 @@ function mapRemoteParticipant(row: {
     statut: row.statut,
     joinedAt: row.joined_at,
     lastSeenAt: row.last_seen_at,
+    handRaised: Boolean(row.hand_raised),
+    handRaisedAt: row.hand_raised_at ?? null,
   };
 }
 
@@ -519,6 +537,8 @@ export const localPersistence: Persistence = {
         ...existing,
         statut: "connecte",
         lastSeenAt: new Date().toISOString(),
+        handRaised: existing.handRaised ?? false,
+        handRaisedAt: existing.handRaisedAt ?? null,
       };
       writeJson(
         LOCAL_PARTICIPANTS_KEY,
@@ -536,6 +556,8 @@ export const localPersistence: Persistence = {
       statut: "connecte",
       joinedAt: new Date().toISOString(),
       lastSeenAt: new Date().toISOString(),
+      handRaised: false,
+      handRaisedAt: null,
     };
     participants.push(created);
     writeJson(LOCAL_PARTICIPANTS_KEY, participants);
@@ -558,7 +580,13 @@ export const localPersistence: Persistence = {
       LOCAL_PARTICIPANTS_KEY,
       participants.map((item) =>
         item.id === participantId
-          ? { ...item, statut: "deconnecte" as const, lastSeenAt: new Date().toISOString() }
+          ? {
+              ...item,
+              statut: "deconnecte" as const,
+              lastSeenAt: new Date().toISOString(),
+              handRaised: false,
+              handRaisedAt: null,
+            }
           : item,
       ),
     );
@@ -566,6 +594,11 @@ export const localPersistence: Persistence = {
   async listParticipants(sessionId) {
     return readJson<SessionParticipant[]>(LOCAL_PARTICIPANTS_KEY, [])
       .filter((item) => item.sessionId === sessionId)
+      .map((item) => ({
+        ...item,
+        handRaised: Boolean(item.handRaised),
+        handRaisedAt: item.handRaisedAt ?? null,
+      }))
       .sort((a, b) => a.prenom.localeCompare(b.prenom, "fr", { sensitivity: "base" }));
   },
   async kickParticipant(participantId) {
@@ -575,6 +608,24 @@ export const localPersistence: Persistence = {
         (item) => item.id !== participantId,
       ),
     );
+  },
+  async setHandRaised(participantId, raised) {
+    const participants = readJson<SessionParticipant[]>(LOCAL_PARTICIPANTS_KEY, []);
+    const now = new Date().toISOString();
+    let updated: SessionParticipant | null = null;
+    writeJson(
+      LOCAL_PARTICIPANTS_KEY,
+      participants.map((item) => {
+        if (item.id !== participantId) return item;
+        updated = {
+          ...item,
+          handRaised: raised,
+          handRaisedAt: raised ? now : null,
+        };
+        return updated;
+      }),
+    );
+    return updated;
   },
   async listClassMissionsDone(classId) {
     const done = new Set<string>();
@@ -590,6 +641,27 @@ export const localPersistence: Persistence = {
       .filter((item) => item.classId === classId)
       .map(mapLocalClasseSession)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  },
+  async listClassThemeCoverage(classId) {
+    return readJson<ClassThemeCoverage[]>(LOCAL_THEME_COVERAGE_KEY, []).filter(
+      (item) => item.classId === classId,
+    );
+  },
+  async setThemeCoveredInClass(classId, themeId, covered, note = "") {
+    const all = readJson<ClassThemeCoverage[]>(LOCAL_THEME_COVERAGE_KEY, []);
+    const now = new Date().toISOString();
+    const next: ClassThemeCoverage = {
+      classId,
+      themeId,
+      coveredInClass: covered,
+      coveredAt: covered ? now : null,
+      note: note.trim(),
+    };
+    const idx = all.findIndex((item) => item.classId === classId && item.themeId === themeId);
+    if (idx >= 0) all[idx] = next;
+    else all.push(next);
+    writeJson(LOCAL_THEME_COVERAGE_KEY, all);
+    return next;
   },
 };
 
@@ -799,7 +871,7 @@ export async function createPersistence(): Promise<Persistence> {
     },
     async openClassSession(classId) {
       const now = new Date().toISOString();
-      await client
+      const closeRes = await client
         .from("classe_sessions")
         .update({
           statut: "fermee",
@@ -812,7 +884,13 @@ export async function createPersistence(): Promise<Persistence> {
         })
         .eq("class_id", classId)
         .eq("statut", "ouverte");
+      if (closeRes.error) {
+        throw new Error(
+          closeRes.error.message || "Impossible de fermer la session précédente.",
+        );
+      }
 
+      let lastInsertError: string | null = null;
       for (let attempt = 0; attempt < 8; attempt += 1) {
         const code = generateClassCode();
         const { data, error } = await client
@@ -825,9 +903,20 @@ export async function createPersistence(): Promise<Persistence> {
         if (!error && data) {
           const mapped = mapRemoteClasseSession(data as Parameters<typeof mapRemoteClasseSession>[0]);
           if (mapped) return mapped;
+          lastInsertError = "Réponse session invalide.";
+          continue;
         }
+        lastInsertError = error?.message ?? "Insertion refusée.";
+        // Collision de code → réessayer ; autres erreurs (RLS, contrainte) → arrêter.
+        const isCodeCollision =
+          error?.code === "23505" ||
+          /duplicate|unique|code/i.test(error?.message ?? "");
+        if (!isCodeCollision) break;
       }
-      return localPersistence.openClassSession(classId);
+      throw new Error(
+        lastInsertError ||
+          "Impossible d’ouvrir la session live (Supabase). Réessaie ou reconnecte-toi.",
+      );
     },
     async closeClassSession(sessionId) {
       const { error } = await client
@@ -906,9 +995,7 @@ export async function createPersistence(): Promise<Persistence> {
 
       const { data: existingRows, error: existingError } = await client
         .from("session_participants")
-        .select(
-          "id, session_id, eleve_id, prenom, nom, device_id, statut, joined_at, last_seen_at",
-        )
+        .select(PARTICIPANT_COLUMNS)
         .eq("session_id", session.id)
         .eq("eleve_id", eleveId)
         .maybeSingle();
@@ -928,9 +1015,7 @@ export async function createPersistence(): Promise<Persistence> {
             last_seen_at: new Date().toISOString(),
           })
           .eq("id", existing.id)
-          .select(
-            "id, session_id, eleve_id, prenom, nom, device_id, statut, joined_at, last_seen_at",
-          )
+          .select(PARTICIPANT_COLUMNS)
           .single();
         if (updateError || !updated) {
           return localPersistence.joinSession(sessionCode, eleveId);
@@ -952,9 +1037,7 @@ export async function createPersistence(): Promise<Persistence> {
           device_id: deviceId,
           statut: "connecte",
         })
-        .select(
-          "id, session_id, eleve_id, prenom, nom, device_id, statut, joined_at, last_seen_at",
-        )
+        .select(PARTICIPANT_COLUMNS)
         .single();
 
       if (error || !data) {
@@ -983,6 +1066,8 @@ export async function createPersistence(): Promise<Persistence> {
         .update({
           statut: "deconnecte",
           last_seen_at: new Date().toISOString(),
+          hand_raised: false,
+          hand_raised_at: null,
         })
         .eq("id", participantId);
       if (error) await localPersistence.leaveSession(participantId);
@@ -990,9 +1075,7 @@ export async function createPersistence(): Promise<Persistence> {
     async listParticipants(sessionId) {
       const { data, error } = await client
         .from("session_participants")
-        .select(
-          "id, session_id, eleve_id, prenom, nom, device_id, statut, joined_at, last_seen_at",
-        )
+        .select(PARTICIPANT_COLUMNS)
         .eq("session_id", sessionId)
         .order("prenom", { ascending: true });
       if (error || !data) return localPersistence.listParticipants(sessionId);
@@ -1003,6 +1086,20 @@ export async function createPersistence(): Promise<Persistence> {
     async kickParticipant(participantId) {
       const { error } = await client.from("session_participants").delete().eq("id", participantId);
       if (error) await localPersistence.kickParticipant(participantId);
+    },
+    async setHandRaised(participantId, raised) {
+      const now = new Date().toISOString();
+      const { data, error } = await client
+        .from("session_participants")
+        .update({
+          hand_raised: raised,
+          hand_raised_at: raised ? now : null,
+        })
+        .eq("id", participantId)
+        .select(PARTICIPANT_COLUMNS)
+        .single();
+      if (error || !data) return localPersistence.setHandRaised(participantId, raised);
+      return mapRemoteParticipant(data as Parameters<typeof mapRemoteParticipant>[0]);
     },
     async listClassMissionsDone(classId) {
       const { data, error } = await client
@@ -1032,6 +1129,45 @@ export async function createPersistence(): Promise<Persistence> {
       return data
         .map((row) => mapRemoteClasseSession(row as Parameters<typeof mapRemoteClasseSession>[0]))
         .filter((item): item is ClasseSession => item !== null);
+    },
+    async listClassThemeCoverage(classId) {
+      const { data, error } = await client
+        .from("classe_programme_couverture")
+        .select("class_id, theme_id, covered_in_class, covered_at, note")
+        .eq("class_id", classId);
+      if (error || !data) return localPersistence.listClassThemeCoverage(classId);
+      return data.map((row) => ({
+        classId: row.class_id as string,
+        themeId: row.theme_id as string,
+        coveredInClass: Boolean(row.covered_in_class),
+        coveredAt: (row.covered_at as string | null) ?? null,
+        note: (row.note as string) ?? "",
+      }));
+    },
+    async setThemeCoveredInClass(classId, themeId, covered, note = "") {
+      const payload = {
+        class_id: classId,
+        theme_id: themeId,
+        covered_in_class: covered,
+        covered_at: covered ? new Date().toISOString() : null,
+        note: note.trim(),
+        updated_at: new Date().toISOString(),
+      };
+      const { data, error } = await client
+        .from("classe_programme_couverture")
+        .upsert(payload, { onConflict: "class_id,theme_id" })
+        .select("class_id, theme_id, covered_in_class, covered_at, note")
+        .maybeSingle();
+      if (error || !data) {
+        return localPersistence.setThemeCoveredInClass(classId, themeId, covered, note);
+      }
+      return {
+        classId: data.class_id as string,
+        themeId: data.theme_id as string,
+        coveredInClass: Boolean(data.covered_in_class),
+        coveredAt: (data.covered_at as string | null) ?? null,
+        note: (data.note as string) ?? "",
+      };
     },
   };
 
