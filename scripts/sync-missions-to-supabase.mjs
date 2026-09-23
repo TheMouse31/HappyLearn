@@ -41,7 +41,7 @@ try {
     blurb: mission.blurb,
     available: false,
     official: false,
-    difficulty: mission.difficulty ?? "moyen",
+    difficulty: mission.difficulty ?? null,
     theme_id: mission.themeId,
     steps: mission.steps,
     version: mission.version ?? 1,

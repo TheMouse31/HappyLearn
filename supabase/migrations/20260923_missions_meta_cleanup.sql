@@ -75,5 +75,10 @@ create policy "lecture missions disponibles"
 -- ——— Nettoyage legacy ———
 -- `etapes` n’est plus lue par l’app (contenu dans missions.steps).
 -- `reponses.etape_id` reste un texte libre (pas de FK vers etapes).
-drop policy if exists "lecture publique etapes" on etapes;
-drop table if exists etapes cascade;
+do $$
+begin
+  if to_regclass('public.etapes') is not null then
+    drop policy if exists "lecture publique etapes" on etapes;
+    drop table if exists etapes cascade;
+  end if;
+end $$;

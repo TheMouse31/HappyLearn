@@ -61,10 +61,10 @@ export function defineMission(def: {
     subject: def.subject,
     title: def.title,
     blurb: def.blurb,
-    // Catalogue embarqué : non publié et non officiel jusqu’à validation éditoriale.
+    // Catalogue embarqué : non publié, non officiel, difficulté non renseignée.
     available: def.available ?? false,
     official: def.official ?? false,
-    difficulty: def.difficulty ?? "moyen",
+    difficulty: def.difficulty ?? null,
     themeId: def.themeId ?? linkedTheme?.id ?? null,
     version: def.version ?? 1,
     source: "builtin",

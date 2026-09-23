@@ -144,8 +144,9 @@ export function editorKindNeedsAnswer(kind: StepKind): boolean {
   );
 }
 
-function normalizeDifficulty(value: unknown): MissionDifficulty {
-  return DIFFICULTIES.includes(value as MissionDifficulty) ? (value as MissionDifficulty) : "moyen";
+function normalizeDifficulty(value: unknown): MissionDifficulty | null {
+  if (value == null || value === "") return null;
+  return DIFFICULTIES.includes(value as MissionDifficulty) ? (value as MissionDifficulty) : null;
 }
 
 type MissionRow = {
@@ -202,7 +203,7 @@ function toMissionPayload(mission: MissionDef) {
     blurb: mission.blurb,
     available: mission.available,
     official: mission.official,
-    difficulty: mission.difficulty,
+    difficulty: mission.difficulty ?? null,
     theme_id: mission.themeId,
     steps: mission.steps,
     version: mission.version ?? 1,
@@ -399,7 +400,7 @@ export type SaveMissionInput = {
   blurb: string;
   available: boolean;
   official: boolean;
-  difficulty: MissionDifficulty;
+  difficulty: MissionDifficulty | null;
   themeId: string | null;
   steps: Step[];
   version?: number;

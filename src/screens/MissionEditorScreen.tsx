@@ -151,7 +151,7 @@ function missionToDrafts(mission: MissionDef): {
   blurb: string;
   available: boolean;
   official: boolean;
-  difficulty: MissionDifficulty;
+  difficulty: MissionDifficulty | "";
   themeId: string;
   steps: DraftStep[];
 } {
@@ -166,7 +166,7 @@ function missionToDrafts(mission: MissionDef): {
     blurb: mission.blurb,
     available: mission.available,
     official: Boolean(mission.official),
-    difficulty: mission.difficulty ?? "moyen",
+    difficulty: mission.difficulty ?? "",
     themeId: theme?.id ?? mission.themeId ?? "",
     steps: mission.steps.map(stepToDraft),
   };
@@ -200,7 +200,7 @@ export function MissionEditorScreen() {
   const [blurb, setBlurb] = useState("");
   const [available, setAvailable] = useState(false);
   const [official, setOfficial] = useState(false);
-  const [difficulty, setDifficulty] = useState<MissionDifficulty>("moyen");
+  const [difficulty, setDifficulty] = useState<MissionDifficulty | "">("");
   const [steps, setSteps] = useState<DraftStep[]>([emptyStep(0)]);
   const [selectedStep, setSelectedStep] = useState(0);
   const [previewUniverse, setPreviewUniverse] = useState<UniverseSlug>("football");
@@ -390,7 +390,7 @@ export function MissionEditorScreen() {
     setBlurb("");
     setAvailable(false);
     setOfficial(false);
-    setDifficulty("moyen");
+    setDifficulty("");
     setSteps([emptyStep(0)]);
     setSelectedStep(0);
     setMode("edit");
@@ -461,7 +461,7 @@ export function MissionEditorScreen() {
       blurb,
       available,
       official,
-      difficulty,
+      difficulty: difficulty || null,
       themeId: themeId || null,
       steps: builtSteps,
       teacherId: teacher.id,
@@ -565,7 +565,7 @@ export function MissionEditorScreen() {
                     </span>
                     <span className="mission-badge">
                       {MISSION_DIFFICULTIES.find((d) => d.value === item.difficulty)?.label ??
-                        "Moyen"}
+                        "Sans difficulté"}
                     </span>
                   </div>
                   <strong>{item.title}</strong>
@@ -637,7 +637,9 @@ export function MissionEditorScreen() {
                 {gradeLabel(grade)} · {subjectLabel(subject)}
                 {available ? " · publiée" : " · brouillon"}
                 {official ? " · officielle" : " · non officielle"}
-                {` · ${MISSION_DIFFICULTIES.find((d) => d.value === difficulty)?.label ?? "Moyen"}`}
+                {difficulty
+                  ? ` · ${MISSION_DIFFICULTIES.find((d) => d.value === difficulty)?.label ?? difficulty}`
+                  : ""}
               </p>
             </div>
           </div>
@@ -765,8 +767,11 @@ export function MissionEditorScreen() {
                 id="me-difficulty"
                 value={difficulty}
                 disabled={readOnly}
-                onChange={(event) => setDifficulty(event.target.value as MissionDifficulty)}
+                onChange={(event) =>
+                  setDifficulty(event.target.value as MissionDifficulty | "")
+                }
               >
+                <option value="">—</option>
                 {MISSION_DIFFICULTIES.map((item) => (
                   <option key={item.value} value={item.value}>
                     {item.label}

@@ -31,6 +31,7 @@ const files = [
   "supabase/migrations/20260922_admin_accounts.sql",
   "supabase/migrations/20260922_platform_usage_stats.sql",
   "supabase/migrations/20260923_missions_meta_cleanup.sql",
+  "supabase/migrations/20260923_mission_difficulty_nullable.sql",
   "supabase/seed.sql",
 ];
 
