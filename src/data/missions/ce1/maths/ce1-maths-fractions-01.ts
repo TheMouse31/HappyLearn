@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "maths",
   title: "Fractions partie d'un tout en mission",
   blurb: "Une mission CE1 : Fractions partie d'un tout.",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

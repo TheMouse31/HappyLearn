@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "maths",
   title: "Soustraction et sens des opérations en mission",
   blurb: "Une mission CE1 : Soustraction et sens des opérations.",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

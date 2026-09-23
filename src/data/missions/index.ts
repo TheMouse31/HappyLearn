@@ -185,7 +185,8 @@ export function defaultBuiltinMission(
   grade: GradeLevel | null,
   subject: SubjectSlug | null,
 ): MissionDef | null {
-  return listBuiltinMissions(grade, subject).find((item) => item.available) ?? null;
+  const list = listBuiltinMissions(grade, subject);
+  return list.find((item) => item.available) ?? list[0] ?? null;
 }
 
 export function findMission(id: string | null | undefined): MissionDef | null {
@@ -225,8 +226,10 @@ export {
   listEditableCatalog,
   listResolvedMissions,
   listTeacherMissions,
+  MISSION_DIFFICULTIES,
   resolveMission,
   saveTeacherMission,
   suggestNextMissionId,
+  syncBuiltinMissionsToSupabase,
 } from "./catalog";
 export type { EditorKindGroup } from "./catalog";

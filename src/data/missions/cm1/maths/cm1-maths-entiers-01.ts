@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "maths",
   title: "Nombres entiers jusqu'à 999 999 en mission",
   blurb: "Une mission CM1 : Nombres entiers jusqu'à 999 999.",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

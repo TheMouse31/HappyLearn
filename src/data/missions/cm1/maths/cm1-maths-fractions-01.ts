@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "maths",
   title: "Fractions (dénominateur ≤20 opérateur unitair…",
   blurb: "Une mission CM1 : Fractions (dénominateur ≤20 opérateur unitaire).",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

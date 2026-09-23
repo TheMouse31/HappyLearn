@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "maths",
   title: "Longueurs monnaie heure entière en mission",
   blurb: "Une mission CP : Longueurs monnaie heure entière.",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

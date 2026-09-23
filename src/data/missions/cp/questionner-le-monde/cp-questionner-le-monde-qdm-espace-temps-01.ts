@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "questionner-le-monde",
   title: "Espace et temps en mission",
   blurb: "Une mission CP : Questionner le monde — Espace et temps.",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

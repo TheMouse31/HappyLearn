@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "maths",
   title: "Données et probabilités (vocabulaire) en mission",
   blurb: "Une mission CM1 : Données et probabilités (vocabulaire).",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

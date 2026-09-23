@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "sciences",
   title: "Vivant en mission",
   blurb: "Une mission CM1 : Sciences — Vivant.",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

@@ -1,4 +1,11 @@
-import type { GradeLevel, MissionDef, Step, StepKind, SubjectSlug } from "../types";
+import type {
+  GradeLevel,
+  MissionDef,
+  MissionDifficulty,
+  Step,
+  StepKind,
+  SubjectSlug,
+} from "../types";
 import {
   BUILTIN_MISSIONS,
   defaultBuiltinMission,
@@ -9,6 +16,7 @@ import { buildMissionId, isValidMissionId, parseMissionId } from "./ids";
 import { getSupabase } from "../../lib/supabase";
 
 const LOCAL_TEACHER_MISSIONS_KEY = "happy-learn-teacher-missions";
+const DIFFICULTIES: MissionDifficulty[] = ["facile", "moyen", "difficile"];
 
 /**
  * Palette standardisée du studio — valable pour toutes les matières.
@@ -107,6 +115,12 @@ export const EDITOR_KINDS: { value: StepKind; label: string }[] = EDITOR_KIND_GR
   group.items.map((item) => ({ value: item.value, label: item.label })),
 );
 
+export const MISSION_DIFFICULTIES: { value: MissionDifficulty; label: string }[] = [
+  { value: "facile", label: "Facile" },
+  { value: "moyen", label: "Moyen" },
+  { value: "difficile", label: "Difficile" },
+];
+
 export function editorKindHelp(kind: StepKind): string {
   for (const group of EDITOR_KIND_GROUPS) {
     const found = group.items.find((item) => item.value === kind);
@@ -130,6 +144,10 @@ export function editorKindNeedsAnswer(kind: StepKind): boolean {
   );
 }
 
+function normalizeDifficulty(value: unknown): MissionDifficulty {
+  return DIFFICULTIES.includes(value as MissionDifficulty) ? (value as MissionDifficulty) : "moyen";
+}
+
 type MissionRow = {
   id: string;
   grade: string;
@@ -137,6 +155,9 @@ type MissionRow = {
   title: string;
   blurb: string;
   available: boolean;
+  official?: boolean;
+  difficulty?: string;
+  theme_id?: string | null;
   steps: unknown;
   version?: number;
   source?: string;
@@ -153,10 +174,36 @@ function mapRemoteMission(row: MissionRow): MissionDef | null {
     title: row.title,
     blurb: row.blurb ?? "",
     available: Boolean(row.available),
+    official: Boolean(row.official),
+    difficulty: normalizeDifficulty(row.difficulty),
+    themeId: typeof row.theme_id === "string" && row.theme_id ? row.theme_id : null,
     version: row.version ?? 1,
     source: row.source === "builtin" ? "builtin" : "teacher",
     teacherId: row.teacher_id ?? null,
     steps,
+  };
+}
+
+function missionSelectColumns() {
+  return "id, grade, subject, title, blurb, available, official, difficulty, theme_id, steps, version, source, teacher_id";
+}
+
+function toMissionPayload(mission: MissionDef) {
+  return {
+    id: mission.id,
+    grade: mission.grade,
+    subject: mission.subject,
+    title: mission.title,
+    blurb: mission.blurb,
+    available: mission.available,
+    official: mission.official,
+    difficulty: mission.difficulty,
+    theme_id: mission.themeId,
+    steps: mission.steps,
+    version: mission.version ?? 1,
+    source: mission.source === "builtin" ? "builtin" : "teacher",
+    teacher_id: mission.teacherId ?? null,
+    updated_at: new Date().toISOString(),
   };
 }
 
@@ -165,7 +212,10 @@ function mergeMissions(builtin: MissionDef[], remote: MissionDef[]): MissionDef[
   for (const item of builtin) byId.set(item.id, item);
   for (const item of remote) {
     const existing = byId.get(item.id);
-    if (!existing || item.source === "teacher") byId.set(item.id, item);
+    // Distant gagne pour les overrides / créations ; conserve le builtin si remote incomplet.
+    if (!existing || item.source === "teacher" || item.version !== undefined) {
+      byId.set(item.id, { ...existing, ...item, steps: item.steps?.length ? item.steps : existing?.steps ?? [] });
+    }
   }
   return [...byId.values()];
 }
@@ -175,7 +225,15 @@ function readLocalTeacherMissions(): MissionDef[] {
     const raw = localStorage.getItem(LOCAL_TEACHER_MISSIONS_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as MissionDef[];
-    return Array.isArray(parsed) ? parsed.filter((item) => isValidMissionId(item.id)) : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((item) => isValidMissionId(item.id))
+      .map((item) => ({
+        ...item,
+        official: Boolean(item.official),
+        difficulty: normalizeDifficulty(item.difficulty),
+        themeId: item.themeId ?? null,
+      }));
   } catch {
     return [];
   }
@@ -204,7 +262,7 @@ export async function fetchRemoteMissions(filters?: {
 
   let query = client
     .from("missions")
-    .select("id, grade, subject, title, blurb, available, steps, version, source, teacher_id")
+    .select(missionSelectColumns())
     .order("updated_at", { ascending: false });
   if (filters?.grade) query = query.eq("grade", filters.grade);
   if (filters?.subject) query = query.eq("subject", filters.subject);
@@ -226,7 +284,7 @@ export async function resolveMission(id: string | null | undefined): Promise<Mis
   if (!client) return local ?? builtin;
   const { data, error } = await client
     .from("missions")
-    .select("id, grade, subject, title, blurb, available, steps, version, source, teacher_id")
+    .select(missionSelectColumns())
     .eq("id", id)
     .maybeSingle();
   if (error || !data) return local ?? builtin;
@@ -254,6 +312,40 @@ export async function listEditableCatalog(teacherId: string): Promise<MissionDef
   return mergeMissions(BUILTIN_MISSIONS, teacher);
 }
 
+/**
+ * Pousse le catalogue embarqué vers Supabase (admin).
+ * Idempotent : upsert par id, marque non publiées / non officielles si besoin.
+ */
+export async function syncBuiltinMissionsToSupabase(): Promise<{
+  ok: boolean;
+  upserted: number;
+  error?: string;
+}> {
+  const client = getSupabase();
+  if (!client) return { ok: false, upserted: 0, error: "Supabase indisponible." };
+
+  const payload = BUILTIN_MISSIONS.map((mission) =>
+    toMissionPayload({
+      ...mission,
+      available: false,
+      official: false,
+      source: "builtin",
+      teacherId: null,
+    }),
+  );
+
+  // Upsert par lots pour rester sous les limites payload.
+  const chunkSize = 20;
+  let upserted = 0;
+  for (let i = 0; i < payload.length; i += chunkSize) {
+    const chunk = payload.slice(i, i + chunkSize);
+    const { error } = await client.from("missions").upsert(chunk, { onConflict: "id" });
+    if (error) return { ok: false, upserted, error: error.message };
+    upserted += chunk.length;
+  }
+  return { ok: true, upserted };
+}
+
 /** Catalogue administrateur : toutes les missions (builtins + overrides / créations). */
 export async function listAdminCatalog(): Promise<MissionDef[]> {
   const remote = await fetchRemoteMissions({ includeDrafts: true });
@@ -271,12 +363,16 @@ export async function suggestNextMissionId(
   subject: SubjectSlug,
   slug: string,
 ): Promise<string> {
-  const cleanSlug = slug
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "") || "mission";
-  const all = mergeMissions(BUILTIN_MISSIONS, await fetchRemoteMissions({ grade, subject, includeDrafts: true }));
+  const cleanSlug =
+    slug
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "") || "mission";
+  const all = mergeMissions(
+    BUILTIN_MISSIONS,
+    await fetchRemoteMissions({ grade, subject, includeDrafts: true }),
+  );
   let maxNn = 0;
   for (const item of all) {
     const parsed = parseMissionId(item.id);
@@ -294,6 +390,9 @@ export type SaveMissionInput = {
   title: string;
   blurb: string;
   available: boolean;
+  official: boolean;
+  difficulty: MissionDifficulty;
+  themeId: string | null;
   steps: Step[];
   version?: number;
   teacherId: string;
@@ -301,12 +400,14 @@ export type SaveMissionInput = {
   allowBuiltinOverride?: boolean;
 };
 
-export async function saveTeacherMission(input: SaveMissionInput): Promise<{ ok: true; mission: MissionDef } | { ok: false; error: string }> {
+export async function saveTeacherMission(
+  input: SaveMissionInput,
+): Promise<{ ok: true; mission: MissionDef } | { ok: false; error: string }> {
   if (!isValidMissionId(input.id)) {
     return { ok: false, error: "Identifiant de mission invalide." };
   }
   if (findBuiltinMission(input.id) && !input.allowBuiltinOverride) {
-    return { ok: false, error: "Une mission officielle porte déjà cet id. Duplique-la ou change le slug." };
+    return { ok: false, error: "Une mission porte déjà cet id. Duplique-la ou change le thème." };
   }
   const mission: MissionDef = {
     id: input.id,
@@ -315,8 +416,11 @@ export async function saveTeacherMission(input: SaveMissionInput): Promise<{ ok:
     title: input.title.trim() || "Sans titre",
     blurb: input.blurb.trim(),
     available: input.available,
+    official: input.official,
+    difficulty: normalizeDifficulty(input.difficulty),
+    themeId: input.themeId,
     version: input.version ?? 1,
-    source: "teacher",
+    source: input.allowBuiltinOverride && findBuiltinMission(input.id) ? "builtin" : "teacher",
     teacherId: input.teacherId,
     steps: input.steps,
   };
@@ -329,23 +433,9 @@ export async function saveTeacherMission(input: SaveMissionInput): Promise<{ ok:
     return { ok: true, mission };
   }
 
-  const payload = {
-    id: mission.id,
-    grade: mission.grade,
-    subject: mission.subject,
-    title: mission.title,
-    blurb: mission.blurb,
-    available: mission.available,
-    steps: mission.steps,
-    version: mission.version ?? 1,
-    source: "teacher" as const,
-    teacher_id: input.teacherId,
-    updated_at: new Date().toISOString(),
-  };
-
+  const payload = toMissionPayload(mission);
   const { error } = await client.from("missions").upsert(payload, { onConflict: "id" });
   if (error) {
-    // Fallback local si RLS / réseau échoue.
     const current = readLocalTeacherMissions().filter((item) => item.id !== mission.id);
     current.unshift(mission);
     writeLocalTeacherMissions(current);
@@ -360,7 +450,7 @@ export async function deleteTeacherMission(
   options?: { allowBuiltinOverride?: boolean },
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   if (findBuiltinMission(id) && !options?.allowBuiltinOverride) {
-    return { ok: false, error: "Impossible de supprimer une mission officielle." };
+    return { ok: false, error: "Impossible de supprimer une mission du catalogue embarqué." };
   }
   const client = getSupabase();
   if (client) {

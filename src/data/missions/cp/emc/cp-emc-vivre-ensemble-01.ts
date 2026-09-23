@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "emc",
   title: "Émotions règles coopération en mission",
   blurb: "Une mission CP : EMC — Émotions règles coopération.",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

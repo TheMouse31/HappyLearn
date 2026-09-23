@@ -101,3 +101,45 @@ export function listThemesFor(grade: GradeLevel | null, subject: SubjectSlug | n
   });
 }
 
+/** Matières du programme pour lesquelles un thème existe à ce niveau. */
+export function listSubjectsForGrade(grade: GradeLevel): SubjectSlug[] {
+  const seen = new Set<SubjectSlug>();
+  const ordered: SubjectSlug[] = [];
+  for (const theme of PROGRAMME_THEMES) {
+    if (theme.grade !== grade) continue;
+    if (seen.has(theme.subject)) continue;
+    seen.add(theme.subject);
+    ordered.push(theme.subject);
+  }
+  return ordered;
+}
+
+export function findThemeById(themeId: string | null | undefined): ProgrammeTheme | null {
+  if (!themeId) return null;
+  return PROGRAMME_THEMES.find((theme) => theme.id === themeId) ?? null;
+}
+
+export function findThemeByMissionId(missionId: string | null | undefined): ProgrammeTheme | null {
+  if (!missionId) return null;
+  return PROGRAMME_THEMES.find((theme) => theme.missionId === missionId) ?? null;
+}
+
+/**
+ * Segment slug d’un thème programme pour l’id mission
+ * (`cm2-maths-fractions-operateur` → `fractions-operateur`).
+ */
+export function themeSlugFromId(themeId: string, grade: GradeLevel, subject: SubjectSlug): string {
+  const prefix = `${grade}-${subject}-`;
+  if (themeId.startsWith(prefix)) {
+    const rest = themeId.slice(prefix.length).replace(/[^a-z0-9-]+/g, "-").replace(/^-|-$/g, "");
+    if (rest) return rest;
+  }
+  return (
+    themeId
+      .replace(new RegExp(`^${grade}-`), "")
+      .replace(new RegExp(`^${subject}-`), "")
+      .replace(/[^a-z0-9-]+/g, "-")
+      .replace(/^-|-$/g, "") || "mission"
+  );
+}
+

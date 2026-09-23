@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "maths",
   title: "Géométrie (losange symétrie patron) en mission",
   blurb: "Une mission CE2 : Géométrie (losange symétrie patron).",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

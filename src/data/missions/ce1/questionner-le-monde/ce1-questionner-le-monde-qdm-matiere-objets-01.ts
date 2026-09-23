@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "questionner-le-monde",
   title: "Matière et objets en mission",
   blurb: "Une mission CE1 : Questionner le monde — Matière et objets.",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

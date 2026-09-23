@@ -1,4 +1,13 @@
-import type { GradeLevel, MissionDef, Step, SubjectSlug, UniverseCopy, UniverseSlug } from "../types";
+import type {
+  GradeLevel,
+  MissionDef,
+  MissionDifficulty,
+  Step,
+  SubjectSlug,
+  UniverseCopy,
+  UniverseSlug,
+} from "../types";
+import { findThemeByMissionId } from "../programmeThemes";
 import { ordinalStepSlug, stepId } from "./ids";
 
 export function allUniverses(copy: UniverseCopy): Record<UniverseSlug, UniverseCopy> {
@@ -37,17 +46,26 @@ export function defineMission(def: {
   subject: SubjectSlug;
   title: string;
   blurb: string;
-  available: boolean;
+  /** @deprecated Préférer laisser false — catalogue non publié par défaut. */
+  available?: boolean;
+  official?: boolean;
+  difficulty?: MissionDifficulty;
+  themeId?: string | null;
   version?: number;
   steps: StepInput[];
 }): MissionDef {
+  const linkedTheme = findThemeByMissionId(def.id);
   return {
     id: def.id,
     grade: def.grade,
     subject: def.subject,
     title: def.title,
     blurb: def.blurb,
-    available: def.available,
+    // Catalogue embarqué : non publié et non officiel jusqu’à validation éditoriale.
+    available: def.available ?? false,
+    official: def.official ?? false,
+    difficulty: def.difficulty ?? "moyen",
+    themeId: def.themeId ?? linkedTheme?.id ?? null,
     version: def.version ?? 1,
     source: "builtin",
     steps: defineSteps(def.id, def.steps),

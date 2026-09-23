@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "francais",
   title: "Vocabulaire et oral en mission",
   blurb: "Une mission CM2 : Vocabulaire et oral.",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

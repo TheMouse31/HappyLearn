@@ -3942,6 +3942,12 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
   color: #0f6b45;
 }
 
+.mission-badge.is-official {
+  border-color: color-mix(in srgb, #2f6fed 35%, var(--line));
+  background: #eef4ff;
+  color: #1d4fbf;
+}
+
 .mission-studio-bar {
   display: flex;
   flex-wrap: wrap;
@@ -3957,38 +3963,75 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
 .mission-studio-bar-main {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
   align-items: center;
+  gap: 10px;
   min-width: 0;
-  flex: 1 1 280px;
 }
 
 .mission-studio-title-block {
+  display: grid;
+  gap: 2px;
   min-width: 0;
-  flex: 1 1 200px;
 }
 
 .mission-studio-title-block p {
-  margin: 2px 0 0;
-  font-size: 0.88rem;
+  margin: 0;
   color: var(--muted, #5a6270);
+  font-size: 0.86rem;
 }
 
 .mission-studio-title-input {
-  width: 100%;
-  border: 2px solid #3d8f72;
-  border-radius: 10px;
-  background: #fff;
-  font: inherit;
-  font-size: 1.25rem;
+  width: min(100%, 28rem);
+  font-size: 1.2rem;
   font-weight: 800;
+  border: 1px solid var(--line);
+  border-radius: 12px;
   padding: 8px 12px;
+  background: #fff;
 }
 
 .mission-studio-title-input:focus {
-  outline: 3px solid color-mix(in srgb, var(--action, #0f8f78) 28%, transparent);
-  outline-offset: 1px;
-  border-color: var(--action, #0f8f78);
+  outline: 2px solid color-mix(in srgb, var(--action, #138c59) 35%, transparent);
+  border-color: var(--action, #138c59);
+}
+
+.mission-studio-note {
+  margin: 0;
+}
+
+.mission-studio-meta {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.mission-studio-meta-title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.mission-studio-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.mission-studio-meta-theme,
+.mission-studio-meta-blurb {
+  grid-column: 1 / -1;
+}
+
+.mission-studio-meta-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.mission-studio-answer-intro {
+  margin: 0 0 8px;
 }
 
 .mission-publish-chip {
@@ -4002,29 +4045,6 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
   background: #f8faf9;
   font-weight: 700;
   cursor: pointer;
-}
-
-.mission-studio-note {
-  margin: 0;
-}
-
-.mission-studio-meta {
-  border-radius: 14px;
-  border: 1px solid var(--line);
-  background: #f8faf9;
-  padding: 10px 14px;
-}
-
-.mission-studio-meta summary {
-  cursor: pointer;
-  font-weight: 800;
-}
-
-.mission-studio-meta-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
-  margin-top: 12px;
 }
 
 .mission-studio-layout {

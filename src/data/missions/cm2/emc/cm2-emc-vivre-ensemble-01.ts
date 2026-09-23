@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "emc",
   title: "Règle droit jugement engagement en mission",
   blurb: "Une mission CM2 : EMC — Règle droit jugement engagement.",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

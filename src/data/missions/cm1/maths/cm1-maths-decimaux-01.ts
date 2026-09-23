@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "maths",
   title: "Nombres décimaux (centièmes) en mission",
   blurb: "Une mission CM1 : Nombres décimaux (centièmes).",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "francais",
   title: "Production d'écrits en mission",
   blurb: "Une mission CE2 : Production d'écrits.",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

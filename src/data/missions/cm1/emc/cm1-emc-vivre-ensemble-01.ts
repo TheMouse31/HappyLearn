@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "emc",
   title: "Sensibilité règle engagement en mission",
   blurb: "Une mission CM1 : EMC — Sensibilité règle engagement.",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

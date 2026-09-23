@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "maths",
   title: "Initiation pensée algébrique en mission",
   blurb: "Une mission CM2 : Initiation pensée algébrique.",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

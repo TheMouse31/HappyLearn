@@ -594,7 +594,7 @@ export const mission = defineMission({
   subject: "maths",
   title: "Fractions en mission",
   blurb: "Une séance de fractions racontée comme une aventure.",
-  available: true,
+  available: false,
   version: 1,
   steps: RAW_STEPS,
 });

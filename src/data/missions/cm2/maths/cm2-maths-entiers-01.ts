@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "maths",
   title: "Nombres entiers (grands nombres) en mission",
   blurb: "Une mission CM2 : Nombres entiers (grands nombres).",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "maths",
   title: "Proportionnalité (linéarité sans produit en c…",
   blurb: "Une mission CM2 : Proportionnalité (linéarité sans produit en croix).",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

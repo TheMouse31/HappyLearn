@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "histoire-geo",
   title: "L'âge industriel en mission",
   blurb: "Une mission CM2 : Histoire — L'âge industriel.",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

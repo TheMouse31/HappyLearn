@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "maths",
   title: "Calcul mental et automatismes en mission",
   blurb: "Une mission CM2 : Calcul mental et automatismes.",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

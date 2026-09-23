@@ -77,6 +77,9 @@ export type SessionParticipant = {
   handRaisedAt: string | null;
 };
 
+/** Niveau de difficulté d’une mission (tag studio / catalogue). */
+export type MissionDifficulty = "facile" | "moyen" | "difficile";
+
 export type MissionDef = {
   id: string;
   grade: GradeLevel;
@@ -84,7 +87,14 @@ export type MissionDef = {
   title: string;
   blurb: string;
   steps: Step[];
+  /** Publiée pour les élèves / enseignants (sinon brouillon). */
   available: boolean;
+  /** Mission labellisée officielle Happy Learn (sinon création / brouillon éditorial). */
+  official: boolean;
+  /** Difficulté pédagogique. */
+  difficulty: MissionDifficulty;
+  /** Thème du programme (`programmeThemes`) lié à cette mission. */
+  themeId: string | null;
   /** Incrémente sans changer l’id public. */
   version?: number;
   /** builtin = catalogue embarqué ; teacher = créée in-app. */

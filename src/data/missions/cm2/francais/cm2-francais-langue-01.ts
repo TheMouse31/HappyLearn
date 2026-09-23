@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "francais",
   title: "Étude de la langue (grammaire orthographe)…",
   blurb: "Une mission CM2 : Étude de la langue (grammaire orthographe).",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

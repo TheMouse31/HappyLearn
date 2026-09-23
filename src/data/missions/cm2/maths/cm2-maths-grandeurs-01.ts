@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "maths",
   title: "Grandeurs et mesures (durées angles aires)…",
   blurb: "Une mission CM2 : Grandeurs et mesures (durées angles aires).",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

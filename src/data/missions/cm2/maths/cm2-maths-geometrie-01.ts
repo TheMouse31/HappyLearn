@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "maths",
   title: "Espace et géométrie (figures symétrie)…",
   blurb: "Une mission CM2 : Espace et géométrie (figures symétrie).",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

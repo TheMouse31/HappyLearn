@@ -23,15 +23,25 @@ import {
   defineSteps,
   deleteTeacherMission,
   listAdminCatalog,
+  MISSION_DIFFICULTIES,
   ordinalStepSlug,
   parseMissionId,
   resolveMission,
   saveTeacherMission,
   suggestNextMissionId,
+  syncBuiltinMissionsToSupabase,
 } from "../data/missions/index";
+import {
+  findThemeById,
+  findThemeByMissionId,
+  listSubjectsForGrade,
+  listThemesFor,
+  themeSlugFromId,
+} from "../data/programmeThemes";
 import type {
   GradeLevel,
   MissionDef,
+  MissionDifficulty,
   Step,
   StepKind,
   SubjectSlug,
@@ -140,9 +150,14 @@ function missionToDrafts(mission: MissionDef): {
   title: string;
   blurb: string;
   available: boolean;
+  official: boolean;
+  difficulty: MissionDifficulty;
+  themeId: string;
   steps: DraftStep[];
 } {
   const parsed = parseMissionId(mission.id);
+  const theme =
+    findThemeById(mission.themeId) ?? findThemeByMissionId(mission.id) ?? null;
   return {
     grade: mission.grade,
     subject: mission.subject,
@@ -150,6 +165,9 @@ function missionToDrafts(mission: MissionDef): {
     title: mission.title,
     blurb: mission.blurb,
     available: mission.available,
+    official: Boolean(mission.official),
+    difficulty: mission.difficulty ?? "moyen",
+    themeId: theme?.id ?? mission.themeId ?? "",
     steps: mission.steps.map(stepToDraft),
   };
 }
@@ -175,11 +193,14 @@ export function MissionEditorScreen() {
 
   const [grade, setGrade] = useState<GradeLevel>("cm2");
   const [subject, setSubject] = useState<SubjectSlug>("maths");
+  const [themeId, setThemeId] = useState("");
   const [slug, setSlug] = useState("nouvelle-mission");
   const [missionId, setMissionId] = useState("");
   const [title, setTitle] = useState("");
   const [blurb, setBlurb] = useState("");
   const [available, setAvailable] = useState(false);
+  const [official, setOfficial] = useState(false);
+  const [difficulty, setDifficulty] = useState<MissionDifficulty>("moyen");
   const [steps, setSteps] = useState<DraftStep[]>([emptyStep(0)]);
   const [selectedStep, setSelectedStep] = useState(0);
   const [previewUniverse, setPreviewUniverse] = useState<UniverseSlug>("football");
@@ -190,6 +211,17 @@ export function MissionEditorScreen() {
   const [creatingIllust, setCreatingIllust] = useState(false);
   const [illustForm, setIllustForm] = useState<IllustrationFormState>(EMPTY_ILLUSTRATION_FORM);
   const [previewOpen, setPreviewOpen] = useState(true);
+  const [syncNote, setSyncNote] = useState("");
+
+  const subjectsForGrade = useMemo(() => {
+    const slugs = listSubjectsForGrade(grade);
+    return SUBJECTS.filter((item) => slugs.includes(item.slug));
+  }, [grade]);
+
+  const themesForSelection = useMemo(
+    () => listThemesFor(grade, subject),
+    [grade, subject],
+  );
 
   async function refreshCatalog() {
     const rows = await listAdminCatalog();
@@ -199,6 +231,46 @@ export function MissionEditorScreen() {
   useEffect(() => {
     void refreshCatalog();
   }, [teacher?.id]);
+
+  useEffect(() => {
+    if (role !== "admin" || !teacher?.isAdmin) return;
+    let cancelled = false;
+    void syncBuiltinMissionsToSupabase().then((result) => {
+      if (cancelled) return;
+      if (result.ok) {
+        setSyncNote(`${result.upserted} missions synchronisées dans Supabase.`);
+        void refreshCatalog();
+      } else if (result.error) {
+        setSyncNote(`Sync catalogue : ${result.error}`);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [role, teacher?.isAdmin]);
+
+  // Cascade : si la matière n’existe pas pour le niveau, prendre la 1ʳᵉ disponible.
+  useEffect(() => {
+    if (!subjectsForGrade.length) return;
+    if (!subjectsForGrade.some((item) => item.slug === subject)) {
+      setSubject(subjectsForGrade[0].slug);
+    }
+  }, [subjectsForGrade, subject]);
+
+  // Cascade : thème cohérent avec niveau × matière.
+  useEffect(() => {
+    if (!themesForSelection.length) {
+      if (themeId) setThemeId("");
+      return;
+    }
+    if (!themesForSelection.some((theme) => theme.id === themeId)) {
+      const first = themesForSelection[0];
+      setThemeId(first.id);
+      if (!editingId && !builtinOverride) {
+        setSlug(themeSlugFromId(first.id, grade, subject));
+      }
+    }
+  }, [themesForSelection, themeId, editingId, builtinOverride, grade, subject]);
 
   // Rafraîchit ScenePicker quand la bibliothèque perso change (admin ou création inline).
   useEffect(() => {
@@ -280,11 +352,14 @@ export function MissionEditorScreen() {
     const draft = missionToDrafts(mission);
     setGrade(draft.grade);
     setSubject(draft.subject);
+    setThemeId(draft.themeId);
     setSlug(draft.slug);
     setMissionId(mission.id);
     setTitle(draft.title);
     setBlurb(draft.blurb);
     setAvailable(draft.available);
+    setOfficial(draft.official);
+    setDifficulty(draft.difficulty);
     setSteps(draft.steps.length ? draft.steps : [emptyStep(0)]);
     setSelectedStep(0);
     setEditingId(asReadOnly ? null : mission.id);
@@ -296,40 +371,55 @@ export function MissionEditorScreen() {
   }
 
   function startCreate() {
+    const initialGrade: GradeLevel = "cm2";
+    const subjects = listSubjectsForGrade(initialGrade);
+    const initialSubject = subjects[0] ?? "maths";
+    const themes = listThemesFor(initialGrade, initialSubject);
+    const initialTheme = themes[0] ?? null;
+    const initialSlug = initialTheme
+      ? themeSlugFromId(initialTheme.id, initialGrade, initialSubject)
+      : "nouvelle-mission";
     setEditingId(null);
     setReadOnly(false);
     setBuiltinOverride(false);
-    setGrade("cm2");
-    setSubject("maths");
-    setSlug("nouvelle-mission");
+    setGrade(initialGrade);
+    setSubject(initialSubject);
+    setThemeId(initialTheme?.id ?? "");
+    setSlug(initialSlug);
     setTitle("");
     setBlurb("");
     setAvailable(false);
+    setOfficial(false);
+    setDifficulty("moyen");
     setSteps([emptyStep(0)]);
     setSelectedStep(0);
     setMode("edit");
     setMessage("");
     setError("");
-    void suggestNextMissionId("cm2", "maths", "nouvelle-mission").then(setMissionId);
+    void suggestNextMissionId(initialGrade, initialSubject, initialSlug).then(setMissionId);
   }
 
   function duplicateBuiltin(mission: MissionDef) {
     const draft = missionToDrafts(mission);
+    const copySlug = `${draft.slug}-copie`;
     setEditingId(null);
     setReadOnly(false);
     setBuiltinOverride(false);
     setGrade(draft.grade);
     setSubject(draft.subject);
-    setSlug(`${draft.slug}-copie`);
+    setThemeId(draft.themeId);
+    setSlug(copySlug);
     setTitle(`${draft.title} (copie)`);
     setBlurb(draft.blurb);
     setAvailable(false);
+    setOfficial(false);
+    setDifficulty(draft.difficulty);
     setSteps(draft.steps);
     setSelectedStep(0);
     setMode("edit");
     setMessage("");
     setError("");
-    void suggestNextMissionId(draft.grade, draft.subject, `${draft.slug}-copie`).then(setMissionId);
+    void suggestNextMissionId(draft.grade, draft.subject, copySlug).then(setMissionId);
   }
 
   function updateStep(index: number, patch: Partial<DraftStep>) {
@@ -370,6 +460,9 @@ export function MissionEditorScreen() {
       title,
       blurb,
       available,
+      official,
+      difficulty,
+      themeId: themeId || null,
       steps: builtSteps,
       teacherId: teacher.id,
       version: 1,
@@ -441,6 +534,7 @@ export function MissionEditorScreen() {
               </Button>
             </div>
           </header>
+          {syncNote ? <p className="field-help">{syncNote}</p> : null}
 
           <div className="mission-studio-toolbar">
             <div className="field mission-studio-search">
@@ -466,14 +560,21 @@ export function MissionEditorScreen() {
                     <span className={`mission-badge${item.available ? " is-live" : ""}`}>
                       {item.available ? "Publiée" : "Brouillon"}
                     </span>
+                    <span className={`mission-badge${item.official ? " is-official" : ""}`}>
+                      {item.official ? "Officielle" : "Non officielle"}
+                    </span>
                     <span className="mission-badge">
-                      {item.source === "teacher" ? "Créée" : "Officielle"}
+                      {MISSION_DIFFICULTIES.find((d) => d.value === item.difficulty)?.label ??
+                        "Moyen"}
                     </span>
                   </div>
                   <strong>{item.title}</strong>
                   <p>
-                    {gradeLabel(item.grade)} · {subjectLabel(item.subject)} · {item.steps.length}{" "}
-                    étape{item.steps.length > 1 ? "s" : ""}
+                    {gradeLabel(item.grade)} · {subjectLabel(item.subject)}
+                    {item.themeId
+                      ? ` · ${findThemeById(item.themeId)?.label ?? item.themeId}`
+                      : ""}{" "}
+                    · {item.steps.length} étape{item.steps.length > 1 ? "s" : ""}
                   </p>
                 </div>
                 <div className="actions">
@@ -535,6 +636,8 @@ export function MissionEditorScreen() {
               <p>
                 {gradeLabel(grade)} · {subjectLabel(subject)}
                 {available ? " · publiée" : " · brouillon"}
+                {official ? " · officielle" : " · non officielle"}
+                {` · ${MISSION_DIFFICULTIES.find((d) => d.value === difficulty)?.label ?? "Moyen"}`}
               </p>
             </div>
           </div>
@@ -556,6 +659,14 @@ export function MissionEditorScreen() {
                     onChange={(event) => setAvailable(event.target.checked)}
                   />
                   Publier
+                </label>
+                <label className="mission-publish-chip">
+                  <input
+                    type="checkbox"
+                    checked={official}
+                    onChange={(event) => setOfficial(event.target.checked)}
+                  />
+                  Officielle
                 </label>
                 <Button variant="primary" type="button" disabled={busy} onClick={() => void onSave()}>
                   Enregistrer
@@ -582,17 +693,18 @@ export function MissionEditorScreen() {
 
         {builtinOverride ? (
           <p className="field-help mission-studio-note">
-            Mission officielle : l’enregistrement crée une version adaptée (même identifiant).
+            Mission du catalogue embarqué : l’enregistrement met à jour la version Supabase (même
+            identifiant).
           </p>
         ) : null}
         {message ? <p className="feedback ok">{message}</p> : null}
         {error ? <p className="error">{error}</p> : null}
 
-        <details className="mission-studio-meta">
-          <summary>Identité de la mission</summary>
+        <section className="mission-studio-meta" aria-label="Identité de la mission">
+          <h2 className="mission-studio-meta-title">Identité de la mission</h2>
           <div className="mission-studio-meta-grid">
             <div className="field">
-              <label htmlFor="me-grade">Niveau</label>
+              <label htmlFor="me-grade">Classe</label>
               <select
                 id="me-grade"
                 value={grade}
@@ -611,26 +723,58 @@ export function MissionEditorScreen() {
               <select
                 id="me-subject"
                 value={subject}
-                disabled={readOnly || Boolean(editingId)}
+                disabled={readOnly || Boolean(editingId) || subjectsForGrade.length === 0}
                 onChange={(event) => setSubject(event.target.value as SubjectSlug)}
               >
-                {SUBJECTS.map((item) => (
+                {subjectsForGrade.map((item) => (
                   <option key={item.slug} value={item.slug}>
                     {item.label}
                   </option>
                 ))}
               </select>
             </div>
-            <div className="field">
-              <label htmlFor="me-slug">Thème (slug)</label>
-              <input
-                id="me-slug"
-                value={slug}
-                disabled={readOnly || Boolean(editingId)}
-                onChange={(event) => setSlug(event.target.value)}
-              />
+            <div className="field mission-studio-meta-theme">
+              <label htmlFor="me-theme">Thème du programme</label>
+              <select
+                id="me-theme"
+                value={themeId}
+                disabled={readOnly || Boolean(editingId) || themesForSelection.length === 0}
+                onChange={(event) => {
+                  const nextId = event.target.value;
+                  setThemeId(nextId);
+                  const theme = findThemeById(nextId);
+                  if (theme && !editingId && !builtinOverride) {
+                    setSlug(themeSlugFromId(theme.id, grade, subject));
+                  }
+                }}
+              >
+                {themesForSelection.length === 0 ? (
+                  <option value="">Aucun thème pour cette matière</option>
+                ) : (
+                  themesForSelection.map((theme) => (
+                    <option key={theme.id} value={theme.id}>
+                      {theme.label}
+                    </option>
+                  ))
+                )}
+              </select>
             </div>
             <div className="field">
+              <label htmlFor="me-difficulty">Difficulté</label>
+              <select
+                id="me-difficulty"
+                value={difficulty}
+                disabled={readOnly}
+                onChange={(event) => setDifficulty(event.target.value as MissionDifficulty)}
+              >
+                {MISSION_DIFFICULTIES.map((item) => (
+                  <option key={item.value} value={item.value}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="field mission-studio-meta-blurb">
               <label htmlFor="me-blurb">Accroche catalogue</label>
               <input
                 id="me-blurb"
@@ -640,8 +784,32 @@ export function MissionEditorScreen() {
                 placeholder="Une phrase pour le professeur"
               />
             </div>
+            <div className="field">
+              <label htmlFor="me-id">Identifiant</label>
+              <input id="me-id" value={missionId} readOnly disabled />
+            </div>
           </div>
-        </details>
+          <div className="mission-studio-meta-flags">
+            <label className="mission-publish-chip">
+              <input
+                type="checkbox"
+                checked={available}
+                disabled={readOnly}
+                onChange={(event) => setAvailable(event.target.checked)}
+              />
+              Publiée
+            </label>
+            <label className="mission-publish-chip">
+              <input
+                type="checkbox"
+                checked={official}
+                disabled={readOnly}
+                onChange={(event) => setOfficial(event.target.checked)}
+              />
+              Officielle
+            </label>
+          </div>
+        </section>
 
         {/* Layout studio : rail étapes | workspace (onglets) | aperçu élève. */}
         <div className="mission-studio-layout">
@@ -891,13 +1059,26 @@ export function MissionEditorScreen() {
 
                 {stepPane === "answer" && answerNeeded ? (
                   <div className="mission-studio-panel">
+                    <p className="field-help mission-studio-answer-intro">
+                      {currentDraft.kind === "choice"
+                        ? "QCM : une bonne réponse + distracteurs séparés par |. Les propositions sont mélangées pour l’élève."
+                        : currentDraft.kind === "fraction-choice" ||
+                            currentDraft.kind === "simplify" ||
+                            currentDraft.kind === "tutorial"
+                          ? "Fractions : écris la réponse sous la forme a/b (ex. 3/4). Ajoute des distracteurs pour un QCM."
+                          : currentDraft.kind === "number"
+                            ? "Nombre / calcul : la valeur exacte attendue. Distracteurs optionnels pour un QCM."
+                            : null}
+                    </p>
                     <div className="field">
                       <label>
                         {currentDraft.kind === "audio"
                           ? "Réponse attendue (optionnel)"
                           : currentDraft.kind === "blanks"
                             ? "Réponses des trous"
-                            : "Réponse attendue"}
+                            : currentDraft.kind === "choice"
+                              ? "Bonne réponse"
+                              : "Réponse attendue"}
                       </label>
                       <input
                         value={currentDraft.expected}
@@ -910,7 +1091,15 @@ export function MissionEditorScreen() {
                             ? "Ex. chat | chien"
                             : currentDraft.kind === "audio"
                               ? "Laisse vide = écoute seule"
-                              : undefined
+                              : currentDraft.kind === "choice"
+                                ? "Ex. 12"
+                                : currentDraft.kind === "fraction-choice" ||
+                                    currentDraft.kind === "simplify" ||
+                                    currentDraft.kind === "tutorial"
+                                  ? "Ex. 3/4"
+                                  : currentDraft.kind === "number"
+                                    ? "Ex. 42"
+                                    : undefined
                         }
                       />
                       {currentDraft.kind === "blanks" ? (
@@ -934,12 +1123,15 @@ export function MissionEditorScreen() {
                           onChange={(event) =>
                             updateStep(selectedStep, { distractors: event.target.value })
                           }
-                          placeholder="Sépare les distracteurs par |"
+                          placeholder="Sépare les mauvaises réponses par |"
                         />
                         <small className="field-help">
-                          Exemple : {currentDraft.kind === "choice" || currentDraft.kind === "audio"
-                            ? "vert | bleu | jaune"
-                            : "1/2 | 2/3 | 3/4"}
+                          Exemple :{" "}
+                          {currentDraft.kind === "choice" || currentDraft.kind === "audio"
+                            ? "10 | 14 | 16"
+                            : currentDraft.kind === "number"
+                              ? "40 | 41 | 44"
+                              : "1/2 | 2/3 | 4/5"}
                         </small>
                       </div>
                     )}

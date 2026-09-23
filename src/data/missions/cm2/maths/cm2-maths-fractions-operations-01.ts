@@ -12,7 +12,7 @@ export const mission = defineMission({
   subject: "maths",
   title: "Fractions en opérations",
   blurb: "Comparer, additionner et soustraire des fractions pour combiner des distances.",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

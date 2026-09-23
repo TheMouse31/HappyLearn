@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "francais",
   title: "Geste cursif copie premières phrases en mission",
   blurb: "Une mission CP : Geste cursif copie premières phrases.",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

@@ -14,7 +14,7 @@ export const mission = defineMission({
   subject: "maths",
   title: "Décimaux en mission",
   blurb: "Lire, écrire et comparer des nombres décimaux jusqu’aux millièmes.",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

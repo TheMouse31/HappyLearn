@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "maths",
   title: "Formes solides repérage spatial en mission",
   blurb: "Une mission CP : Formes solides repérage spatial.",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

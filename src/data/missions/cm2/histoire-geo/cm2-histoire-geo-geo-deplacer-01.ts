@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "histoire-geo",
   title: "Se déplacer en mission",
   blurb: "Une mission CM2 : Géographie — Se déplacer.",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

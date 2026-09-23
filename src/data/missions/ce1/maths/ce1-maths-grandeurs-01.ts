@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "maths",
   title: "Grandeurs (km masses monnaie centimes)…",
   blurb: "Une mission CE1 : Grandeurs (km masses monnaie centimes).",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

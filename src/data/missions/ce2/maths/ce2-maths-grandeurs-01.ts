@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "maths",
   title: "Grandeurs (périmètre contenances durées)…",
   blurb: "Une mission CE2 : Grandeurs (périmètre contenances durées).",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

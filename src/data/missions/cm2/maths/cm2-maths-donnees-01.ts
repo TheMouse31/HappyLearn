@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "maths",
   title: "Organisation des données et probabilités…",
   blurb: "Une mission CM2 : Organisation des données et probabilités.",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

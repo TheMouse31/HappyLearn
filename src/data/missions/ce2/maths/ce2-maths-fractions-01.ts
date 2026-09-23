@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "maths",
   title: "Fractions d'unité / égalités (dén. ≤12)…",
   blurb: "Une mission CE2 : Fractions d'unité / égalités (dén. ≤12).",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

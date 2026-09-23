@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "maths",
   title: "Multiplication posée et division en mission",
   blurb: "Une mission CE2 : Multiplication posée et division.",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

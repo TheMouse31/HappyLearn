@@ -12,7 +12,7 @@ export const mission = defineMission({
   subject: "maths",
   title: "Fractions sur la droite",
   blurb: "Placer, encadrer et comparer des fractions, y compris plus grandes que 1.",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {

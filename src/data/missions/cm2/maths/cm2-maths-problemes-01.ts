@@ -9,7 +9,7 @@ export const mission = defineMission({
   subject: "maths",
   title: "Résolution de problèmes (structures variées)…",
   blurb: "Une mission CM2 : Résolution de problèmes (structures variées).",
-  available: true,
+  available: false,
   version: 1,
   steps: [
     {
