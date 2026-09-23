@@ -6,7 +6,6 @@ import { GRADES, SUBJECTS, gradeLabel, subjectLabel } from "../data/catalog";
 import { listResolvedMissions } from "../data/missions";
 import type { ClassStudent, GradeLevel, MissionDef, PlayMode, SubjectSlug } from "../data/types";
 import { formatStudentName } from "../data/types";
-import { agentDebugLog } from "../lib/agentDebugLog";
 import { useSession } from "../lib/session";
 
 type PresenceStatus = "connecte" | "deconnecte" | "absent";
@@ -97,23 +96,6 @@ export function SessionControlScreen() {
   }, [liveSession?.missionId, missions]);
 
   useEffect(() => {
-    // #region agent log
-    agentDebugLog({
-      hypothesisId: "C,E",
-      location: "SessionControlScreen.tsx:mount-refresh",
-      message: "SessionControl mount/class change",
-      data: {
-        role,
-        hasTeacher: Boolean(teacher),
-        backend,
-        activeClassId,
-        currentId: current?.id ?? null,
-        classesCount: classes.length,
-        liveSessionId: liveSession?.id ?? null,
-        liveSessionCode: liveSession?.code ?? null,
-      },
-    });
-    // #endregion
     void refreshLiveSessionRef.current();
   }, [current?.id]);
 
@@ -182,14 +164,6 @@ export function SessionControlScreen() {
   }, [roster, liveParticipants]);
 
   if ((role !== "enseignant" && role !== "admin") || !teacher) {
-    // #region agent log
-    agentDebugLog({
-      hypothesisId: "E",
-      location: "SessionControlScreen.tsx:auth-redirect",
-      message: "Redirect away from session pilotage",
-      data: { role, hasTeacher: Boolean(teacher) },
-    });
-    // #endregion
     return <Navigate to="/connexion/enseignant" replace />;
   }
 
@@ -202,47 +176,11 @@ export function SessionControlScreen() {
     missions.some((m) => m.id === missionId && m.available);
 
   const launchSession = () => {
-    if (!current) {
-      // #region agent log
-      agentDebugLog({
-        hypothesisId: "C",
-        location: "SessionControlScreen.tsx:launchSession",
-        message: "Launch aborted: no current class",
-        data: { activeClassId, classesCount: classes.length },
-      });
-      // #endregion
-      return;
-    }
+    if (!current) return;
     setBusy(true);
     setError("");
-    // #region agent log
-    agentDebugLog({
-      hypothesisId: "A,F",
-      location: "SessionControlScreen.tsx:launchSession",
-      message: "Launch clicked",
-      data: {
-        classId: current.id,
-        role,
-        backend,
-        prevLiveSessionId: liveSession?.id ?? null,
-      },
-    });
-    // #endregion
     void launchClassSession(current.id)
       .then((created) => {
-        // #region agent log
-        agentDebugLog({
-          hypothesisId: "A,F",
-          location: "SessionControlScreen.tsx:launchSession.then",
-          message: "Launch promise resolved",
-          data: {
-            created: Boolean(created),
-            createdId: created?.id ?? null,
-            createdCode: created?.code ?? null,
-            createdStatut: created?.statut ?? null,
-          },
-        });
-        // #endregion
         if (!created) setError("Impossible de lancer la session.");
       })
       .catch((err: unknown) => {
@@ -250,14 +188,6 @@ export function SessionControlScreen() {
           err instanceof Error && err.message.trim()
             ? err.message
             : "Impossible de lancer la session.";
-        // #region agent log
-        agentDebugLog({
-          hypothesisId: "F",
-          location: "SessionControlScreen.tsx:launchSession.catch",
-          message: "Launch promise rejected",
-          data: { error: message, runId: "post-fix" },
-        });
-        // #endregion
         setError(message);
       })
       .finally(() => setBusy(false));

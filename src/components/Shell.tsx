@@ -4,7 +4,6 @@ import { ColorsMenu } from "./ColorsMenu";
 import { ListenButton } from "./ListenButton";
 import { SetupSteps } from "./SetupSteps";
 import { SkinToggle } from "./SkinToggle";
-import { agentDebugLog } from "../lib/agentDebugLog";
 import { useSession } from "../lib/session";
 
 type Props = {
@@ -51,14 +50,6 @@ export function Shell({
 
   function goBack() {
     if (onBack) {
-      // #region agent log
-      agentDebugLog({
-        hypothesisId: "E",
-        location: "Shell.tsx:goBack",
-        message: "Back via onBack handler",
-        data: { pathname, role },
-      });
-      // #endregion
       onBack();
       return;
     }
@@ -66,25 +57,9 @@ export function Shell({
     const current = `${pathname}${search}`;
     // Même URL → pas de remount : tenter l’historique, sinon rester (évite un no-op silencieux).
     if (current === backTo || pathname === backTo) {
-      // #region agent log
-      agentDebugLog({
-        hypothesisId: "E",
-        location: "Shell.tsx:goBack",
-        message: "Back same-URL → history(-1)",
-        data: { pathname, backTo, role, historyLength: window.history.length },
-      });
-      // #endregion
       if (window.history.length > 1) navigate(-1);
       return;
     }
-    // #region agent log
-    agentDebugLog({
-      hypothesisId: "E",
-      location: "Shell.tsx:goBack",
-      message: "Back navigate to backTo",
-      data: { pathname, backTo, role },
-    });
-    // #endregion
     navigate(backTo);
   }
 

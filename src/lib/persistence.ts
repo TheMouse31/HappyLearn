@@ -14,7 +14,6 @@ import type {
   UniverseSlug,
 } from "../data/types";
 import { isGradeLevel, isSubjectSlug } from "../data/catalog";
-import { agentDebugLog } from "./agentDebugLog";
 import { generateClassCode } from "./classCode";
 import {
   getDeviceId,
@@ -872,14 +871,6 @@ export async function createPersistence(): Promise<Persistence> {
     },
     async openClassSession(classId) {
       const now = new Date().toISOString();
-      // #region agent log
-      agentDebugLog({
-        hypothesisId: "A,D",
-        location: "persistence.ts:openClassSession",
-        message: "Remote openClassSession start",
-        data: { classId, runId: "post-fix" },
-      });
-      // #endregion
       const closeRes = await client
         .from("classe_sessions")
         .update({
@@ -893,21 +884,6 @@ export async function createPersistence(): Promise<Persistence> {
         })
         .eq("class_id", classId)
         .eq("statut", "ouverte");
-      // #region agent log
-      agentDebugLog({
-        hypothesisId: "A,D",
-        location: "persistence.ts:openClassSession:close",
-        message: "Close existing open sessions result",
-        data: {
-          classId,
-          error: closeRes.error?.message ?? null,
-          errorCode: closeRes.error?.code ?? null,
-          status: closeRes.status ?? null,
-          count: closeRes.count ?? null,
-          runId: "post-fix",
-        },
-      });
-      // #endregion
       if (closeRes.error) {
         throw new Error(
           closeRes.error.message || "Impossible de fermer la session précédente.",
@@ -924,24 +900,6 @@ export async function createPersistence(): Promise<Persistence> {
             "id, class_id, code, statut, niveau, matiere, mission_id, univers, mode, created_at, closed_at",
           )
           .single();
-        // #region agent log
-        agentDebugLog({
-          hypothesisId: "A,D",
-          location: "persistence.ts:openClassSession:insert",
-          message: "Insert attempt",
-          data: {
-            classId,
-            attempt,
-            code,
-            ok: !error && Boolean(data),
-            error: error?.message ?? null,
-            errorCode: error?.code ?? null,
-            errorDetails: error?.details ?? null,
-            dataId: data?.id ?? null,
-            runId: "post-fix",
-          },
-        });
-        // #endregion
         if (!error && data) {
           const mapped = mapRemoteClasseSession(data as Parameters<typeof mapRemoteClasseSession>[0]);
           if (mapped) return mapped;
@@ -955,14 +913,6 @@ export async function createPersistence(): Promise<Persistence> {
           /duplicate|unique|code/i.test(error?.message ?? "");
         if (!isCodeCollision) break;
       }
-      // #region agent log
-      agentDebugLog({
-        hypothesisId: "A",
-        location: "persistence.ts:openClassSession:fail",
-        message: "Remote open failed — no local fallback",
-        data: { classId, lastInsertError, runId: "post-fix" },
-      });
-      // #endregion
       throw new Error(
         lastInsertError ||
           "Impossible d’ouvrir la session live (Supabase). Réessaie ou reconnecte-toi.",
