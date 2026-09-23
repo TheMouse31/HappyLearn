@@ -1840,6 +1840,36 @@ html[data-skin="newfront"] .suivi-eleve-rate{
   font-variant-numeric: tabular-nums;
   justify-self: end;
   font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+html[data-skin="newfront"] .suivi-alert-badge{
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.25rem;
+  background: color-mix(in srgb, #b45309 18%, transparent);
+  color: #9a3412;
+  border: 1px solid color-mix(in srgb, #b45309 35%, transparent);
+}
+
+html[data-skin="newfront"] .suivi-alert-text{
+  color: #9a3412;
+}
+
+html[data-skin="newfront"] .suivi-alert-note{
+  margin: 0.65rem 0 0.85rem;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  color: #9a3412;
+  background: color-mix(in srgb, #b45309 10%, transparent);
+  border-left: 3px solid #b45309;
 }
 
 html[data-skin="newfront"] .suivi-activity{

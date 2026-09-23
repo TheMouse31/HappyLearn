@@ -214,6 +214,16 @@ export type StoredAnswer = {
   correct: boolean;
   attempts: number;
   createdAt: string;
+  /** True si un indice a été ouvert avant cette tentative. */
+  hintUsed?: boolean;
+  /** Nombre de propositions QCM au moment de la tentative (null hors QCM). */
+  qcmOptionCount?: number | null;
+};
+
+export type StoredHint = {
+  sessionId: string;
+  stepId: string;
+  openedAt: string;
 };
 
 /** Affiche « Prénom Nom » (sans double espace si nom vide). */

@@ -124,6 +124,7 @@ type SessionState = {
     filters?: SessionStatsFilters,
   ) => ReturnType<Persistence["listSessionsByClassCode"]>;
   loadClassAnswers: (sessionIds: string[]) => ReturnType<Persistence["listAnswersBySessionIds"]>;
+  loadClassHints: (sessionIds: string[]) => ReturnType<Persistence["listHintsBySessionIds"]>;
   listClassMissionsDone: (classId: string) => Promise<string[]>;
   listClassSessionsHistory: (classId: string) => Promise<ClasseSession[]>;
   listClassThemeCoverage: (classId: string) => Promise<ClassThemeCoverage[]>;
@@ -136,7 +137,14 @@ type SessionState = {
   activeClassId: string | null;
   setActiveClassId: (classId: string) => void;
   startMission: (override?: { universe?: UniverseSlug }) => Promise<void>;
-  recordAnswer: (stepId: string, raw: string, correct: boolean, attempts: number) => Promise<void>;
+  recordAnswer: (
+    stepId: string,
+    raw: string,
+    correct: boolean,
+    attempts: number,
+    meta?: { hintUsed?: boolean; qcmOptionCount?: number | null },
+  ) => Promise<void>;
+  recordHint: (stepId: string) => Promise<void>;
   completeMission: () => Promise<void>;
   quitMission: () => Promise<void>;
   resetToHome: () => void;
@@ -877,6 +885,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         const store = persistence ?? localPersistence;
         return store.listAnswersBySessionIds(sessionIds);
       },
+      loadClassHints: async (sessionIds) => {
+        const store = persistence ?? localPersistence;
+        return store.listHintsBySessionIds(sessionIds);
+      },
       listClassMissionsDone: async (classId) => {
         const store = persistence ?? localPersistence;
         return store.listClassMissionsDone(classId);
@@ -918,9 +930,21 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         setSessionId(id);
         setRewardPending(false);
       },
-      recordAnswer: async (stepId, raw, correct, attempts) => {
+      recordAnswer: async (stepId, raw, correct, attempts, meta) => {
         if (!persistence || !sessionId) return;
-        await persistence.saveAnswer({ sessionId, stepId, raw, correct, attempts });
+        await persistence.saveAnswer({
+          sessionId,
+          stepId,
+          raw,
+          correct,
+          attempts,
+          hintUsed: Boolean(meta?.hintUsed),
+          qcmOptionCount: meta?.qcmOptionCount ?? null,
+        });
+      },
+      recordHint: async (stepId) => {
+        if (!persistence || !sessionId) return;
+        await persistence.saveHint({ sessionId, stepId });
       },
       completeMission: async () => {
         if (!persistence || !sessionId || !universe) return;

@@ -83,6 +83,7 @@ export function TeacherSpaceScreen() {
     removeClassStudent,
     loadClassSessions,
     loadClassAnswers,
+    loadClassHints,
     listClassSessionsHistory,
     listClassMissionsDone,
     listClassThemeCoverage,
@@ -245,20 +246,22 @@ export function TeacherSpaceScreen() {
 
   const [answersReady, setAnswersReady] = useState(false);
   const [answerRows, setAnswerRows] = useState<Awaited<ReturnType<typeof loadClassAnswers>>>([]);
+  const [hintRows, setHintRows] = useState<Awaited<ReturnType<typeof loadClassHints>>>([]);
 
   useEffect(() => {
     let cancelled = false;
     setAnswersReady(false);
     const ids = sessions.map((session) => session.id);
-    void loadClassAnswers(ids).then((rows) => {
+    void Promise.all([loadClassAnswers(ids), loadClassHints(ids)]).then(([answers, hints]) => {
       if (cancelled) return;
-      setAnswerRows(rows);
+      setAnswerRows(answers);
+      setHintRows(hints);
       setAnswersReady(true);
     });
     return () => {
       cancelled = true;
     };
-  }, [sessions, loadClassAnswers]);
+  }, [sessions, loadClassAnswers, loadClassHints]);
 
   const rosterForStats = useMemo(() => {
     if (!filterEleveId) return roster;
@@ -266,8 +269,8 @@ export function TeacherSpaceScreen() {
   }, [roster, filterEleveId]);
 
   const studentStats = useMemo(
-    () => (answersReady ? buildStudentStats(sessions, answerRows, rosterForStats) : []),
-    [answersReady, sessions, answerRows, rosterForStats],
+    () => (answersReady ? buildStudentStats(sessions, answerRows, rosterForStats, hintRows) : []),
+    [answersReady, sessions, answerRows, rosterForStats, hintRows],
   );
 
   const classSummary = useMemo(() => buildClassSummary(studentStats), [studentStats]);
@@ -751,6 +754,18 @@ export function TeacherSpaceScreen() {
                   </div>
                   <div className="suivi-summary-item">
                     <span className="suivi-summary-value">
+                      {answersReady ? classSummary.hintsOpened : "—"}
+                    </span>
+                    <span className="suivi-summary-label">Indices ouverts</span>
+                  </div>
+                  <div className="suivi-summary-item">
+                    <span className="suivi-summary-value">
+                      {answersReady ? classSummary.qcmExhaustedCount : "—"}
+                    </span>
+                    <span className="suivi-summary-label">QCM toutes options</span>
+                  </div>
+                  <div className="suivi-summary-item">
+                    <span className="suivi-summary-value">
                       {progReady
                         ? `${programmeProgress.covered}/${programmeProgress.total || "—"}`
                         : "—"}
@@ -903,6 +918,14 @@ export function TeacherSpaceScreen() {
                                     {student.successRate === null
                                       ? "—"
                                       : `${student.successRate} %`}
+                                    {student.qcmExhaustedCount > 0 ? (
+                                      <span
+                                        className="suivi-alert-badge"
+                                        title="QCM : toutes les propositions ont été essayées"
+                                      >
+                                        QCM
+                                      </span>
+                                    ) : null}
                                   </span>
                                 </button>
                                 {open ? (
@@ -930,7 +953,55 @@ export function TeacherSpaceScreen() {
                                           {universeShortList(student.universesCompleted)}
                                         </strong>
                                       </div>
+                                      <div>
+                                        <span className="suivi-detail-label">Indices ouverts</span>
+                                        <strong>
+                                          {student.hintsOpened > 0
+                                            ? `${student.hintsOpened} (${student.stepsWithHint} question${student.stepsWithHint > 1 ? "s" : ""})`
+                                            : "0"}
+                                        </strong>
+                                      </div>
+                                      <div>
+                                        <span className="suivi-detail-label">
+                                          Réussites avec indice
+                                        </span>
+                                        <strong>{student.correctWithHint}</strong>
+                                      </div>
+                                      <div>
+                                        <span className="suivi-detail-label">
+                                          Tentatives moy. (réussites)
+                                        </span>
+                                        <strong>
+                                          {student.avgAttemptsOnCorrect === null
+                                            ? "—"
+                                            : student.avgAttemptsOnCorrect}
+                                        </strong>
+                                      </div>
+                                      <div>
+                                        <span className="suivi-detail-label">
+                                          QCM toutes options
+                                        </span>
+                                        <strong
+                                          className={
+                                            student.qcmExhaustedCount > 0
+                                              ? "suivi-alert-text"
+                                              : undefined
+                                          }
+                                        >
+                                          {student.qcmExhaustedCount > 0
+                                            ? `${student.qcmExhaustedCount} question${student.qcmExhaustedCount > 1 ? "s" : ""} (signal à vérifier)`
+                                            : "Aucune"}
+                                        </strong>
+                                      </div>
                                     </div>
+                                    {student.qcmExhaustedCount > 0 ? (
+                                      <p className="suivi-alert-note">
+                                        Sur {student.qcmExhaustedCount} question
+                                        {student.qcmExhaustedCount > 1 ? "s" : ""} QCM, l’élève a
+                                        essayé toutes les propositions avant de valider — possible
+                                        test systématique.
+                                      </p>
+                                    ) : null}
                                     {studentSessions.length === 0 ? (
                                       <p className="field-help">Pas encore de séance pour cet élève.</p>
                                     ) : (
@@ -940,11 +1011,20 @@ export function TeacherSpaceScreen() {
                                             <tr>
                                               <th>Parcours</th>
                                               <th>Résultat</th>
+                                              <th>Indices / QCM</th>
                                               <th>Quand</th>
                                             </tr>
                                           </thead>
                                           <tbody>
-                                            {studentSessions.map((session) => (
+                                            {studentSessions.map((session) => {
+                                              const sessionHints = hintRows.filter(
+                                                (hint) => hint.sessionId === session.id,
+                                              ).length;
+                                              const sessionExhausted =
+                                                student.qcmExhaustedSteps.filter(
+                                                  (item) => item.sessionId === session.id,
+                                                ).length;
+                                              return (
                                               <tr key={session.id}>
                                                 <td>
                                                   <div>
@@ -958,9 +1038,20 @@ export function TeacherSpaceScreen() {
                                                   </div>
                                                 </td>
                                                 <td>{sessionResultLabel(session)}</td>
+                                                <td>
+                                                  {sessionHints > 0
+                                                    ? `${sessionHints} indice${sessionHints > 1 ? "s" : ""}`
+                                                    : "—"}
+                                                  {sessionExhausted > 0 ? (
+                                                    <div className="suivi-alert-text">
+                                                      {sessionExhausted} QCM toutes options
+                                                    </div>
+                                                  ) : null}
+                                                </td>
                                                 <td>{formatWhen(session.startedAt)}</td>
                                               </tr>
-                                            ))}
+                                              );
+                                            })}
                                           </tbody>
                                         </table>
                                       </div>
