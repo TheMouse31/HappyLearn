@@ -66,7 +66,8 @@ type DraftStep = {
   kicker: string;
   progress: number;
   expected: string;
-  distractors: string;
+  /** Mauvaises réponses QCM (une case = une proposition). */
+  distractors: string[];
   title: string;
   statement: string;
   note: string;
@@ -78,6 +79,19 @@ type DraftStep = {
 /** Sous-panneaux de l’étape courante (onglets workspace). */
 type StepPane = "content" | "illustration" | "answer";
 
+/** Kinds joués en QCM (bonne réponse + mauvaises réponses séparées). */
+function isQcmKind(kind: StepKind): boolean {
+  return (
+    kind === "choice" ||
+    kind === "number" ||
+    kind === "fraction-choice" ||
+    kind === "simplify" ||
+    kind === "tutorial" ||
+    kind === "direction" ||
+    kind === "audio"
+  );
+}
+
 function emptyStep(index: number): DraftStep {
   return {
     slug: ordinalStepSlug(index),
@@ -85,7 +99,7 @@ function emptyStep(index: number): DraftStep {
     kicker: `Étape ${index + 1}`,
     progress: Math.min(index + 1, 6),
     expected: "",
-    distractors: "",
+    distractors: ["", ""],
     title: "",
     statement: "",
     note: "",
@@ -97,13 +111,15 @@ function emptyStep(index: number): DraftStep {
 
 function stepToDraft(step: Step): DraftStep {
   const copy = step.copy.football ?? Object.values(step.copy)[0];
+  const distractors = [...(step.distractors ?? [])];
+  while (distractors.length < 2 && isQcmKind(step.kind)) distractors.push("");
   return {
     slug: step.slug,
     kind: step.kind,
     kicker: step.kicker,
     progress: step.progress,
     expected: step.expected ?? "",
-    distractors: (step.distractors ?? []).join(" | "),
+    distractors,
     title: copy?.title ?? "",
     statement: copy?.statement ?? "",
     note: copy?.note ?? "",
@@ -125,17 +141,14 @@ function draftToSteps(missionId: string, drafts: DraftStep[]): Step[] {
         ...(draft.hint.trim() ? { hint: sanitizeRichHtml(draft.hint) } : {}),
         ...(draft.caption.trim() ? { caption: draft.caption.trim() } : {}),
       };
-      const distractors = draft.distractors
-        .split("|")
-        .map((item) => item.trim())
-        .filter(Boolean);
+      const distractors = draft.distractors.map((item) => item.trim()).filter(Boolean);
       return {
         slug: draft.slug.trim() || undefined,
         kind: draft.kind,
         kicker: draft.kicker.trim() || "Étape",
         progress: Number(draft.progress) || 0,
         ...(draft.expected.trim() ? { expected: draft.expected.trim() } : {}),
-        ...(distractors.length ? { distractors } : {}),
+        ...(draft.kind !== "blanks" && distractors.length ? { distractors } : {}),
         ...(draft.scene.trim() ? { scene: draft.scene.trim() } : {}),
         copy: allUniverses(copy),
       };
@@ -905,9 +918,21 @@ export function MissionEditorScreen() {
                         <select
                           value={currentDraft.kind}
                           disabled={readOnly}
-                          onChange={(event) =>
-                            updateStep(selectedStep, { kind: event.target.value as StepKind })
-                          }
+                          onChange={(event) => {
+                            const kind = event.target.value as StepKind;
+                            const patch: Partial<DraftStep> = { kind };
+                            if (isQcmKind(kind) && currentDraft.distractors.length < 2) {
+                              patch.distractors = [
+                                ...currentDraft.distractors,
+                                ...Array.from(
+                                  { length: 2 - currentDraft.distractors.length },
+                                  () => "",
+                                ),
+                              ];
+                            }
+                            updateStep(selectedStep, patch);
+                            if (editorKindNeedsAnswer(kind)) setStepPane("answer");
+                          }}
                         >
                           {EDITOR_KIND_GROUPS.map((group) => (
                             <optgroup key={group.label} label={group.label}>
@@ -1064,80 +1089,115 @@ export function MissionEditorScreen() {
 
                 {stepPane === "answer" && answerNeeded ? (
                   <div className="mission-studio-panel">
-                    <p className="field-help mission-studio-answer-intro">
-                      {currentDraft.kind === "choice"
-                        ? "QCM : une bonne réponse + distracteurs séparés par |. Les propositions sont mélangées pour l’élève."
-                        : currentDraft.kind === "fraction-choice" ||
-                            currentDraft.kind === "simplify" ||
-                            currentDraft.kind === "tutorial"
-                          ? "Fractions : écris la réponse sous la forme a/b (ex. 3/4). Ajoute des distracteurs pour un QCM."
-                          : currentDraft.kind === "number"
-                            ? "Nombre / calcul : la valeur exacte attendue. Distracteurs optionnels pour un QCM."
-                            : null}
-                    </p>
-                    <div className="field">
-                      <label>
-                        {currentDraft.kind === "audio"
-                          ? "Réponse attendue (optionnel)"
-                          : currentDraft.kind === "blanks"
-                            ? "Réponses des trous"
-                            : currentDraft.kind === "choice"
-                              ? "Bonne réponse"
-                              : "Réponse attendue"}
-                      </label>
-                      <input
-                        value={currentDraft.expected}
-                        disabled={readOnly}
-                        onChange={(event) =>
-                          updateStep(selectedStep, { expected: event.target.value })
-                        }
-                        placeholder={
-                          currentDraft.kind === "blanks"
-                            ? "Ex. chat | chien"
-                            : currentDraft.kind === "audio"
-                              ? "Laisse vide = écoute seule"
-                              : currentDraft.kind === "choice"
-                                ? "Ex. 12"
-                                : currentDraft.kind === "fraction-choice" ||
-                                    currentDraft.kind === "simplify" ||
-                                    currentDraft.kind === "tutorial"
-                                  ? "Ex. 3/4"
-                                  : currentDraft.kind === "number"
-                                    ? "Ex. 42"
-                                    : undefined
-                        }
-                      />
-                      {currentDraft.kind === "blanks" ? (
-                        <small className="field-help">
-                          Une réponse par trou, séparées par |. Dans la consigne, utilise ___ pour chaque trou.
-                        </small>
-                      ) : null}
-                      {currentDraft.kind === "audio" ? (
-                        <small className="field-help">
-                          Avec réponse + distracteurs → QCM après écoute. Avec réponse seule → saisie texte. Sans
-                          réponse → écoute puis Continuer.
-                        </small>
-                      ) : null}
-                    </div>
-                    {currentDraft.kind === "blanks" ? null : (
+                    {currentDraft.kind === "blanks" ? (
                       <div className="field">
-                        <label>Distracteurs (QCM)</label>
+                        <label>Réponses des trous</label>
                         <input
-                          value={currentDraft.distractors}
+                          value={currentDraft.expected}
                           disabled={readOnly}
                           onChange={(event) =>
-                            updateStep(selectedStep, { distractors: event.target.value })
+                            updateStep(selectedStep, { expected: event.target.value })
                           }
-                          placeholder="Sépare les mauvaises réponses par |"
+                          placeholder="Ex. chat | chien"
                         />
                         <small className="field-help">
-                          Exemple :{" "}
-                          {currentDraft.kind === "choice" || currentDraft.kind === "audio"
-                            ? "10 | 14 | 16"
-                            : currentDraft.kind === "number"
-                              ? "40 | 41 | 44"
-                              : "1/2 | 2/3 | 4/5"}
+                          Une réponse par trou, séparées par |. Dans la consigne, utilise ___ pour
+                          chaque trou.
                         </small>
+                      </div>
+                    ) : (
+                      <div className="mission-studio-qcm">
+                        <p className="mission-studio-qcm-lead">
+                          Remplis la bonne réponse, puis les mauvaises. Les propositions seront
+                          mélangées pour l’élève.
+                        </p>
+                        <div className="field mission-studio-qcm-correct">
+                          <label htmlFor={`qcm-ok-${selectedStep}`}>Bonne réponse</label>
+                          <input
+                            id={`qcm-ok-${selectedStep}`}
+                            value={currentDraft.expected}
+                            disabled={readOnly}
+                            onChange={(event) =>
+                              updateStep(selectedStep, { expected: event.target.value })
+                            }
+                            placeholder={
+                              currentDraft.kind === "fraction-choice" ||
+                              currentDraft.kind === "simplify" ||
+                              currentDraft.kind === "tutorial"
+                                ? "Ex. 3/4"
+                                : currentDraft.kind === "direction"
+                                  ? "Ex. axe"
+                                  : currentDraft.kind === "number"
+                                    ? "Ex. 12"
+                                    : "Ex. Paris"
+                            }
+                          />
+                        </div>
+                        <div className="mission-studio-qcm-wrongs">
+                          <p className="mission-studio-qcm-wrongs-label">Mauvaises réponses</p>
+                          {currentDraft.distractors.map((value, wrongIndex) => (
+                            <div
+                              key={`wrong-${selectedStep}-${wrongIndex}`}
+                              className="mission-studio-qcm-wrong-row"
+                            >
+                              <label
+                                className="visually-hidden"
+                                htmlFor={`qcm-wrong-${selectedStep}-${wrongIndex}`}
+                              >
+                                Mauvaise réponse {wrongIndex + 1}
+                              </label>
+                              <input
+                                id={`qcm-wrong-${selectedStep}-${wrongIndex}`}
+                                value={value}
+                                disabled={readOnly}
+                                onChange={(event) => {
+                                  const next = [...currentDraft.distractors];
+                                  next[wrongIndex] = event.target.value;
+                                  updateStep(selectedStep, { distractors: next });
+                                }}
+                                placeholder={`Proposition ${wrongIndex + 1}`}
+                              />
+                              {!readOnly && currentDraft.distractors.length > 1 ? (
+                                <Button
+                                  type="button"
+                                  onClick={() => {
+                                    const next = currentDraft.distractors.filter(
+                                      (_, i) => i !== wrongIndex,
+                                    );
+                                    updateStep(selectedStep, {
+                                      distractors: next.length ? next : [""],
+                                    });
+                                  }}
+                                >
+                                  Retirer
+                                </Button>
+                              ) : null}
+                            </div>
+                          ))}
+                          {!readOnly ? (
+                            <Button
+                              type="button"
+                              onClick={() =>
+                                updateStep(selectedStep, {
+                                  distractors: [...currentDraft.distractors, ""],
+                                })
+                              }
+                            >
+                              + Ajouter une proposition
+                            </Button>
+                          ) : null}
+                        </div>
+                        {currentDraft.kind === "audio" ? (
+                          <small className="field-help">
+                            Sans bonne réponse : écoute seule puis Continuer. Avec bonne réponse
+                            seulement : saisie texte. Avec mauvaises réponses : QCM après écoute.
+                          </small>
+                        ) : null}
+                        {currentDraft.kind === "direction" ? (
+                          <small className="field-help">
+                            Valeurs habituelles : gauche, axe, droite.
+                          </small>
+                        ) : null}
                       </div>
                     )}
                   </div>

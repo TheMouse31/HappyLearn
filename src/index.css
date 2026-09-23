@@ -4034,6 +4034,52 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
   margin: 0 0 8px;
 }
 
+.mission-studio-qcm {
+  display: grid;
+  gap: 14px;
+}
+
+.mission-studio-qcm-lead {
+  margin: 0;
+  color: var(--muted, #5a6270);
+  font-size: 0.92rem;
+}
+
+.mission-studio-qcm-correct input {
+  border-color: color-mix(in srgb, var(--action, #138c59) 45%, var(--line));
+  background: #f3fff8;
+}
+
+.mission-studio-qcm-wrongs {
+  display: grid;
+  gap: 8px;
+}
+
+.mission-studio-qcm-wrongs-label {
+  margin: 0;
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
+.mission-studio-qcm-wrong-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .mission-publish-chip {
   display: inline-flex;
   align-items: center;

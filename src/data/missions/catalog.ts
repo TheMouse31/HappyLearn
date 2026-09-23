@@ -59,7 +59,7 @@ export const EDITOR_KIND_GROUPS: EditorKindGroup[] = [
       {
         value: "choice",
         label: "QCM",
-        help: "Une bonne réponse + distracteurs (séparés par |). Toujours en choix multiples.",
+        help: "Bonne réponse + mauvaises réponses (une case chacune). Mélangées pour l’élève.",
       },
       {
         value: "text",
@@ -94,12 +94,12 @@ export const EDITOR_KIND_GROUPS: EditorKindGroup[] = [
       {
         value: "fraction-choice",
         label: "Choix de fraction",
-        help: "Réponse sous forme a/b (cahier ou QCM).",
+        help: "Bonne réponse au format a/b + mauvaises réponses dans les cases.",
       },
       {
         value: "simplify",
         label: "Simplifier une fraction",
-        help: "Attend la fraction irréductible attendue.",
+        help: "Fraction irréductible attendue + mauvaises réponses optionnelles.",
       },
       {
         value: "direction",
