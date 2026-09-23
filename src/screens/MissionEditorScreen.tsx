@@ -36,6 +36,7 @@ import {
   findThemeByMissionId,
   listSubjectsForGrade,
   listThemesFor,
+  PROGRAMME_THEMES,
   themeSlugFromId,
 } from "../data/programmeThemes";
 import type {
@@ -196,6 +197,13 @@ export function MissionEditorScreen() {
 
   const [catalog, setCatalog] = useState<MissionDef[]>([]);
   const [filter, setFilter] = useState("");
+  const [filterGrade, setFilterGrade] = useState<GradeLevel | "">("");
+  const [filterSubject, setFilterSubject] = useState<SubjectSlug | "">("");
+  const [filterThemeId, setFilterThemeId] = useState("");
+  const [filterStatus, setFilterStatus] = useState<"all" | "published" | "draft">("all");
+  const [filterOfficial, setFilterOfficial] = useState<"all" | "yes" | "no">("all");
+  const [filterDifficulty, setFilterDifficulty] = useState<MissionDifficulty | "none" | "">("");
+  const [showThemeCoverage, setShowThemeCoverage] = useState(false);
   const [mode, setMode] = useState<"list" | "edit">("list");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [readOnly, setReadOnly] = useState(false);
@@ -349,17 +357,93 @@ export function MissionEditorScreen() {
     }
   }, [stepPane, currentDraft?.kind]);
 
+  const filterSubjects = useMemo(() => {
+    if (!filterGrade) return SUBJECTS;
+    const slugs = listSubjectsForGrade(filterGrade);
+    return SUBJECTS.filter((item) => slugs.includes(item.slug));
+  }, [filterGrade]);
+
+  const filterThemes = useMemo(
+    () => listThemesFor(filterGrade || null, filterSubject || null),
+    [filterGrade, filterSubject],
+  );
+
+  // Cascade filtres catalogue.
+  useEffect(() => {
+    if (!filterGrade) return;
+    if (filterSubject && !filterSubjects.some((item) => item.slug === filterSubject)) {
+      setFilterSubject("");
+      setFilterThemeId("");
+    }
+  }, [filterGrade, filterSubject, filterSubjects]);
+
+  useEffect(() => {
+    if (!filterThemeId) return;
+    if (!filterThemes.some((theme) => theme.id === filterThemeId)) {
+      setFilterThemeId("");
+    }
+  }, [filterThemes, filterThemeId]);
+
   const filteredCatalog = useMemo(() => {
     const q = filter.trim().toLowerCase();
-    if (!q) return catalog;
-    return catalog.filter(
-      (item) =>
+    return catalog.filter((item) => {
+      if (filterGrade && item.grade !== filterGrade) return false;
+      if (filterSubject && item.subject !== filterSubject) return false;
+      if (filterThemeId && item.themeId !== filterThemeId) return false;
+      if (filterStatus === "published" && !item.available) return false;
+      if (filterStatus === "draft" && item.available) return false;
+      if (filterOfficial === "yes" && !item.official) return false;
+      if (filterOfficial === "no" && item.official) return false;
+      if (filterDifficulty === "none" && item.difficulty != null) return false;
+      if (
+        filterDifficulty &&
+        filterDifficulty !== "none" &&
+        item.difficulty !== filterDifficulty
+      ) {
+        return false;
+      }
+      if (!q) return true;
+      const themeLabel = findThemeById(item.themeId)?.label?.toLowerCase() ?? "";
+      return (
         item.title.toLowerCase().includes(q) ||
         item.id.toLowerCase().includes(q) ||
         item.grade.includes(q) ||
-        item.subject.includes(q),
-    );
-  }, [catalog, filter]);
+        item.subject.includes(q) ||
+        themeLabel.includes(q)
+      );
+    });
+  }, [
+    catalog,
+    filter,
+    filterGrade,
+    filterSubject,
+    filterThemeId,
+    filterStatus,
+    filterOfficial,
+    filterDifficulty,
+  ]);
+
+  const themeCoverageRows = useMemo(() => {
+    return PROGRAMME_THEMES.map((theme) => {
+      const count = catalog.filter(
+        (mission) =>
+          mission.themeId === theme.id ||
+          (theme.missionId != null && mission.id === theme.missionId),
+      ).length;
+      return { ...theme, count };
+    });
+  }, [catalog]);
+
+  const themeCoverageByGrade = useMemo(() => {
+    const grades = GRADES.map((g) => g.slug);
+    return grades
+      .map((g) => {
+        const rows = themeCoverageRows.filter((row) => row.grade === g);
+        const withMission = rows.filter((row) => row.count > 0).length;
+        return { grade: g, rows, withMission, total: rows.length };
+      })
+      .filter((block) => block.total > 0);
+  }, [themeCoverageRows]);
 
   function openMission(mission: MissionDef, asReadOnly: boolean) {
     const draft = missionToDrafts(mission);
@@ -557,13 +641,169 @@ export function MissionEditorScreen() {
                 type="search"
                 value={filter}
                 onChange={(event) => setFilter(event.target.value)}
-                placeholder="Titre, niveau, matière…"
+                placeholder="Titre, id, thème…"
               />
             </div>
-            <p className="mission-studio-count">
-              {filteredCatalog.length} mission{filteredCatalog.length > 1 ? "s" : ""}
-            </p>
+            <div className="mission-studio-toolbar-actions">
+              <Button
+                type="button"
+                onClick={() => setShowThemeCoverage((value) => !value)}
+              >
+                {showThemeCoverage
+                  ? "Masquer la couverture"
+                  : `Couverture thèmes (${themeCoverageRows.filter((r) => r.count > 0).length}/${themeCoverageRows.length})`}
+              </Button>
+              <p className="mission-studio-count">
+                {filteredCatalog.length} mission{filteredCatalog.length > 1 ? "s" : ""}
+              </p>
+            </div>
           </div>
+
+          <div className="mission-studio-filters" aria-label="Filtres catalogue">
+            <div className="field">
+              <label htmlFor="cat-grade">Classe</label>
+              <select
+                id="cat-grade"
+                value={filterGrade}
+                onChange={(event) => {
+                  setFilterGrade(event.target.value as GradeLevel | "");
+                  setFilterSubject("");
+                  setFilterThemeId("");
+                }}
+              >
+                <option value="">Toutes</option>
+                {GRADES.map((item) => (
+                  <option key={item.slug} value={item.slug}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="cat-subject">Matière</label>
+              <select
+                id="cat-subject"
+                value={filterSubject}
+                onChange={(event) => {
+                  setFilterSubject(event.target.value as SubjectSlug | "");
+                  setFilterThemeId("");
+                }}
+              >
+                <option value="">Toutes</option>
+                {filterSubjects.map((item) => (
+                  <option key={item.slug} value={item.slug}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="cat-theme">Thème</label>
+              <select
+                id="cat-theme"
+                value={filterThemeId}
+                onChange={(event) => setFilterThemeId(event.target.value)}
+              >
+                <option value="">Tous</option>
+                {filterThemes.map((theme) => (
+                  <option key={theme.id} value={theme.id}>
+                    {theme.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="cat-status">Publication</label>
+              <select
+                id="cat-status"
+                value={filterStatus}
+                onChange={(event) =>
+                  setFilterStatus(event.target.value as "all" | "published" | "draft")
+                }
+              >
+                <option value="all">Toutes</option>
+                <option value="published">Publiées</option>
+                <option value="draft">Brouillons</option>
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="cat-official">Officiel</label>
+              <select
+                id="cat-official"
+                value={filterOfficial}
+                onChange={(event) =>
+                  setFilterOfficial(event.target.value as "all" | "yes" | "no")
+                }
+              >
+                <option value="all">Tous</option>
+                <option value="yes">Officielles</option>
+                <option value="no">Non officielles</option>
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="cat-difficulty">Difficulté</label>
+              <select
+                id="cat-difficulty"
+                value={filterDifficulty}
+                onChange={(event) =>
+                  setFilterDifficulty(event.target.value as MissionDifficulty | "none" | "")
+                }
+              >
+                <option value="">Toutes</option>
+                <option value="none">Non renseignée</option>
+                {MISSION_DIFFICULTIES.map((item) => (
+                  <option key={item.value} value={item.value}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {showThemeCoverage ? (
+            <section className="mission-studio-coverage" aria-label="Couverture des thèmes">
+              <header className="mission-studio-coverage-head">
+                <h2>Missions par thème (classe × matière)</h2>
+                <p className="field-help">
+                  Nombre de missions liées à chaque thème du programme.
+                </p>
+              </header>
+              {themeCoverageByGrade.map((block) => (
+                <div key={block.grade} className="mission-studio-coverage-grade">
+                  <h3>
+                    {gradeLabel(block.grade)}{" "}
+                    <span>
+                      {block.withMission}/{block.total} thèmes couverts
+                    </span>
+                  </h3>
+                  <ul>
+                    {block.rows.map((row) => (
+                      <li key={row.id}>
+                        <button
+                          type="button"
+                          className={row.count === 0 ? "is-empty" : ""}
+                          onClick={() => {
+                            setFilterGrade(row.grade);
+                            setFilterSubject(row.subject);
+                            setFilterThemeId(row.id);
+                            setShowThemeCoverage(false);
+                          }}
+                        >
+                          <span className="mission-studio-coverage-meta">
+                            {subjectLabel(row.subject)}
+                          </span>
+                          <span className="mission-studio-coverage-label">{row.label}</span>
+                          <strong>
+                            {row.count} mission{row.count > 1 ? "s" : ""}
+                          </strong>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </section>
+          ) : null}
 
           <ul className="mission-studio-catalog">
             {filteredCatalog.map((item) => (
@@ -603,6 +843,9 @@ export function MissionEditorScreen() {
               </li>
             ))}
           </ul>
+          {filteredCatalog.length === 0 ? (
+            <p className="field-help">Aucune mission ne correspond aux filtres.</p>
+          ) : null}
         </section>
       </Shell>
     );
