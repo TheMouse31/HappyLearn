@@ -1,6 +1,6 @@
 export type UniverseSlug = "football" | "rugby" | "equitation" | "espace";
 export type PlayMode = "cahier" | "qcm";
-export type AppRole = "eleve" | "enseignant";
+export type AppRole = "eleve" | "enseignant" | "admin";
 export type GradeLevel = "cp" | "ce1" | "ce2" | "cm1" | "cm2";
 export type SubjectSlug =
   | "francais"
@@ -18,12 +18,22 @@ export type TeacherAccount = {
   id: string;
   email: string;
   backend: "local" | "supabase";
+  isAdmin?: boolean;
 };
 
 export type ClassRecord = {
   id: string;
   nom: string;
   code: string;
+};
+
+/** Couverture d’un thème du programme pour une classe (hors appli). */
+export type ClassThemeCoverage = {
+  classId: string;
+  themeId: string;
+  coveredInClass: boolean;
+  coveredAt: string | null;
+  note: string;
 };
 
 export type ClassStudent = {
@@ -62,7 +72,13 @@ export type SessionParticipant = {
   statut: ParticipantStatus;
   joinedAt: string;
   lastSeenAt: string;
+  /** Élève a levé la main pour appeler le professeur. */
+  handRaised: boolean;
+  handRaisedAt: string | null;
 };
+
+/** Niveau de difficulté d’une mission (tag studio / catalogue). Vide = non renseigné. */
+export type MissionDifficulty = "facile" | "moyen" | "difficile";
 
 export type MissionDef = {
   id: string;
@@ -71,7 +87,19 @@ export type MissionDef = {
   title: string;
   blurb: string;
   steps: Step[];
+  /** Publiée pour les élèves / enseignants (sinon brouillon). */
   available: boolean;
+  /** Mission labellisée officielle Happy Learn (sinon création / brouillon éditorial). */
+  official: boolean;
+  /** Difficulté pédagogique ; `null` = non renseignée. */
+  difficulty: MissionDifficulty | null;
+  /** Thème du programme (`programmeThemes`) lié à cette mission. */
+  themeId: string | null;
+  /** Incrémente sans changer l’id public. */
+  version?: number;
+  /** builtin = catalogue embarqué ; teacher = créée in-app. */
+  source?: "builtin" | "teacher";
+  teacherId?: string | null;
 };
 
 export type SessionStatsFilters = {
@@ -82,15 +110,32 @@ export type SessionStatsFilters = {
 };
 
 export type StepKind =
-  | "tutorial"
+  /** Narration / passage d’histoire — bouton Continuer. */
   | "continue"
-  | "fraction-choice"
-  | "simplify"
+  /** QCM — propositions = expected + distractors. */
+  | "choice"
+  /** Réponse courte texte libre. */
+  | "text"
+  /** Texte à trous — consignes avec `___`, réponses dans expected (séparées par |). */
+  | "blanks"
+  /** Nombre / calcul (saisie numérique). */
   | "number"
-  | "direction"
+  /** Écoute (TTS) puis réponse optionnelle (QCM ou texte). */
+  | "audio"
+  /** Rappel de méthode / aide. */
   | "method"
+  /** Bilan de fin de parcours (choix soft non noté). */
   | "bilan"
-  | "teaser";
+  /** Teaser / clôture avant récompense. */
+  | "teaser"
+  /** Maths spécialisé — tutoriel fraction. */
+  | "tutorial"
+  /** Maths spécialisé — choix de fraction. */
+  | "fraction-choice"
+  /** Maths spécialisé — simplification. */
+  | "simplify"
+  /** Maths spécialisé — direction spatiale (gauche / axe / droite). */
+  | "direction";
 
 export type UniverseCopy = {
   title: string;
@@ -101,14 +146,24 @@ export type UniverseCopy = {
 };
 
 export type Step = {
+  /** Id canonique `{missionId}/{slug}` (ou legacy court pendant transition). */
   id: string;
+  /** Slug local unique dans la mission (`s01`, `intro`…). */
+  slug: string;
   kind: StepKind;
   kicker: string;
-  progress: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+  /** Progression visuelle 0..N (dérivée de l’index si besoin). */
+  progress: number;
   expected?: string;
   distractors?: string[];
   twoStep?: 1 | 2;
   copy: Record<UniverseSlug, UniverseCopy>;
+  /**
+   * Clé de scène visuelle (UniverseScene).
+   * Pour la mission fractions migrée : anciens ids (T00, M01…).
+   * Les nouvelles missions peuvent l’omettre (scène narrative générique).
+   */
+  scene?: string;
 };
 
 export type UniverseDef = {

@@ -1,5 +1,9 @@
 # Plan — Sessions de classe live (pilotées par le professeur)
 
+> **Statut :** livré sur `main` (septembre 2026). Ce document reste la spécification
+> d’origine ; l’implémentation courante est décrite dans le guide utilisateur et la
+> documentation produit (`docs/HappyLearn_*.pdf`).
+
 Ajouter des sessions de classe pilotées par le professeur (code éphémère
 régénérable), avec verrouillage d'un nom élève (nom + prénom) par session et
 reconnexion, une page de pilotage live (présence, exclusion, lancement

@@ -1,7 +1,9 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import type { ReactNode } from "react";
+import { ColorsMenu } from "./ColorsMenu";
 import { ListenButton } from "./ListenButton";
 import { SetupSteps } from "./SetupSteps";
+import { SkinToggle } from "./SkinToggle";
 import { useSession } from "../lib/session";
 
 type Props = {
@@ -9,7 +11,10 @@ type Props = {
   children: ReactNode;
   extra?: ReactNode;
   brand?: string;
+  /** Cible de navigation pour ← Retour (ignoré si `onBack` est fourni). */
   backTo?: string;
+  /** Handler prioritaire pour ← Retour (ex. bascule mode local sans changer d’URL). */
+  onBack?: () => void;
   homeTo?: string;
   showSetupSteps?: boolean;
   confirmLeaveMission?: boolean;
@@ -18,6 +23,7 @@ type Props = {
 function defaultHomeTo(role: string | null | undefined, lockedSession: boolean): string {
   if (lockedSession) return "/salle-attente";
   if (role === "eleve") return "/accueil";
+  if (role === "admin") return "/espace-admin";
   if (role === "enseignant") return "/espace-professeur";
   return "/";
 }
@@ -28,16 +34,34 @@ export function Shell({
   extra,
   brand = "Happy Learn",
   backTo,
+  onBack,
   homeTo,
   showSetupSteps = false,
   confirmLeaveMission = false,
 }: Props) {
   const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const { role, lockedSession } = useSession();
   const resolvedHome = homeTo ?? defaultHomeTo(role, lockedSession);
   const brandTo = lockedSession ? "/salle-attente" : role === "enseignant" ? "/" : resolvedHome;
   const hideNav = lockedSession && (pathname === "/salle-attente" || pathname === "/mission");
+
+  const showBack = Boolean(!hideNav && (onBack || backTo));
+
+  function goBack() {
+    if (onBack) {
+      onBack();
+      return;
+    }
+    if (!backTo) return;
+    const current = `${pathname}${search}`;
+    // Même URL → pas de remount : tenter l’historique, sinon rester (évite un no-op silencieux).
+    if (current === backTo || pathname === backTo) {
+      if (window.history.length > 1) navigate(-1);
+      return;
+    }
+    navigate(backTo);
+  }
 
   function goHome() {
     if (lockedSession) {
@@ -53,11 +77,10 @@ export function Shell({
 
   return (
     <div className="app-shell">
-      <ListenButton />
       <header className="topbar">
         <div className="topbar-start">
-          {backTo && !hideNav ? (
-            <button type="button" className="nav-icon-btn" onClick={() => navigate(backTo)} aria-label="Retour">
+          {showBack ? (
+            <button type="button" className="nav-icon-btn nav-back-btn" onClick={goBack} aria-label="Retour">
               ← Retour
             </button>
           ) : null}
@@ -66,19 +89,22 @@ export function Shell({
               <span className="brand-mark" aria-hidden="true">
                 ✦
               </span>
-              {brand}
+              <span className="brand-word">{brand}</span>
             </span>
           ) : (
             <Link to={brandTo} className="brand brand-link" aria-label={`${brand} — accueil`}>
               <span className="brand-mark" aria-hidden="true">
                 ✦
               </span>
-              {brand}
+              <span className="brand-word">{brand}</span>
             </Link>
           )}
         </div>
         <div className="topbar-end">
           {stepLabel ? <div className="step-pill">{stepLabel}</div> : null}
+          <SkinToggle />
+          <ColorsMenu />
+          <ListenButton />
           {!hideNav ? (
             <button type="button" className="nav-icon-btn home-btn" onClick={goHome} aria-label="Accueil">
               <span aria-hidden="true">⌂</span>

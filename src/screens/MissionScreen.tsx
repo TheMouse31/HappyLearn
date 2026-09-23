@@ -4,20 +4,25 @@ import { Button } from "../components/Button";
 import { FractionViz } from "../components/FractionViz";
 import { HintOverlay } from "../components/HintOverlay";
 import { Neo } from "../components/Neo";
+import { RichText } from "../components/RichText";
 import { Shell } from "../components/Shell";
 import { UniverseScene } from "../components/UniverseScene";
-import { BILAN_CHOICES } from "../data/steps";
-import { defaultMissionFor, findMission } from "../data/missions";
-import type { Step } from "../data/types";
+import { BILAN_CHOICES } from "../data/missions/labels";
+import { defaultMissionFor, findMission, resolveMission } from "../data/missions";
+import type { MissionDef, Step } from "../data/types";
 import {
   advanceDelay,
+  countBlanks,
   needsAnswer,
   optionLabel,
   qcmOptions,
+  sceneKeyOf,
+  splitBlankSegments,
   usesQcm,
   validateAnswer,
 } from "../engine/missionEngine";
 import { useSession } from "../lib/session";
+import { canSpeak, speakText, stopSpeech, subscribeSpeech } from "../lib/speech";
 import { isCoursePlayable } from "../data/catalog";
 
 function FractionFields({
@@ -67,6 +72,8 @@ export function MissionScreen() {
     missionId,
     lockedSession,
     liveSession,
+    liveParticipant,
+    raiseHand,
   } = useSession();
   const [index, setIndex] = useState(0);
   const [raw, setRaw] = useState("");
@@ -77,9 +84,26 @@ export function MissionScreen() {
   const [kind, setKind] = useState<"ok" | "retry" | "hint" | "info">("info");
   const [hint, setHint] = useState("");
   const [showPouce, setShowPouce] = useState(false);
+  const [blankValues, setBlankValues] = useState<string[]>([]);
+  const [audioHeard, setAudioHeard] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
+  const [mission, setMission] = useState<MissionDef | null>(
+    () => findMission(missionId) ?? defaultMissionFor(grade, subject) ?? findMission("cm2-maths-fractions-01"),
+  );
 
-  const mission =
-    findMission(missionId) ?? defaultMissionFor(grade, subject) ?? findMission("cm2-maths-fractions-01");
+  useEffect(() => {
+    let cancelled = false;
+    void resolveMission(missionId).then((resolved) => {
+      if (cancelled) return;
+      setMission(
+        resolved ?? defaultMissionFor(grade, subject) ?? findMission("cm2-maths-fractions-01"),
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [missionId, grade, subject]);
+
   const steps = mission?.steps ?? [];
   const step = steps[index];
 
@@ -115,7 +139,13 @@ export function MissionScreen() {
     setKind("info");
     setHint("");
     setShowPouce(false);
-  }, [index]);
+    setAudioHeard(false);
+    stopSpeech();
+    const blankCount = step ? countBlanks(step.copy[universe ?? "football"]?.statement ?? "") : 0;
+    setBlankValues(Array.from({ length: Math.max(blankCount, blankCount === 0 && step?.kind === "blanks" ? 1 : 0) }, () => ""));
+  }, [index, step?.id, universe]);
+
+  useEffect(() => subscribeSpeech(setSpeaking), []);
 
   if (!prenom) return <Navigate to="/connexion/eleve" replace />;
   if (!isCoursePlayable(grade, subject) && !lockedSession) return <Navigate to="/classe" replace />;
@@ -134,7 +164,9 @@ export function MissionScreen() {
   const currentValue =
     step.kind === "tutorial" || step.kind === "fraction-choice" || step.kind === "simplify"
       ? `${top}/${bottom}`
-      : raw;
+      : step.kind === "blanks"
+        ? blankValues.join("|")
+        : raw;
 
   function goNext() {
     if (index >= steps.length - 1) {
@@ -186,7 +218,9 @@ export function MissionScreen() {
       (current.kind === "fraction-choice" ||
         current.kind === "simplify" ||
         current.kind === "number" ||
-        current.kind === "direction")
+        current.kind === "direction" ||
+        current.kind === "choice" ||
+        current.kind === "audio")
     ) {
       return (
         <div className="qcm" role="group" aria-label="Propositions">
@@ -218,12 +252,57 @@ export function MissionScreen() {
     if (current.kind === "fraction-choice" || current.kind === "simplify") {
       return <FractionFields top={top} bottom={bottom} onTop={setTop} onBottom={setBottom} />;
     }
-    if (current.kind === "number") {
+    if (current.kind === "blanks") {
+      const segments = splitBlankSegments(copy.statement);
+      const blankOnly = segments.every((seg) => seg.type === "text") || segments.length === 0;
+      if (blankOnly) {
+        return (
+          <div className="free-row">
+            <input
+              type="text"
+              aria-label="Complète le trou"
+              value={blankValues[0] ?? ""}
+              onChange={(event) => setBlankValues([event.target.value])}
+              placeholder="Ta réponse"
+            />
+          </div>
+        );
+      }
+      let blankIndex = 0;
+      return (
+        <p className="blanks-line" aria-label="Texte à trous">
+          {segments.map((seg, i) => {
+            if (seg.type === "text") {
+              return <span key={`t-${i}`}>{seg.value}</span>;
+            }
+            const idx = blankIndex;
+            blankIndex += 1;
+            return (
+              <input
+                key={`b-${idx}`}
+                type="text"
+                className="blanks-input"
+                aria-label={`Trou ${idx + 1}`}
+                value={blankValues[idx] ?? ""}
+                onChange={(event) => {
+                  setBlankValues((prev) => {
+                    const next = [...prev];
+                    next[idx] = event.target.value;
+                    return next;
+                  });
+                }}
+              />
+            );
+          })}
+        </p>
+      );
+    }
+    if (current.kind === "number" || current.kind === "text" || current.kind === "audio") {
       return (
         <div className="free-row">
           <input
-            type="number"
-            inputMode="numeric"
+            type={current.kind === "number" ? "number" : "text"}
+            inputMode={current.kind === "number" ? "numeric" : "text"}
             aria-label="Ta réponse"
             value={raw}
             onChange={(event) => setRaw(event.target.value)}
@@ -239,8 +318,22 @@ export function MissionScreen() {
       stepLabel={`Mission ${copy.title}`}
       confirmLeaveMission={!lockedSession}
       homeTo={lockedSession ? "/salle-attente" : "/accueil"}
+      backTo={lockedSession ? undefined : "/pret"}
       extra={
-        lockedSession ? null : (
+        lockedSession ? (
+          liveParticipant ? (
+            <Button
+              type="button"
+              className={liveParticipant.handRaised ? "hand-raised-btn is-on" : "hand-raised-btn"}
+              aria-pressed={liveParticipant.handRaised}
+              onClick={() => {
+                void raiseHand(!liveParticipant.handRaised);
+              }}
+            >
+              {liveParticipant.handRaised ? "Baisser la main" : "Lever la main"}
+            </Button>
+          ) : null
+        ) : (
           <Button
             onClick={() => {
               const ok = window.confirm("Quitter la mission et revenir à l’accueil ?");
@@ -256,25 +349,54 @@ export function MissionScreen() {
       <div className="mission-layout">
         <UniverseScene
           universe={universe}
-          stepId={step.id}
+          stepId={sceneKeyOf(step)}
           progress={step.progress}
-          success={kind === "ok" || step.kind === "teaser" || step.id === "N04"}
+          success={kind === "ok" || step.kind === "teaser" || step.kind === "method" || sceneKeyOf(step) === "N04"}
           selected={currentValue === "/" ? raw : currentValue}
           expected={step.expected}
           caption={copy.caption}
+          kind={step.kind}
+          subject={mission?.subject ?? subject ?? undefined}
+          statement={copy.statement}
+          title={copy.title}
         />
         <section>
           <div className="progress" aria-label="Progression">
-            {Array.from({ length: 6 }, (_, i) => (
+            {Array.from({ length: Math.max(6, step.progress) }, (_, i) => (
               <i key={i} className={i < step.progress ? "on" : ""} />
             ))}
           </div>
           <span className="kicker">{step.kicker}</span>
-          <h1>{copy.title}</h1>
-          <p className="lead" data-listen>
-            {copy.statement}
-          </p>
-          {copy.note ? <p>{copy.note}</p> : null}
+          <RichText as="h1" html={copy.title} />
+          {step.kind === "blanks" ? null : (
+            <RichText className="lead" html={copy.statement} data-listen />
+          )}
+          {copy.note ? <RichText html={copy.note} /> : null}
+          {step.kind === "audio" ? (
+            <div className="audio-step">
+              <Button
+                type="button"
+                variant="primary"
+                className={audioHeard ? "audio-heard" : ""}
+                disabled={!canSpeak()}
+                onClick={() => {
+                  if (speaking) {
+                    stopSpeech();
+                    return;
+                  }
+                  const ok = speakText(
+                    [copy.title, copy.statement, copy.note].filter(Boolean).join(". "),
+                  );
+                  if (ok) setAudioHeard(true);
+                }}
+              >
+                {speaking ? "Stopper l’écoute" : audioHeard ? "Réécouter" : "Écouter la consigne"}
+              </Button>
+              {!canSpeak() ? (
+                <p className="field-help">La lecture vocale n’est pas disponible sur cet appareil.</p>
+              ) : null}
+            </div>
+          ) : null}
           {step.twoStep ? (
             <div className="two-steps">
               <div className={`step-card ${step.twoStep === 1 ? "active" : ""}`}>
@@ -287,7 +409,11 @@ export function MissionScreen() {
               </div>
             </div>
           ) : null}
-          {step.kind === "method" ? <div className="method-box">{copy.note}</div> : null}
+          {step.kind === "method" ? (
+            <div className="method-box">
+              <RichText html={copy.note ?? ""} />
+            </div>
+          ) : null}
           {step.kind === "bilan" ? (
             <div className="choice-grid">
               {BILAN_CHOICES[universe].map((choice) => (
@@ -307,7 +433,7 @@ export function MissionScreen() {
           {renderAnswer(step)}
           {hint ? <HintOverlay text={hint} universe={universe} /> : null}
           {showPouce ? (
-            <Neo pose={step.id === "N04" ? "applaudit" : "pouce"} universe={universe} className="neo-small" />
+            <Neo pose={sceneKeyOf(step) === "N04" ? "applaudit" : "pouce"} universe={universe} className="neo-small" />
           ) : null}
           <p className={`feedback ${kind}`} aria-live="polite">
             {feedback}
@@ -335,7 +461,11 @@ export function MissionScreen() {
               <Button variant="primary" onClick={goNext}>
                 {lockedSession ? "Terminer" : "Voir ma récompense"}
               </Button>
-            ) : step.kind === "bilan" ? null : (
+            ) : step.kind === "bilan" ? null : step.kind === "audio" && !needsAnswer(step) ? (
+              <Button variant="primary" onClick={goNext} disabled={!audioHeard && canSpeak()}>
+                Continuer
+              </Button>
+            ) : (
               <Button variant="primary" onClick={goNext}>
                 Continuer
               </Button>

@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>Happy Learn — Thèmes du programme par classe et matière</title>
+  <style>
+    @page { size: A4; margin: 14mm 12mm 16mm 12mm; }
+    :root {
+      --ink: #1a2e1f;
+      --muted: #4a5c50;
+      --line: #d7e0d9;
+      --accent: #1f7a4c;
+      --bg: #f6faf7;
+      --chip: #e7f3ec;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      color: var(--ink);
+      font-size: 9.5pt;
+      line-height: 1.4;
+      margin: 0;
+    }
+    h1 { font-size: 22pt; margin: 0 0 6pt; }
+    h2 {
+      font-size: 13pt;
+      margin: 16pt 0 6pt;
+      padding-bottom: 3pt;
+      border-bottom: 2px solid var(--accent);
+      page-break-after: avoid;
+    }
+    h3 {
+      font-size: 11pt;
+      margin: 12pt 0 4pt;
+      color: var(--accent);
+      page-break-after: avoid;
+    }
+    h4 {
+      font-size: 10pt;
+      margin: 8pt 0 3pt;
+      page-break-after: avoid;
+    }
+    .cover {
+      min-height: 220mm;
+      padding: 24pt;
+      border: 1px solid var(--line);
+      border-radius: 10pt;
+      background: linear-gradient(160deg, #e8f5ee, #fff 55%, #f0f7f3);
+      page-break-after: always;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .kicker {
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      font-size: 8.5pt;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .lead { font-size: 11.5pt; color: var(--muted); max-width: 42em; }
+    .meta {
+      margin-top: 20pt;
+      padding-top: 10pt;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 9pt;
+    }
+    .toc { page-break-after: always; }
+    .toc ol { padding-left: 1.2em; }
+    .toc li { margin: 3pt 0; }
+    .note, .warn {
+      border-radius: 6pt;
+      padding: 7pt 9pt;
+      margin: 6pt 0 10pt;
+      page-break-inside: avoid;
+      font-size: 9pt;
+    }
+    .note { background: var(--bg); border-left: 3pt solid var(--accent); }
+    .warn { background: #fff8e8; border-left: 3pt solid #8a5a00; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 6pt 0 10pt;
+      font-size: 8.5pt;
+      page-break-inside: avoid;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 4pt 5pt;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: var(--bg); }
+    ul.themes {
+      margin: 2pt 0 8pt;
+      padding-left: 1.15em;
+    }
+    ul.themes li { margin: 1.5pt 0; }
+    .grade-block { page-break-before: always; }
+    .grade-block:first-of-type { page-break-before: auto; }
+    .subject-card {
+      border: 1px solid var(--line);
+      border-radius: 8pt;
+      padding: 8pt 10pt;
+      margin: 0 0 8pt;
+      page-break-inside: avoid;
+      background: #fff;
+    }
+    .badge {
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      font-size: 7.5pt;
+      font-weight: 700;
+      padding: 1pt 6pt;
+      border-radius: 999pt;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+    }
+    .chip {
+      display: inline-block;
+      background: var(--chip);
+      border: 1px solid var(--line);
+      border-radius: 999pt;
+      padding: 1pt 7pt;
+      margin: 1pt 2pt 1pt 0;
+      font-size: 8pt;
+    }
+    .muted { color: var(--muted); }
+    footer.note-foot {
+      margin-top: 14pt;
+      font-size: 8pt;
+      color: var(--muted);
+    }
+    .matrix td.yes { background: #e7f6ec; text-align: center; font-weight: 700; color: var(--accent); }
+    .matrix td.no { background: #f7f7f7; text-align: center; color: #999; }
+  </style>
+</head>
+<body>
+
+<section class="cover">
+  <div class="kicker">Documentation pédagogique · Référentiel de contenus</div>
+  <h1>Thèmes à aborder<br/>par classe et par matière</h1>
+  <p class="lead">
+    Inventaire des thèmes du programme officiel de l’école élémentaire française
+    (CP → CM2), organisés pour guider la création de missions Happy Learn.
+    Synthèse pédagogique à partir des textes publiés au Bulletin officiel
+    (notamment programmes 2024–2026).
+  </p>
+  <div class="meta">
+    <p><strong>Périmètre :</strong> école élémentaire — cycles 2 et 3 (hors 6e)</p>
+    <p><strong>Horizon :</strong> année scolaire 2026-2027</p>
+    <p><strong>Usage :</strong> cartographie éditoriale Happy Learn (pas un substitut au BO)</p>
+    <p><strong>Date :</strong> septembre 2026 · aligné Phase&nbsp;A (79/79 thèmes)</p>
+  </div>
+</section>
+
+<section class="toc">
+  <h2>Sommaire</h2>
+  <ol>
+    <li>Mode d’emploi &amp; calendrier d’application 2026-2027</li>
+    <li>Matrice matières × classes</li>
+    <li>CP — thèmes par matière</li>
+    <li>CE1 — thèmes par matière</li>
+    <li>CE2 — thèmes par matière</li>
+    <li>CM1 — thèmes par matière</li>
+    <li>CM2 — thèmes par matière</li>
+    <li>Priorités pour les prochaines missions Happy Learn</li>
+    <li>Sources officielles</li>
+  </ol>
+  <div class="warn">
+    <strong>Attention :</strong> ce document synthétise les <em>thèmes / domaines</em> à couvrir.
+    Les attendus détaillés, exemples de réussite et progressions périodiques restent
+    dans les textes officiels (éduscol / BO). En cas de divergence, le BO prime.
+  </div>
+</section>
+
+<!-- 1 -->
+<h2>1. Mode d’emploi &amp; calendrier 2026-2027</h2>
+<p>
+  Happy Learn structure son catalogue avec les matières :
+  <span class="chip">Français</span>
+  <span class="chip">Mathématiques</span>
+  <span class="chip">Questionner le monde</span>
+  <span class="chip">Histoire-Géo</span>
+  <span class="chip">Sciences</span>
+  <span class="chip">EMC</span>
+  <span class="chip">Anglais</span>
+  <span class="chip">EPS</span>
+  <span class="chip">Arts plastiques</span>
+  <span class="chip">Éducation musicale</span>
+</p>
+<table>
+  <thead>
+    <tr><th>Discipline</th><th>Texte de référence (indicatif 2026-2027)</th><th>Notes d’application</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Français &amp; Maths cycle 2</td>
+      <td>BO n°41 du 31/10/2024</td>
+      <td>CP–CE2</td>
+    </tr>
+    <tr>
+      <td>Français &amp; Maths cycle 3</td>
+      <td>BO n°16 du 17/04/2025</td>
+      <td>CM1 dès 2025 ; <strong>CM2 dès rentrée 2026</strong></td>
+    </tr>
+    <tr>
+      <td>EMC</td>
+      <td>BO n°24 du 13/06/2024</td>
+      <td>Élémentaire en vigueur</td>
+    </tr>
+    <tr>
+      <td>Questionner le monde / Hist-Géo / Sciences / EPS / LVE (selon niveau)</td>
+      <td>BO 2020 et/ou nouveaux BO 2026</td>
+      <td>Déploiement progressif : souvent <strong>CP &amp; CM1 en 2026</strong>, extension CE1/CE2/CM2 en 2027</td>
+    </tr>
+    <tr>
+      <td>Arts plastiques &amp; Éducation musicale</td>
+      <td>BO n°31 du 30/07/2020</td>
+      <td>Toujours en vigueur en élémentaire</td>
+    </tr>
+  </tbody>
+</table>
+<div class="note">
+  Les listes ci-dessous sont volontairement <strong>opérationnelles pour créer des missions</strong> :
+  thèmes jouables / enseignables, pas une reprise littérale de chaque objectif d’apprentissage.
+</div>
+
+<!-- 2 -->
+<h2>2. Matrice matières × classes</h2>
+<table class="matrix">
+  <thead>
+    <tr>
+      <th>Matière</th>
+      <th>CP</th><th>CE1</th><th>CE2</th><th>CM1</th><th>CM2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>Français</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td></tr>
+    <tr><td>Mathématiques</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td></tr>
+    <tr><td>Questionner le monde</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td><td class="no">—</td><td class="no">—</td></tr>
+    <tr><td>Histoire-Géographie</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="yes">●</td><td class="yes">●</td></tr>
+    <tr><td>Sciences &amp; techno</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="yes">●</td><td class="yes">●</td></tr>
+    <tr><td>EMC</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td></tr>
+    <tr><td>Anglais (LVE)</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td></tr>
+    <tr><td>EPS</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td></tr>
+    <tr><td>Arts plastiques</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td></tr>
+    <tr><td>Éducation musicale</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td></tr>
+  </tbody>
+</table>
+<p class="muted">● = matière du niveau · — = non enseignée sous ce libellé (remplacée par Questionner le monde en cycle 2, ou hist-géo/sciences en cycle 3).</p>
+
+<!-- ========== CP ========== -->
+<section class="grade-block">
+  <h2>3. CP — thèmes par matière <span class="badge">Cycle 2</span></h2>
+
+  <div class="subject-card">
+    <h3>Français</h3>
+    <ul class="themes">
+      <li><strong>Lecture</strong> — décodage (graphèmes/phonèmes), lecture à voix haute, compréhension de phrases et textes courts</li>
+      <li><strong>Écriture</strong> — geste cursif (minuscules puis majuscules), copie, dictées courtes, premières phrases</li>
+      <li><strong>Oral</strong> — écouter, reformuler, s’exprimer clairement, dialoguer</li>
+      <li><strong>Vocabulaire</strong> — enrichissement quotidien, réseaux de mots</li>
+      <li><strong>Grammaire &amp; orthographe</strong> — sujet / verbe, phrases simples, régularités orthographiques de base</li>
+    </ul>
+  </div>
+
+  <div class="subject-card">
+    <h3>Mathématiques</h3>
+    <h4>Nombres, calcul, problèmes</h4>
+    <ul class="themes">
+      <li>Nombres entiers jusqu’à <strong>100</strong> : dénombrer, comparer, encadrer, droite graduée</li>
+      <li>Calcul mental quotidien (faits numériques, numération)</li>
+      <li>Addition (posée) ; sens de l’addition / soustraction</li>
+      <li>Résolution de problèmes (≥ 10 / semaine) : parties-tout, comparaison simple</li>
+    </ul>
+    <h4>Grandeurs &amp; mesures</h4>
+    <ul class="themes">
+      <li>Longueurs : cm, m</li>
+      <li>Monnaie : euros (lien numération)</li>
+      <li>Temps : heure entière sur horloge</li>
+    </ul>
+    <h4>Espace &amp; géométrie</h4>
+    <ul class="themes">
+      <li>Solides : cube, boule, cône, cylindre, pavé</li>
+      <li>Figures planes à main levée / règle</li>
+      <li>Repérage spatial ; déplacements codés (robot / quadrillage, consignes simples)</li>
+    </ul>
+    <h4>Données</h4>
+    <ul class="themes">
+      <li>Recueillir des données qualitatives simples (2 à 5 valeurs)</li>
+    </ul>
+  </div>
+
+  <div class="subject-card">
+    <h3>Questionner le monde</h3>
+    <ul class="themes">
+      <li><strong>Vivant / matière / objets</strong> — qu’est-ce que la matière ; reconnaître le vivant ; objets techniques et besoins</li>
+      <li><strong>Espace</strong> — se situer dans des espaces proches (classe, école, quartier)</li>
+      <li><strong>Temps</strong> — se situer dans le temps (journée, semaine, année scolaire)</li>
+    </ul>
+  </div>
+
+  <div class="subject-card">
+    <h3>EMC</h3>
+    <ul class="themes">
+      <li>Sensibilité (émotions, respect)</li>
+      <li>Règle et droit (règles de classe, vivre ensemble)</li>
+      <li>Jugement (discuter des choix simples)</li>
+      <li>Engagement (coopération, responsabilité)</li>
+    </ul>
+  </div>
+
+  <div class="subject-card">
+    <h3>Anglais (LVE)</h3>
+    <ul class="themes">
+      <li>Oral prioritaire (A1) : comprendre, reproduire, produire des énoncés simples</li>
+      <li>Thèmes : soi, la classe, univers enfantin (quotidien / imaginaire)</li>
+      <li>Premiers repères culturels</li>
+    </ul>
+  </div>
+
+  <div class="subject-card">
+    <h3>EPS</h3>
+    <ul class="themes">
+      <li>Produire une performance mesurable</li>
+      <li>Adapter ses déplacements à des environnements variés</li>
+      <li>S’exprimer (prestation artistique / acrobatique)</li>
+      <li>Conduire / maîtriser un affrontement collectif ou interindividuel</li>
+    </ul>
+  </div>
+
+  <div class="subject-card">
+    <h3>Arts plastiques</h3>
+    <ul class="themes">
+      <li>Représentation du monde</li>
+      <li>Expression des émotions</li>
+      <li>Narration / témoignage par les images</li>
+      <li>Langage artistique : forme, couleur, matière, geste, support…</li>
+    </ul>
+  </div>
+
+  <div class="subject-card">
+    <h3>Éducation musicale</h3>
+    <ul class="themes">
+      <li>Chanter (voix centrale)</li>
+      <li>Écouter, comparer</li>
+      <li>Explorer et imaginer</li>
+      <li>Échanger, partager</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ========== CE1 ========== -->
+<section class="grade-block">
+  <h2>4. CE1 — thèmes par matière <span class="badge">Cycle 2</span></h2>
+
+  <div class="subject-card">
+    <h3>Français</h3>
+    <ul class="themes">
+      <li><strong>Lecture</strong> — automatisation, fluidité, compréhension de textes plus longs</li>
+      <li><strong>Écriture</strong> — production de textes courts, segmentation, ponctuation</li>
+      <li><strong>Oral</strong> — exposer, reformuler, échanger</li>
+      <li><strong>Vocabulaire</strong> — familles de mots, réemploi interdisciplinaire</li>
+      <li><strong>Grammaire &amp; orthographe</strong> — accords de base, structures régulières, dictées</li>
+    </ul>
+  </div>
+
+  <div class="subject-card">
+    <h3>Mathématiques</h3>
+    <h4>Nombres, calcul, problèmes</h4>
+    <ul class="themes">
+      <li>Nombres entiers jusqu’à <strong>1 000</strong></li>
+      <li>Calcul mental (tables de multiplication commencées sur l’année)</li>
+      <li>Soustraction posée ; sens des opérations</li>
+      <li>Problèmes en 1–2 étapes ; structures multiplicatives</li>
+      <li><strong>Fractions</strong> (début) : partie d’un tout ; dénominateurs 2, 3, 4, 5, 6, 8, 10 ; comparaison / + − même dénominateur</li>
+    </ul>
+    <h4>Grandeurs &amp; mesures</h4>
+    <ul class="themes">
+      <li>Longueurs : + km</li>
+      <li>Masses : g, kg</li>
+      <li>Monnaie : centimes ; écriture à virgule (euro)</li>
+      <li>Temps : demi-heure, quart d’heure ; durées dans une journée</li>
+    </ul>
+    <h4>Espace &amp; géométrie</h4>
+    <ul class="themes">
+      <li>Solides : + pyramide</li>
+      <li>Équerre / angles droits</li>
+      <li>Repérage dans un espace familier ; déplacements codés plus riches</li>
+    </ul>
+    <h4>Données</h4>
+    <ul class="themes">
+      <li>Tableaux à double entrée ; populations plus grandes</li>
+    </ul>
+  </div>
+
+  <div class="subject-card">
+    <h3>Questionner le monde</h3>
+    <ul class="themes">
+      <li>Matière, vivant, objets techniques (approfondissement)</li>
+      <li>Se situer dans l’espace (échelle élargie)</li>
+      <li>Se situer dans le temps (repères chronologiques simples)</li>
+    </ul>
+  </div>
+
+  <div class="subject-card">
+    <h3>EMC · Anglais · EPS · Arts · Musique</h3>
+    <ul class="themes">
+      <li>Mêmes grands domaines qu’au CP, avec attentes renforcées (autonomie, complexité des tâches, culture)</li>
+      <li>LVE : oral A1, thèmes soi / classe / univers enfantin</li>
+      <li>EPS : 4 champs d’apprentissage</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ========== CE2 ========== -->
+<section class="grade-block">
+  <h2>5. CE2 — thèmes par matière <span class="badge">Cycle 2</span></h2>
+
+  <div class="subject-card">
+    <h3>Français</h3>
+    <ul class="themes">
+      <li>Lecture fluide + compréhension fine</li>
+      <li>Écriture de textes structurés (récits, messages)</li>
+      <li>Oral : présenter, argumenter simplement</li>
+      <li>Vocabulaire, grammaire, orthographe : consolidation des régularités et accords</li>
+    </ul>
+  </div>
+
+  <div class="subject-card">
+    <h3>Mathématiques</h3>
+    <h4>Nombres, calcul, problèmes</h4>
+    <ul class="themes">
+      <li>Nombres entiers jusqu’à <strong>10 000</strong></li>
+      <li>Multiplication posée ; division (sens + procédures)</li>
+      <li>Problèmes 2–3 étapes ; comparaison multiplicative</li>
+      <li><strong>Fractions</strong> : fractions d’unité de longueur (bande graduée) ; dénominateur ≤ 12 ; +/− avec dénominateur multiple</li>
+    </ul>
+    <h4>Grandeurs &amp; mesures</h4>
+    <ul class="themes">
+      <li>Longueurs : + dm, mm</li>
+      <li>Masses : + tonne</li>
+      <li>Contenances : L, dL, cL</li>
+      <li>Périmètre d’un polygone</li>
+      <li>Monnaie : +/− de montants en €</li>
+      <li>Durées : problèmes 1–2 étapes</li>
+    </ul>
+    <h4>Espace &amp; géométrie</h4>
+    <ul class="themes">
+      <li>Losange ; axes de symétrie</li>
+      <li>Patron de cube</li>
+      <li>Instruments : règle, équerre, compas</li>
+    </ul>
+    <h4>Données</h4>
+    <ul class="themes">
+      <li>Caractères quantitatifs ; problèmes à partir de données</li>
+    </ul>
+  </div>
+
+  <div class="subject-card">
+    <h3>Questionner le monde · EMC · LVE · EPS · Arts · Musique</h3>
+    <ul class="themes">
+      <li>Continuité cycle 2 avec approfondissement (vivant, matière, objets ; espace/temps)</li>
+      <li>EMC : programme 2024 (dont nouveautés CE2 selon calendrier BO)</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ========== CM1 ========== -->
+<section class="grade-block">
+  <h2>6. CM1 — thèmes par matière <span class="badge">Cycle 3</span></h2>
+
+  <div class="subject-card">
+    <h3>Français</h3>
+    <ul class="themes">
+      <li>Lecture / compréhension de textes variés (littéraires &amp; documentaires)</li>
+      <li>Écriture : textes longs, révision, réécriture</li>
+      <li>Oral : exposés, débats guidés</li>
+      <li>Étude de la langue : classes de mots, conjugaisons, accords, orthographe lexicale/grammaticale</li>
+      <li>Culture littéraire et artistique</li>
+    </ul>
+  </div>
+
+  <div class="subject-card">
+    <h3>Mathématiques</h3>
+    <h4>Nombres &amp; calcul</h4>
+    <ul class="themes">
+      <li>Entiers jusqu’à <strong>999 999</strong></li>
+      <li><strong>Fractions</strong> (dénominateur ≤ 20) : > 1, droite graduée, comparaison, +/−, opérateur (fractions unitaires notamment)</li>
+      <li><strong>Décimaux</strong> jusqu’aux centièmes (via fractions décimales puis virgule)</li>
+      <li>Calcul mental &amp; opérations posées ; ≥ 10 problèmes / semaine</li>
+      <li>Premiers gestes algébriques (suites, égalités à trous, inconnues)</li>
+    </ul>
+    <h4>Grandeurs, géométrie, données</h4>
+    <ul class="themes">
+      <li>Longueurs, masses, contenances, aires (sans formules exigées) ; durées h/min</li>
+      <li>Angles saillants ; vocabulaire (triangle, quadrilatères…)</li>
+      <li>Symétrie axiale (horizontale / verticale)</li>
+      <li>Tableaux, diagrammes en barres</li>
+      <li>Probabilités (vocabulaire : impossible, possible, certain…)</li>
+      <li>Proportionnalité (linéarité orale/écrite, sans produit en croix)</li>
+      <li>Initiation informatique : déplacements / robot</li>
+    </ul>
+  </div>
+
+  <div class="subject-card">
+    <h3>Histoire-Géographie</h3>
+    <h4>Histoire (thèmes usuels CM1)</h4>
+    <ul class="themes">
+      <li>Thème 1 — Et avant la France ?</li>
+      <li>Thème 2 — Le temps des rois</li>
+      <li>Thème 3 — Le temps de la Révolution et de l’Empire</li>
+    </ul>
+    <h4>Géographie</h4>
+    <ul class="themes">
+      <li>Découvrir le(s) territoire(s), habiter, se repérer ; thématiques du programme en vigueur (BO 2020 ou nouveau BO 2026 selon calendrier CM1)</li>
+    </ul>
+  </div>
+
+  <div class="subject-card">
+    <h3>Sciences et technologie</h3>
+    <ul class="themes">
+      <li>Matière, vivant, énergie, objets techniques</li>
+      <li>Démarches scientifiques : observer, expérimenter, modéliser</li>
+      <li>Repères du programme sciences &amp; techno cycle 3 (nouveau texte progressif dès CM1 en 2026)</li>
+    </ul>
+  </div>
+
+  <div class="subject-card">
+    <h3>EMC · Anglais · EPS · Arts · Musique</h3>
+    <ul class="themes">
+      <li>EMC : sensibilité, règle/droit, jugement, engagement (valeurs républicaines)</li>
+      <li>LVE : renforcement oral + premiers écrits selon situations</li>
+      <li>EPS : 4 champs d’apprentissage</li>
+      <li>Arts / musique : production, perception, culture</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ========== CM2 ========== -->
+<section class="grade-block">
+  <h2>7. CM2 — thèmes par matière <span class="badge">Cycle 3 · rentrée 2026</span></h2>
+
+  <div class="subject-card">
+    <h3>Français</h3>
+    <ul class="themes">
+      <li>Lecture expertisée : compréhension, analyse, culture littéraire</li>
+      <li>Écriture aboutie : genres variés, réécriture</li>
+      <li>Oral : argumenter, présenter</li>
+      <li>Langue : consolidation morphosyntaxe / orthographe / conjugaison</li>
+    </ul>
+  </div>
+
+  <div class="subject-card">
+    <h3>Mathématiques <span class="badge">Priorité contenu HL</span></h3>
+    <h4>Nombres &amp; calcul</h4>
+    <ul class="themes">
+      <li>Entiers jusqu’à <strong>999 999 999</strong></li>
+      <li><strong>Fractions</strong> (dénominateur ≤ 60) :
+        <ul>
+          <li>partie d’un tout</li>
+          <li>mesure de grandeurs</li>
+          <li>nombre (droite graduée, encadrement, fractions > 1)</li>
+          <li><strong>opérateur</strong> (ex. 2/3 de 12, 3/4 de 100) ← cœur de la mission actuelle</li>
+          <li>comparer ; additionner / soustraire ; produit entier × fraction</li>
+        </ul>
+      </li>
+      <li><strong>Décimaux</strong> jusqu’aux millièmes</li>
+      <li>Division décimale ; calcul mental ; ≥ 10 problèmes / semaine</li>
+      <li>Algèbre : suites, symboles, égalités</li>
+    </ul>
+    <h4>Grandeurs, géométrie, données</h4>
+    <ul class="themes">
+      <li>Durées : h / min / s ; angles : degré, angle droit = 90°</li>
+      <li>Figures : + trapèzes, pentagone, hexagone ; symétrie (diagonale du quadrillage)</li>
+      <li>Diagramme circulaire ; probabilités « a chances sur b »</li>
+      <li>Proportionnalité (sans produit en croix)</li>
+      <li>Programmes de calcul (jusqu’à 3 instructions)</li>
+    </ul>
+    <div class="note">
+      <strong>Déjà couvert par Happy Learn :</strong> mission
+      <code>cm2-maths-fractions-01</code> (opérateur + problèmes en chaîne).
+      <strong>Manque pour couvrir le thème fractions CM2 :</strong> fractions > 1,
+      droite graduée, +/− de fractions, comparaison formelle, décimales.
+    </div>
+  </div>
+
+  <div class="subject-card">
+    <h3>Histoire-Géographie</h3>
+    <h4>Histoire</h4>
+    <ul class="themes">
+      <li>Thème 1 — Le temps de la République</li>
+      <li>Thème 2 — L’âge industriel en France</li>
+      <li>Thème 3 — La France, des guerres mondiales à l’Union européenne</li>
+    </ul>
+    <h4>Géographie</h4>
+    <ul class="themes">
+      <li>Thème 1 — Se déplacer</li>
+      <li>Thème 2 — Communiquer d’un bout à l’autre du monde grâce à l’internet</li>
+      <li>Thème 3 — Mieux habiter</li>
+    </ul>
+  </div>
+
+  <div class="subject-card">
+    <h3>Sciences et technologie</h3>
+    <ul class="themes">
+      <li>Continuité cycle 3 : matière, vivant, énergie, objets / systèmes techniques</li>
+      <li>Démarche expérimentale, langage scientifique</li>
+      <li>(Selon calendrier) programme 2023 encore applicable au CM2 en 2026-2027, nouveau texte ensuite)</li>
+    </ul>
+  </div>
+
+  <div class="subject-card">
+    <h3>EMC · Anglais · EPS · Arts · Musique</h3>
+    <ul class="themes">
+      <li>Mêmes domaines que CM1, avec approfondissement citoyen / culturel / sportif</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 8 -->
+<section class="grade-block">
+  <h2>8. Priorités pour les prochaines missions Happy Learn</h2>
+  <p>Proposition de backlog éditorial (thèmes les plus adaptés au format mission narrative) :</p>
+  <table>
+    <thead>
+      <tr><th>Priorité</th><th>Classe</th><th>Matière</th><th>Thème mission</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>CM2</td><td>Maths</td><td>Fractions — nombres &amp; opérations (compléter la mission 01)</td></tr>
+      <tr><td>2</td><td>CM1</td><td>Maths</td><td>Fractions unitaires d’une quantité / décimaux</td></tr>
+      <tr><td>3</td><td>CE2</td><td>Maths</td><td>Fractions d’unité / égalités</td></tr>
+      <tr><td>4</td><td>CM2</td><td>Français</td><td>Compréhension / vocabulaire en contexte</td></tr>
+      <tr><td>5</td><td>CM1–CM2</td><td>Histoire</td><td>Un thème chronologique (ex. République)</td></tr>
+      <tr><td>6</td><td>CE1–CE2</td><td>Questionner le monde</td><td>Vivant ou objets techniques</td></tr>
+      <tr><td>7</td><td>Tous</td><td>EMC</td><td>Règles, respect, coopération</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 9 -->
+<section>
+  <h2>9. Sources officielles</h2>
+  <ul class="themes">
+    <li>Programmes de mathématiques cycle 2 — BO n°41 du 31 octobre 2024</li>
+    <li>Programmes de mathématiques / français cycle 3 — BO n°16 du 17 avril 2025</li>
+    <li>Programmes EMC — BO n°24 du 13 juin 2024</li>
+    <li>Programmes arts / musique / (selon niveaux) questionner le monde, hist-géo, sciences, EPS, LVE — BO n°31 du 30 juillet 2020 et textes 2025-2026 de renouvellement progressif</li>
+    <li>Portails : education.gouv.fr · eduscol.education.gouv.fr</li>
+  </ul>
+  <footer class="note-foot">
+    Happy Learn — Référentiel thèmes par classe × matière · septembre 2026
+    (Phase&nbsp;A : une mission standard <code>…-01</code> par thème — voir
+    <code>docs/SUIVI-missions-themes.md</code>).
+    Document de travail éditorial ; non opposable au Bulletin officiel.
+  </footer>
+</section>
+
+</body>
+</html>

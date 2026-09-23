@@ -5,6 +5,7 @@ import { Neo } from "../components/Neo";
 import { Shell } from "../components/Shell";
 import { useSession } from "../lib/session";
 import { supabaseConfigured } from "../lib/supabase";
+import { isAdminEmail } from "../lib/admins";
 
 type TeacherMode = "connexion" | "inscription";
 
@@ -21,10 +22,12 @@ export function TeacherLoginScreen() {
 
   useEffect(() => {
     if (role === "eleve") navigate("/accueil", { replace: true });
+    if (role === "admin") navigate("/espace-admin", { replace: true });
     if (role === "enseignant") navigate("/espace-professeur", { replace: true });
   }, [role, navigate]);
 
   if (role === "eleve") return <Navigate to="/accueil" replace />;
+  if (role === "admin") return <Navigate to="/espace-admin" replace />;
   if (role === "enseignant") return <Navigate to="/espace-professeur" replace />;
 
   return (
@@ -51,14 +54,14 @@ export function TeacherLoginScreen() {
                 void loginTeacherLocal(email).then((message) => {
                   setBusy(false);
                   if (message) setError(message);
-                  else navigate("/espace-professeur");
+                  else navigate(isAdminEmail(email) ? "/espace-admin" : "/espace-professeur");
                 });
                 return;
               }
               void loginTeacherPassword(email, password, teacherMode).then((message) => {
                 setBusy(false);
                 if (message) setError(message);
-                else navigate("/espace-professeur");
+                else navigate(isAdminEmail(email) ? "/espace-admin" : "/espace-professeur");
               });
             }}
           >
