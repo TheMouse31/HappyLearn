@@ -46,6 +46,16 @@ export type MediaUploadResult = {
   via: "supabase" | "local";
 };
 
+/** Détecte une URL / chemin vidéo (mp4, webm, ou dossier Storage videos/). */
+export function isMediaVideoUrl(url: string | null | undefined): boolean {
+  if (!url) return false;
+  const value = url.toLowerCase();
+  if (value.startsWith("data:video/")) return true;
+  if (/\.(mp4|webm|ogg)(\?|#|$)/.test(value)) return true;
+  if (value.includes("/storage/v1/object/") && value.includes("/videos/")) return true;
+  return false;
+}
+
 /** Upload une image (PNG/JPG/WebP/GIF) vers Storage, sinon data-URL locale. */
 export async function uploadImageFile(file: File): Promise<MediaUploadResult> {
   if (!file.type.startsWith("image/")) {

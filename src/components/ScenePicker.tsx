@@ -7,6 +7,7 @@ import {
   groupSceneOptions,
   type SceneOption,
 } from "../lib/illustrations";
+import { isMediaVideoUrl } from "../lib/mediaStorage";
 
 type Props = {
   options: SceneOption[];
@@ -57,7 +58,11 @@ export function ScenePicker({ options, value, disabled, onChange, onCreateReques
                 >
                   <span className={`scene-pick-thumb tone-${option.tone}`} aria-hidden>
                     {option.thumb ? (
-                      <img src={option.thumb} alt="" />
+                      isMediaVideoUrl(option.thumb) ? (
+                        <video src={option.thumb} muted playsInline preload="metadata" />
+                      ) : (
+                        <img src={option.thumb} alt="" />
+                      )
                     ) : (
                       <span className="scene-pick-glyph">{option.value || "★"}</span>
                     )}

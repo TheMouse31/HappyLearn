@@ -149,7 +149,7 @@ export async function upsertCustomIllustration(
   const label = input.label.trim();
   const imageUrl = input.imageUrl.trim();
   if (!label) throw new Error("Donne un nom à l’illustration.");
-  if (!imageUrl) throw new Error("Ajoute une image (URL ou fichier).");
+  if (!imageUrl) throw new Error("Ajoute une image ou une vidéo (URL ou fichier).");
 
   const now = Date.now();
   const items = readLocal();

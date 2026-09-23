@@ -33,6 +33,7 @@ import {
   saveIllustrationOverrides,
   type IllustrationOverrides,
 } from "../lib/illustrations";
+import { isMediaVideoUrl } from "../lib/mediaStorage";
 import { loadPlatformStats, type PlatformStats } from "../lib/platformStats";
 import { useSession } from "../lib/session";
 
@@ -369,7 +370,11 @@ export function AdminSpaceScreen() {
                           onClick={() => startEditCustom(item)}
                         >
                           <span className="illust-library-thumb">
-                            <img src={item.imageUrl} alt="" />
+                            {isMediaVideoUrl(item.imageUrl) ? (
+                              <video src={item.imageUrl} muted playsInline preload="metadata" />
+                            ) : (
+                              <img src={item.imageUrl} alt="" />
+                            )}
                           </span>
                           <span className="illust-library-meta">
                             <strong>{item.label}</strong>

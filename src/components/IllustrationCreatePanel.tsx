@@ -1,6 +1,6 @@
 /**
  * Formulaire création / édition d’une illustration personnalisée.
- * Fichier → upload Supabase Storage (`media`), sinon data-URL locale.
+ * Image ou vidéo → upload Supabase Storage (`media`), sinon data-URL locale (images).
  */
 import { useState } from "react";
 import { Button } from "./Button";
@@ -8,7 +8,7 @@ import {
   upsertCustomIllustration,
   type CustomIllustration,
 } from "../lib/customIllustrations";
-import { uploadImageFile } from "../lib/mediaStorage";
+import { isMediaVideoUrl, uploadImageFile, uploadVideoFile } from "../lib/mediaStorage";
 import { useSession } from "../lib/session";
 
 export type IllustrationFormState = {
@@ -46,6 +46,7 @@ export function IllustrationCreatePanel({
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [uploadNote, setUploadNote] = useState("");
+  const isVideo = isMediaVideoUrl(form.imageUrl);
 
   async function readImageFile(file: File | null) {
     if (!file) return;
@@ -62,6 +63,23 @@ export function IllustrationCreatePanel({
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload impossible.");
+      setUploadNote("");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function readVideoFile(file: File | null) {
+    if (!file) return;
+    setBusy(true);
+    setError("");
+    setUploadNote("Envoi de la vidéo…");
+    try {
+      const uploaded = await uploadVideoFile(file);
+      onChange({ ...form, imageUrl: uploaded.url });
+      setUploadNote("Vidéo stockée sur Supabase Storage.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload vidéo impossible.");
       setUploadNote("");
     } finally {
       setBusy(false);
@@ -119,7 +137,7 @@ export function IllustrationCreatePanel({
             />
           </div>
           <div className="field">
-            <label htmlFor="illust-create-url">URL de l’image</label>
+            <label htmlFor="illust-create-url">URL média</label>
             <input
               id="illust-create-url"
               type="text"
@@ -129,19 +147,21 @@ export function IllustrationCreatePanel({
                   : form.imageUrl
               }
               onChange={(event) => onChange({ ...form, imageUrl: event.target.value })}
-              placeholder="/images/ma-scene.webp ou https://…"
+              placeholder="/images/ma-scene.webp, https://… ou URL vidéo"
               disabled={busy}
             />
             <small className="field-help">
               {form.imageUrl.startsWith("data:")
                 ? "Fichier local (data-URL)."
                 : form.imageUrl.includes("/storage/v1/object/")
-                  ? "Fichier sur Supabase Storage."
+                  ? isVideo
+                    ? "Vidéo sur Supabase Storage."
+                    : "Image sur Supabase Storage."
                   : "Chemin du site, lien HTTPS, ou importe un fichier ci-dessous."}
             </small>
           </div>
           <div className="field">
-            <label htmlFor="illust-create-file">Importer un fichier</label>
+            <label htmlFor="illust-create-file">Importer une image</label>
             <input
               id="illust-create-file"
               type="file"
@@ -149,12 +169,27 @@ export function IllustrationCreatePanel({
               disabled={busy}
               onChange={(event) => void readImageFile(event.target.files?.[0] ?? null)}
             />
+          </div>
+          <div className="field">
+            <label htmlFor="illust-create-video">Importer une vidéo</label>
+            <input
+              id="illust-create-video"
+              type="file"
+              accept="video/mp4,video/webm"
+              disabled={busy}
+              onChange={(event) => void readVideoFile(event.target.files?.[0] ?? null)}
+            />
+            <small className="field-help">MP4 ou WebM, max. 50 Mo (Supabase requis).</small>
             {uploadNote ? <small className="field-help">{uploadNote}</small> : null}
           </div>
         </div>
         <div className={`illust-create-stage${form.imageUrl ? " has-image" : ""}`}>
           {form.imageUrl ? (
-            <img src={form.imageUrl} alt="" />
+            isVideo ? (
+              <video src={form.imageUrl} controls playsInline muted loop />
+            ) : (
+              <img src={form.imageUrl} alt="" />
+            )
           ) : (
             <p>Aperçu de l’illustration</p>
           )}

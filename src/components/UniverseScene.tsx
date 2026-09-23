@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { StepKind, SubjectSlug, UniverseSlug } from "../data/types";
 import { getCustomIllustration, isCustomSceneKey } from "../lib/customIllustrations";
+import { isMediaVideoUrl } from "../lib/mediaStorage";
 import {
   CalcBoardScene,
   DataScene,
@@ -753,12 +754,24 @@ export function UniverseScene({
 
   let body: ReactNode = null;
 
-  // Illustrations perso (préfixe custom:) : image pleine zone, pas de scène procédurale.
+  // Illustrations perso (préfixe custom:) : image/vidéo pleine zone, pas de scène procédurale.
   const custom = isCustomSceneKey(scene) ? getCustomIllustration(scene) : null;
   if (custom) {
     body = (
       <div className="scene-panel scene-custom" role="img" aria-label={custom.label}>
-        <img className="scene-custom-img" src={custom.imageUrl} alt={custom.label} />
+        {isMediaVideoUrl(custom.imageUrl) ? (
+          <video
+            className="scene-custom-img"
+            src={custom.imageUrl}
+            autoPlay
+            muted
+            loop
+            playsInline
+            controls
+          />
+        ) : (
+          <img className="scene-custom-img" src={custom.imageUrl} alt={custom.label} />
+        )}
       </div>
     );
   } else if (FRACTIONS_LEGACY.has(scene)) {

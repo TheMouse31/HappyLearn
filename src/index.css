@@ -3778,6 +3778,10 @@ html[data-colorblind="1"] .pilot-mode button.is-selected {
   border-radius: 12px;
 }
 
+.scene-custom video.scene-custom-img {
+  background: #0b1a14;
+}
+
 .admin-email-list {
   list-style: none;
   margin: 0;
@@ -4667,7 +4671,8 @@ button.is-active-toggle {
   background: #eef2f0;
 }
 
-.scene-pick-thumb img {
+.scene-pick-thumb img,
+.scene-pick-thumb video {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -4749,7 +4754,8 @@ button.is-active-toggle {
   background: #fff;
 }
 
-.illust-create-stage img {
+.illust-create-stage img,
+.illust-create-stage video {
   max-width: 100%;
   max-height: 220px;
   object-fit: contain;
@@ -4861,7 +4867,8 @@ button.is-active-toggle {
   background: #eef2f0;
 }
 
-.illust-library-thumb img {
+.illust-library-thumb img,
+.illust-library-thumb video {
   width: 100%;
   height: 100%;
   object-fit: cover;
