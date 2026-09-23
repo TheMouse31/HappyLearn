@@ -184,8 +184,13 @@ function mapRemoteMission(row: MissionRow): MissionDef | null {
   };
 }
 
-function missionSelectColumns() {
-  return "id, grade, subject, title, blurb, available, official, difficulty, theme_id, steps, version, source, teacher_id";
+const MISSION_SELECT =
+  "id, grade, subject, title, blurb, available, official, difficulty, theme_id, steps, version, source, teacher_id" as const;
+
+function isMissionRow(value: unknown): value is MissionRow {
+  if (!value || typeof value !== "object") return false;
+  const row = value as Record<string, unknown>;
+  return typeof row.id === "string" && typeof row.grade === "string" && typeof row.subject === "string";
 }
 
 function toMissionPayload(mission: MissionDef) {
@@ -262,7 +267,7 @@ export async function fetchRemoteMissions(filters?: {
 
   let query = client
     .from("missions")
-    .select(missionSelectColumns())
+    .select(MISSION_SELECT)
     .order("updated_at", { ascending: false });
   if (filters?.grade) query = query.eq("grade", filters.grade);
   if (filters?.subject) query = query.eq("subject", filters.subject);
@@ -271,7 +276,8 @@ export async function fetchRemoteMissions(filters?: {
   const { data, error } = await query;
   if (error || !data) return local;
   const remote = data
-    .map((row) => mapRemoteMission(row as MissionRow))
+    .filter(isMissionRow)
+    .map((row) => mapRemoteMission(row))
     .filter((item): item is MissionDef => item !== null);
   return mergeMissions(remote, local);
 }
@@ -284,11 +290,11 @@ export async function resolveMission(id: string | null | undefined): Promise<Mis
   if (!client) return local ?? builtin;
   const { data, error } = await client
     .from("missions")
-    .select(missionSelectColumns())
+    .select(MISSION_SELECT)
     .eq("id", id)
     .maybeSingle();
-  if (error || !data) return local ?? builtin;
-  const remote = mapRemoteMission(data as MissionRow);
+  if (error || !data || !isMissionRow(data)) return local ?? builtin;
+  const remote = mapRemoteMission(data);
   return remote ?? local ?? builtin;
 }
 
