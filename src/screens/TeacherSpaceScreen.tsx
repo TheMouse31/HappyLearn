@@ -371,10 +371,11 @@ export function TeacherSpaceScreen() {
       homeTo="/espace-professeur"
       backTo="/espace-professeur"
     >
-      <section className="teacher-space suivi-classe">
-        <div className="suivi-topbar space-hub-header">
+      <section className="teacher-space suivi-classe dedicated-page">
+        <header className="dedicated-page-header space-hub-header">
           <div>
-            <span className="kicker">Suivi de classe</span>
+            <span className="kicker">Espace enseignant</span>
+            <h1>{current ? current.nom : "Ma classe"}</h1>
             <p className="suivi-greeting">Connecté · {teacher.email}</p>
           </div>
           <button
@@ -388,7 +389,7 @@ export function TeacherSpaceScreen() {
             <strong>{current ? current.nom : "Choisir une classe"}</strong>
             {current ? <span className="suivi-classes-trigger-code">{current.code}</span> : null}
           </button>
-        </div>
+        </header>
         {backend === "local" ? (
           <p className="field-help">
             Espace local sur cet appareil. Avec Supabase, les mêmes codes fonctionnent sur les tablettes de l’école.

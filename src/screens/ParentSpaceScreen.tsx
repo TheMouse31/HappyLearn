@@ -8,8 +8,6 @@ import type { ChildSession, EleveFoyer, GradeLevel, StoredAnswer } from "../data
 import { formatStudentName } from "../data/types";
 import {
   addEleveFoyer,
-  createCheckoutSession,
-  createPortalSession,
   listElevesFoyer,
   listSessionsByFoyerId,
   regenerateFoyerCode,
@@ -99,11 +97,12 @@ export function ParentSpaceScreen() {
 
   return (
     <Shell brand="Happy Learn" stepLabel="Mon foyer" homeTo="/espace-parent" backTo="/espace-parent">
-      <section className="teacher-space suivi-classe">
-        <header className="suivi-header space-hub-header">
+      <section className="teacher-space suivi-classe dedicated-page">
+        <header className="dedicated-page-header space-hub-header">
           <div>
-            <p className="suivi-greeting">Famille · {teacher.email}</p>
+            <span className="kicker">Espace parent</span>
             <h1>{foyer.nom}</h1>
+            <p className="suivi-greeting">Famille · {teacher.email}</p>
             <p className="field-help">
               Code foyer : <strong>{foyerCode}</strong>{" "}
               <Button
@@ -130,7 +129,7 @@ export function ParentSpaceScreen() {
           </div>
         </header>
 
-        <div className="suivi-summary" aria-label="Abonnement">
+        <div className="suivi-summary" aria-label="Synthèse foyer">
           <div className="suivi-summary-item">
             <span className="suivi-summary-value">{eleves.length}</span>
             <span className="suivi-summary-label">Enfants</span>
@@ -151,40 +150,12 @@ export function ParentSpaceScreen() {
 
         <section className="suivi-panel">
           <h2>Abonnement</h2>
-          <div className="actions">
-            <Button
-              type="button"
-              onClick={() => {
-                void createCheckoutSession({
-                  subjectType: "foyer",
-                  subjectId: foyer.id,
-                  email: teacher.email,
-                  successUrl: `${window.location.origin}/espace-parent?checkout=1`,
-                  cancelUrl: `${window.location.origin}/espace-parent`,
-                }).then((r) => {
-                  if ("url" in r) window.location.href = r.url;
-                  else setError(r.error);
-                });
-              }}
-            >
-              Renouveler / payer
-            </Button>
-            <Button
-              type="button"
-              onClick={() => {
-                void createPortalSession({
-                  subjectType: "foyer",
-                  subjectId: foyer.id,
-                  returnUrl: `${window.location.origin}/espace-parent`,
-                }).then((r) => {
-                  if ("url" in r) window.location.href = r.url;
-                  else setError(r.error);
-                });
-              }}
-            >
-              Portail Stripe
-            </Button>
-          </div>
+          <p className="field-help">
+            Statut : {abonnementLabel(abonnement)}. Gestion complète sur la page dédiée.
+          </p>
+          <Link className="text-link" to="/abonnement">
+            Gérer l’abonnement →
+          </Link>
         </section>
 
         <section className="suivi-panel">

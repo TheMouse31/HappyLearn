@@ -612,7 +612,7 @@ export function MissionEditorScreen() {
 
   if (mode === "list") {
     return (
-      <Shell brand="Happy Learn" stepLabel="Missions" homeTo="/espace-admin" backTo="/espace-admin">
+      <Shell brand="Happy Learn" stepLabel="Studio missions" homeTo="/espace-admin" backTo="/espace-admin">
         <section className="mission-studio">
           <header className="mission-studio-hero">
             <div>
@@ -626,7 +626,7 @@ export function MissionEditorScreen() {
               <Button variant="primary" type="button" onClick={startCreate}>
                 Nouvelle mission
               </Button>
-              <Button type="button" onClick={() => navigate("/espace-admin?tab=illustrations")}>
+              <Button type="button" onClick={() => navigate("/espace-admin/panel?tab=illustrations")}>
                 Bibliothèque d’illustrations
               </Button>
             </div>

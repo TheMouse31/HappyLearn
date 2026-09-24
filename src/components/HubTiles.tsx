@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import type { LucideIcon } from "lucide-react";
+import { ChevronRight, type LucideIcon } from "lucide-react";
 import type { MouseEvent } from "react";
 
 export type HubTile = {
@@ -31,7 +31,7 @@ export function HubTiles({ title = "Tableau de bord", lead, tiles }: Props) {
   return (
     <section className="hub-section" aria-label={title}>
       <div className="hub-section-head">
-        <h2 className="hub-section-title">{title}</h2>
+        <h1 className="hub-section-title">{title}</h1>
         {lead ? <p className="hub-section-lead">{lead}</p> : null}
       </div>
       <div className="hub-tiles">
@@ -53,6 +53,7 @@ export function HubTiles({ title = "Tableau de bord", lead, tiles }: Props) {
                 <span className="hub-tile-label">{tile.label}</span>
                 {tile.description ? <span className="hub-tile-desc">{tile.description}</span> : null}
               </span>
+              <ChevronRight className="hub-tile-chevron" size={18} strokeWidth={2.25} aria-hidden />
             </Link>
           );
         })}

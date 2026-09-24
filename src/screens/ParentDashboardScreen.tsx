@@ -4,7 +4,7 @@ import { HubTiles } from "../components/HubTiles";
 import { Shell } from "../components/Shell";
 import { useSession } from "../lib/session";
 
-/** Hub parent — tuiles vers pages dédiées (disposition RetroVault). */
+/** Hub parent — chaque tuile ouvre une page dédiée. */
 export function ParentDashboardScreen() {
   const { role, teacher, switchAdultRole } = useSession();
   if (role !== "parent") {
@@ -13,32 +13,36 @@ export function ParentDashboardScreen() {
   if (!teacher) return <Navigate to="/connexion/parent" replace />;
 
   return (
-    <Shell brand="Happy Learn" stepLabel="Espace parent" homeTo="/espace-parent">
-      <HubTiles
-        title="Tableau de bord"
-        lead="Gère ton foyer, l’abonnement et le suivi des enfants."
-        tiles={[
-          {
-            to: "/espace-parent/foyer",
-            label: "Mon foyer",
-            description: "Enfants, code et séances",
-            icon: Home,
-          },
-          {
-            to: "/abonnement",
-            label: "Abonnement",
-            description: "Premium famille",
-            icon: CreditCard,
-          },
-          {
-            to: "/espace-professeur",
-            label: "Espace enseignant",
-            description: "Même e-mail — bascule de rôle",
-            icon: Users,
-            onNavigate: () => void switchAdultRole("enseignant"),
-          },
-        ]}
-      />
+    <Shell brand="Happy Learn" stepLabel="Tableau de bord" homeTo="/espace-parent" backTo="/">
+      <div className="dedicated-page hub-page">
+        <HubTiles
+          title="Espace parent"
+          lead="Choisis une section pour continuer."
+          tiles={[
+            {
+              to: "/espace-parent/foyer",
+              label: "Mon foyer",
+              description: "Enfants, code foyer et séances",
+              icon: Home,
+            },
+            {
+              to: "/abonnement",
+              label: "Abonnement",
+              description: "Payer ou gérer Premium famille",
+              icon: CreditCard,
+            },
+            {
+              to: "/espace-professeur",
+              label: "Espace enseignant",
+              description: "Passer en mode professeur (même e-mail)",
+              icon: Users,
+              onNavigate: async () => {
+                await switchAdultRole("enseignant");
+              },
+            },
+          ]}
+        />
+      </div>
     </Shell>
   );
 }

@@ -119,6 +119,13 @@ export function AdminSpaceScreen() {
     void listAbonnementsAdmin().then(setGrants);
   }, [tab]);
 
+  // Ancien lien ?tab=missions → studio dédié.
+  useEffect(() => {
+    if (tabParam === "missions") {
+      navigate("/espace-admin/missions", { replace: true });
+    }
+  }, [tabParam, navigate]);
+
   // Resync si une illustration est créée depuis le studio missions (même onglet ou autre).
   useEffect(() => {
     function sync() {
@@ -159,7 +166,7 @@ export function AdminSpaceScreen() {
   return (
     <Shell
       brand="Happy Learn"
-      stepLabel="Administration"
+      stepLabel="Panneau admin"
       homeTo="/espace-admin"
       backTo="/espace-admin"
       onBack={
@@ -170,13 +177,33 @@ export function AdminSpaceScreen() {
             }
       }
     >
-      <section className="admin-space">
-        <header className="admin-head space-hub-header">
+      <section className="admin-space dedicated-page">
+        <header className="dedicated-page-header admin-head space-hub-header">
           <div>
-            <p className="pilot-eyebrow">Administration</p>
-            <h1>Espace admin</h1>
+            <span className="kicker">Administration</span>
+            <h1>
+              {tab === "overview"
+                ? "Vue d’ensemble"
+                : tab === "missions"
+                  ? "Missions"
+                  : tab === "illustrations"
+                    ? "Illustrations"
+                    : tab === "admins"
+                      ? "Comptes admin"
+                      : tab === "abonnements"
+                        ? "Grants Premium"
+                        : "Panneau"}
+            </h1>
             <p className="lead" data-listen>
-              Gère les missions, crée des illustrations, gère les comptes admin et suis l’usage de la plateforme.
+              {tab === "overview"
+                ? "Suis l’usage de la plateforme et accède aux outils."
+                : tab === "missions"
+                  ? "Ouvre le studio pour créer ou modifier des missions."
+                  : tab === "illustrations"
+                    ? "Gère les illustrations et overrides Néo."
+                    : tab === "admins"
+                      ? "Ajoute ou retire des comptes administrateurs."
+                      : "Accorde un Premium à un enseignant ou un foyer."}
             </p>
           </div>
           <div className="admin-head-actions">
@@ -184,7 +211,7 @@ export function AdminSpaceScreen() {
           </div>
         </header>
 
-        {/* Navigation principale : l’état vit dans l’URL (?tab=). */}
+        {/* Navigation principale : l’état vit dans l’URL (?tab=). Missions → studio dédié. */}
         <nav className="admin-tabs" aria-label="Sections administration">
           {(
             [
@@ -199,7 +226,13 @@ export function AdminSpaceScreen() {
               key={id}
               type="button"
               className={tab === id ? "is-selected" : ""}
-              onClick={() => setTab(id)}
+              onClick={() => {
+                if (id === "missions") {
+                  navigate("/espace-admin/missions");
+                  return;
+                }
+                setTab(id);
+              }}
             >
               {label}
             </button>

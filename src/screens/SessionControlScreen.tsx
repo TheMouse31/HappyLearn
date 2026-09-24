@@ -209,22 +209,31 @@ export function SessionControlScreen() {
       homeTo="/espace-professeur"
       backTo="/espace-professeur"
     >
-      <section className="session-pilot">
+      <section className="session-pilot dedicated-page">
         {!current ? (
           <div className="pilot-idle">
-            <h1>Pilotage</h1>
-            <p className="lead">Crée d’abord une classe dans l’espace professeur.</p>
-            <Button variant="primary" type="button" onClick={() => navigate("/espace-professeur")}>
-              Aller à l’espace professeur
+            <header className="dedicated-page-header">
+              <div>
+                <span className="kicker">Session live</span>
+                <h1>Pilotage</h1>
+                <p className="lead">Crée d’abord une classe dans « Ma classe ».</p>
+              </div>
+            </header>
+            <Button variant="primary" type="button" onClick={() => navigate("/espace-professeur/classe")}>
+              Aller à ma classe
             </Button>
           </div>
         ) : !liveSession ? (
           <div className="pilot-idle">
-            <p className="pilot-eyebrow">{current.nom}</p>
-            <h1>Lancer une session</h1>
-            <p className="lead" data-listen>
-              Un code s’affiche pour le tableau. Les élèves se connectent, tu lances une mission.
-            </p>
+            <header className="dedicated-page-header">
+              <div>
+                <span className="kicker">{current.nom}</span>
+                <h1>Lancer une session</h1>
+                <p className="lead" data-listen>
+                  Un code s’affiche pour le tableau. Les élèves se connectent, tu lances une mission.
+                </p>
+              </div>
+            </header>
             {backend === "local" ? (
               <p className="pilot-note" role="status">
                 Mode local : présence temps réel limitée sans Supabase.
