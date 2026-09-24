@@ -8,6 +8,7 @@ import { EleveLoginScreen } from "./screens/EleveLoginScreen";
 import { TeacherLoginScreen } from "./screens/TeacherLoginScreen";
 import { ParentLoginScreen } from "./screens/ParentLoginScreen";
 import { ParentSpaceScreen } from "./screens/ParentSpaceScreen";
+import { ParentDashboardScreen } from "./screens/ParentDashboardScreen";
 import { PaywallScreen } from "./screens/PaywallScreen";
 import { WelcomeScreen } from "./screens/WelcomeScreen";
 import { NicknameScreen } from "./screens/NicknameScreen";
@@ -21,9 +22,11 @@ import { ReadyScreen } from "./screens/ReadyScreen";
 import { MissionScreen } from "./screens/MissionScreen";
 import { RewardScreen } from "./screens/RewardScreen";
 import { TeacherSpaceScreen } from "./screens/TeacherSpaceScreen";
+import { TeacherDashboardScreen } from "./screens/TeacherDashboardScreen";
 import { SessionControlScreen } from "./screens/SessionControlScreen";
 import { MissionEditorScreen } from "./screens/MissionEditorScreen";
 import { AdminSpaceScreen } from "./screens/AdminSpaceScreen";
+import { AdminDashboardScreen } from "./screens/AdminDashboardScreen";
 import { StudentWaitingScreen } from "./screens/StudentWaitingScreen";
 
 const LOCKED_ALLOWED = new Set(["/salle-attente", "/mission"]);
@@ -85,6 +88,14 @@ export default function App() {
           path="/espace-parent"
           element={
             <PremiumGate>
+              <ParentDashboardScreen />
+            </PremiumGate>
+          }
+        />
+        <Route
+          path="/espace-parent/foyer"
+          element={
+            <PremiumGate>
               <ParentSpaceScreen />
             </PremiumGate>
           }
@@ -104,6 +115,14 @@ export default function App() {
           path="/espace-professeur"
           element={
             <PremiumGate>
+              <TeacherDashboardScreen />
+            </PremiumGate>
+          }
+        />
+        <Route
+          path="/espace-professeur/classe"
+          element={
+            <PremiumGate>
               <TeacherSpaceScreen />
             </PremiumGate>
           }
@@ -117,7 +136,8 @@ export default function App() {
           }
         />
         <Route path="/espace-professeur/missions" element={<Navigate to="/espace-admin/missions" replace />} />
-        <Route path="/espace-admin" element={<AdminSpaceScreen />} />
+        <Route path="/espace-admin" element={<AdminDashboardScreen />} />
+        <Route path="/espace-admin/panel" element={<AdminSpaceScreen />} />
         <Route path="/espace-admin/missions" element={<MissionEditorScreen />} />
         <Route path="/salle-attente" element={<StudentWaitingScreen />} />
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -5,9 +5,7 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
-import { CreditCard, Image, Shield, Sparkles, Users } from "lucide-react";
 import { Button } from "../components/Button";
-import { HubTiles } from "../components/HubTiles";
 import {
   EMPTY_ILLUSTRATION_FORM,
   IllustrationCreatePanel,
@@ -163,7 +161,7 @@ export function AdminSpaceScreen() {
       brand="Happy Learn"
       stepLabel="Administration"
       homeTo="/espace-admin"
-      backTo={tab === "overview" ? "/" : undefined}
+      backTo="/espace-admin"
       onBack={
         tab === "overview"
           ? undefined
@@ -173,48 +171,6 @@ export function AdminSpaceScreen() {
       }
     >
       <section className="admin-space">
-        <HubTiles
-          title="Tableau de bord"
-          lead="Raccourcis vers les outils d’administration Happy Learn."
-          tiles={[
-            {
-              to: "/espace-admin?tab=overview",
-              label: "Vue d’ensemble",
-              description: "Stats et activité",
-              icon: Sparkles,
-            },
-            {
-              to: "/espace-admin?tab=missions",
-              label: "Missions",
-              description: "Studio pédagogique",
-              icon: Shield,
-            },
-            {
-              to: "/espace-admin?tab=illustrations",
-              label: "Illustrations",
-              description: "Bibliothèque visuelle",
-              icon: Image,
-            },
-            {
-              to: "/espace-admin?tab=admins",
-              label: "Admins",
-              description: "Comptes administrateurs",
-              icon: Users,
-            },
-            {
-              to: "/espace-admin?tab=abonnements",
-              label: "Abonnements",
-              description: "Grants Premium",
-              icon: CreditCard,
-            },
-            {
-              to: "/espace-professeur",
-              label: "Espace enseignant",
-              description: "Même compte, autre portail",
-              icon: Users,
-            },
-          ]}
-        />
         <header className="admin-head space-hub-header">
           <div>
             <p className="pilot-eyebrow">Administration</p>
