@@ -1,7 +1,6 @@
 type Props = {
   busy?: boolean;
   onGoogle: () => void;
-  onApple: () => void;
 };
 
 function GoogleGlyph() {
@@ -27,28 +26,13 @@ function GoogleGlyph() {
   );
 }
 
-function AppleGlyph() {
-  return (
-    <svg className="oauth-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-      <path
-        fill="currentColor"
-        d="M16.37 12.64c-.03-2.2 1.8-3.26 1.88-3.31-1.03-1.5-2.62-1.7-3.18-1.72-1.35-.14-2.64.8-3.32.8-.69 0-1.74-.78-2.87-.76-1.48.02-2.84.86-3.6 2.18-1.54 2.67-.39 6.62 1.1 8.78.73 1.06 1.6 2.25 2.74 2.2 1.11-.04 1.53-.71 2.87-.71 1.33 0 1.71.71 2.88.69 1.19-.02 1.94-1.08 2.66-2.14.84-1.23 1.18-2.42 1.2-2.48-.03-.01-2.3-.88-2.36-3.53zM14.3 6.1c.6-.73 1.01-1.75.9-2.76-.87.03-1.92.58-2.54 1.31-.56.64-1.05 1.68-.92 2.66 1 .08 2.01-.5 2.56-1.21z"
-      />
-    </svg>
-  );
-}
-
-/** Boutons OAuth Google + Apple pour les écrans parent / enseignant. */
-export function OAuthButtons({ busy = false, onGoogle, onApple }: Props) {
+/** Bouton OAuth Google pour les écrans parent / enseignant. */
+export function OAuthButtons({ busy = false, onGoogle }: Props) {
   return (
     <div className="oauth-buttons" role="group" aria-label="Connexion sociale">
       <button type="button" className="oauth-btn oauth-google" disabled={busy} onClick={onGoogle}>
         <GoogleGlyph />
         <span>Se connecter avec Google</span>
-      </button>
-      <button type="button" className="oauth-btn oauth-apple" disabled={busy} onClick={onApple}>
-        <AppleGlyph />
-        <span>Se connecter avec Apple</span>
       </button>
     </div>
   );

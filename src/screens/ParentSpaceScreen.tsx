@@ -17,6 +17,7 @@ import {
 } from "../lib/familyStore";
 import { useSession } from "../lib/session";
 import { abonnementLabel, isAbonnementActive } from "../lib/subscription";
+import { StatusBadge, SubscriptionStatusBadge } from "../components/StatusBadge";
 import { buildStudentStats, activityStatusLabel } from "../lib/studentStats";
 import { createPersistence } from "../lib/persistence";
 
@@ -102,7 +103,10 @@ export function ParentSpaceScreen() {
       <section className="teacher-space suivi-classe">
         <header className="suivi-header">
           <div>
-            <p className="suivi-greeting">Famille · {teacher.email}</p>
+            <div className="suivi-title-row">
+              <p className="suivi-greeting">Famille · {teacher.email}</p>
+              <SubscriptionStatusBadge abonnement={abonnement} premiumActive={premiumActive} />
+            </div>
             <h1>{foyer.nom}</h1>
             <p className="field-help">
               Code foyer : <strong>{foyerCode}</strong>{" "}
@@ -141,8 +145,10 @@ export function ParentSpaceScreen() {
             <span className="suivi-summary-label">Enfants</span>
           </div>
           <div className="suivi-summary-item">
-            <span className="suivi-summary-value">
-              {isAbonnementActive(abonnement) ? "Premium" : "—"}
+            <span className="suivi-summary-value suivi-summary-badge-wrap">
+              <StatusBadge tone={isAbonnementActive(abonnement) ? "premium" : "free"} icon="✦">
+                {isAbonnementActive(abonnement) ? "Premium" : "—"}
+              </StatusBadge>
             </span>
             <span className="suivi-summary-label">{abonnementLabel(abonnement)}</span>
           </div>

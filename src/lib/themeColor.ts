@@ -72,9 +72,10 @@ export function saveThemeColor(hex: string): void {
 export function applyThemeColor(hex: string): void {
   const root = document.documentElement;
   const color = isValidThemeColor(hex) ? (hex.startsWith("#") ? hex : `#${hex}`) : DEFAULT_THEME_COLOR;
-  const light = mix(color, "#ffffff", 0.28);
-  const soft = mix(color, "#ffffff", 0.88);
-  const line = mix(color, "#ffffff", 0.55);
+  const darkSurface = root.getAttribute("data-theme") === "dark";
+  const light = darkSurface ? mix(color, "#0c1a18", 0.22) : mix(color, "#ffffff", 0.28);
+  const soft = darkSurface ? mix(color, "#142826", 0.72) : mix(color, "#ffffff", 0.88);
+  const line = darkSurface ? mix(color, "#0c1a18", 0.45) : mix(color, "#ffffff", 0.55);
   const inkOnAction = "#ffffff";
 
   root.style.setProperty("--action", color);

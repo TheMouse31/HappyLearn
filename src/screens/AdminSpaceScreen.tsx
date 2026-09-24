@@ -28,6 +28,7 @@ import {
   upsertAbonnement,
 } from "../lib/familyStore";
 import { abonnementLabel } from "../lib/subscription";
+import { StatusBadge, SubscriptionStatusBadge, abonnementTone } from "../components/StatusBadge";
 import {
   CUSTOM_ILLUSTRATIONS_EVENT,
   deleteCustomIllustration,
@@ -52,7 +53,7 @@ type IllustStudio = "library" | "characters";
 export function AdminSpaceScreen() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { role, teacher, logout, backend } = useSession();
+  const { role, teacher, logout, backend, abonnement, premiumActive } = useSession();
   const tabParam = searchParams.get("tab");
   const tab: AdminTab =
     tabParam === "missions" ||
@@ -172,7 +173,10 @@ export function AdminSpaceScreen() {
       <section className="admin-space">
         <header className="admin-head">
           <div>
-            <p className="pilot-eyebrow">Administration</p>
+            <div className="suivi-title-row">
+              <p className="pilot-eyebrow">Administration</p>
+              <SubscriptionStatusBadge abonnement={abonnement} premiumActive={premiumActive} />
+            </div>
             <h1>Espace admin</h1>
             <p className="lead" data-listen>
               Gère les missions, crée des illustrations, gère les comptes admin et suis l’usage de la plateforme.
@@ -702,15 +706,21 @@ export function AdminSpaceScreen() {
             <h3>Abonnements récents</h3>
             <ul className="admin-email-list">
               {grants.map((g) => (
-                <li key={g.id}>
+                <li key={g.id} className="admin-grant-row">
                   <strong>
                     {g.subjectType} · {g.subjectId.slice(0, 8)}…
                   </strong>{" "}
-                  {abonnementLabel(g)}
+                  <StatusBadge tone={abonnementTone(g)} icon={abonnementTone(g) === "premium" ? "✦" : undefined}>
+                    {abonnementLabel(g)}
+                  </StatusBadge>
                   {g.currentPeriodEnd
                     ? ` · jusqu’au ${new Date(g.currentPeriodEnd).toLocaleDateString("fr-FR")}`
                     : ""}
-                  {g.source === "admin_grant" ? " · grant" : ` · ${g.source}`}
+                  {g.source === "admin_grant" ? (
+                    <StatusBadge tone="info">Grant</StatusBadge>
+                  ) : (
+                    <StatusBadge tone="neutral">{g.source}</StatusBadge>
+                  )}
                 </li>
               ))}
             </ul>

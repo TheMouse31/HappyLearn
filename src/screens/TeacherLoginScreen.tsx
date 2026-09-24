@@ -12,7 +12,7 @@ type TeacherMode = "connexion" | "inscription";
 
 export function TeacherLoginScreen() {
   const navigate = useNavigate();
-  const { role, loginTeacherPassword, loginTeacherMagic, loginTeacherLocal, loginTeacherGoogle, loginTeacherApple } =
+  const { role, loginTeacherPassword, loginTeacherMagic, loginTeacherLocal, loginTeacherGoogle } =
     useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -158,14 +158,6 @@ export function TeacherLoginScreen() {
                     setBusy(true);
                     setError("");
                     void loginTeacherGoogle().then((message) => {
-                      setBusy(false);
-                      if (message) setError(message);
-                    });
-                  }}
-                  onApple={() => {
-                    setBusy(true);
-                    setError("");
-                    void loginTeacherApple().then((message) => {
                       setBusy(false);
                       if (message) setError(message);
                     });

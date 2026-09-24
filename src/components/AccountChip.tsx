@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { abonnementLabel } from "../lib/subscription";
+import { StatusBadge, SubscriptionStatusBadge } from "./StatusBadge";
 import { useSession } from "../lib/session";
 
 type Props = {
@@ -28,7 +28,6 @@ export function AccountChip({ compact = false }: Props) {
   const shortName = email ? email.split("@")[0] : role;
   const roleLabel =
     role === "parent" ? "Parent" : role === "enseignant" ? "Prof" : role === "admin" ? "Admin" : "";
-  const subLabel = premiumActive ? abonnementLabel(abonnement) : "Sans abonnement";
   const spaceTo =
     role === "parent"
       ? premiumActive
@@ -44,8 +43,16 @@ export function AccountChip({ compact = false }: Props) {
     <div className={`account-chip${premiumActive ? " is-premium" : " is-free"}`}>
       <Link to={spaceTo} className="account-chip-main" title={email || roleLabel}>
         <span className="account-chip-name">{shortName}</span>
-        {!compact ? <span className="account-chip-role">{roleLabel}</span> : null}
-        <span className={`account-chip-sub${premiumActive ? " is-on" : ""}`}>{subLabel}</span>
+        {!compact && roleLabel ? (
+          <StatusBadge tone="role" className="account-chip-role-badge">
+            {roleLabel}
+          </StatusBadge>
+        ) : null}
+        <SubscriptionStatusBadge
+          abonnement={abonnement}
+          premiumActive={premiumActive}
+          className="account-chip-sub-badge"
+        />
       </Link>
       <button
         type="button"

@@ -15,7 +15,6 @@ export function ParentLoginScreen() {
     role,
     loginParentPassword,
     loginParentGoogle,
-    loginParentApple,
     loginParentLocal,
     premiumActive,
   } = useSession();
@@ -138,14 +137,6 @@ export function ParentLoginScreen() {
                     setBusy(true);
                     setError("");
                     void loginParentGoogle().then((message) => {
-                      setBusy(false);
-                      if (message) setError(message);
-                    });
-                  }}
-                  onApple={() => {
-                    setBusy(true);
-                    setError("");
-                    void loginParentApple().then((message) => {
                       setBusy(false);
                       if (message) setError(message);
                     });

@@ -16,6 +16,7 @@ import type {
 import { formatStudentName } from "../data/types";
 import { UNIVERSES } from "../data/universes";
 import { useSession } from "../lib/session";
+import { SubscriptionStatusBadge } from "../components/StatusBadge";
 import {
   activityStatusLabel,
   buildClassSummary,
@@ -89,6 +90,8 @@ export function TeacherSpaceScreen() {
     setThemeCoveredInClass,
     logout,
     backend,
+    abonnement,
+    premiumActive,
   } = useSession();
 
   const current = classes.find((item) => item.id === activeClassId) ?? classes[0] ?? null;
@@ -384,7 +387,13 @@ export function TeacherSpaceScreen() {
       <section className="teacher-space suivi-classe">
         <div className="suivi-topbar">
           <div>
-            <span className="kicker">Suivi de classe</span>
+            <div className="suivi-title-row">
+              <span className="kicker">Suivi de classe</span>
+              <SubscriptionStatusBadge
+                abonnement={abonnement}
+                premiumActive={premiumActive}
+              />
+            </div>
             <p className="suivi-greeting">Connecté · {teacher.email}</p>
           </div>
           <button

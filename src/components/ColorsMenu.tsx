@@ -6,18 +6,21 @@ import {
   initThemeColor,
   setThemeColor,
 } from "../lib/themeColor";
+import { initThemeMode, setThemeMode, type ThemeMode } from "../lib/themeMode";
 
-/** Opens a panel: daltonien mode and site accent color picker. */
+/** Opens a panel: appearance (light/dark), daltonien mode, site accent. */
 export function ColorsMenu() {
   const panelId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [daltonien, setDaltonien] = useState(false);
   const [color, setColor] = useState(DEFAULT_THEME_COLOR);
+  const [themeMode, setThemeModeState] = useState<ThemeMode>("light");
 
   useEffect(() => {
     setDaltonien(initColorblind());
     setColor(initThemeColor());
+    setThemeModeState(initThemeMode());
   }, []);
 
   useEffect(() => {
@@ -36,18 +39,27 @@ export function ColorsMenu() {
     };
   }, [open]);
 
-  const label = daltonien ? "Daltonien" : "Couleurs";
+  const label = daltonien ? "Daltonien" : themeMode === "dark" ? "Sombre" : "Couleurs";
+
+  function applyMode(next: ThemeMode) {
+    setThemeMode(next);
+    setThemeModeState(next);
+    // Re-apply accent so soft mixes match the active surface.
+    setThemeColor(color);
+  }
 
   return (
     <div className={`colors-menu ${open ? "is-open" : ""}`} ref={rootRef}>
       <button
         type="button"
-        className={`nav-icon-btn colors-menu-trigger ${daltonien ? "is-daltonien" : ""}`}
+        className={`nav-icon-btn colors-menu-trigger ${daltonien ? "is-daltonien" : ""} ${
+          themeMode === "dark" ? "is-dark-mode" : ""
+        }`}
         aria-expanded={open}
         aria-controls={panelId}
         aria-haspopup="dialog"
-        aria-label="Ouvrir les options de couleurs"
-        title="Couleurs du site"
+        aria-label="Ouvrir les options d’apparence"
+        title="Apparence et couleurs"
         onClick={() => setOpen((v) => !v)}
       >
         <span className="colors-menu-swatch" style={{ background: color }} aria-hidden="true" />
@@ -55,8 +67,29 @@ export function ColorsMenu() {
       </button>
 
       {open ? (
-        <div className="colors-panel" id={panelId} role="dialog" aria-label="Couleurs du site">
-          <p className="colors-panel-title">Couleurs</p>
+        <div className="colors-panel" id={panelId} role="dialog" aria-label="Apparence Happy Learn">
+          <p className="colors-panel-title">Apparence</p>
+
+          <div className="theme-mode-toggle" role="group" aria-label="Thème clair ou sombre">
+            <button
+              type="button"
+              className={`theme-mode-btn${themeMode === "light" ? " is-active" : ""}`}
+              aria-pressed={themeMode === "light"}
+              onClick={() => applyMode("light")}
+            >
+              Clair
+            </button>
+            <button
+              type="button"
+              className={`theme-mode-btn${themeMode === "dark" ? " is-active" : ""}`}
+              aria-pressed={themeMode === "dark"}
+              onClick={() => applyMode("dark")}
+            >
+              Sombre
+            </button>
+          </div>
+
+          <div className="colors-divider" />
 
           <label className="colors-option">
             <input

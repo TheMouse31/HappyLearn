@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr" data-skin="newfront">
+<html lang="fr" data-skin="newfront" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -8,6 +8,18 @@
       name="description"
       content="Happy Learn : les apprentissages du primaire, racontés comme une mission. CP à CM2, toutes les matières."
     />
+    <script>
+      (function () {
+        try {
+          var m = localStorage.getItem("happy-learn-theme-mode");
+          if (m !== "light" && m !== "dark") {
+            m = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+          }
+          document.documentElement.setAttribute("data-theme", m);
+          document.documentElement.style.colorScheme = m;
+        } catch (e) {}
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
