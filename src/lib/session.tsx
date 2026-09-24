@@ -53,11 +53,13 @@ import {
   ensureFoyer,
   ensureUserProfile,
   getAbonnement,
-  getUserProfileRole,
+  getUserProfile,
+  migrateLocalParentFoyer,
   upsertAbonnement,
   verifyEleveFoyerPin,
 } from "./familyStore";
 import { isAbonnementActive } from "./subscription";
+import { mergeRole, normalizeRoles, pickActiveRole, type AdultRole } from "./adultRoles";
 
 async function ensureSeedPremiumTeacher(
   userId: string,
@@ -181,6 +183,8 @@ type SessionState = {
   ) => Promise<string | null>;
   loginParentGoogle: () => Promise<string | null>;
   loginParentLocal: (email: string) => Promise<string | null>;
+  /** Bascule parent ↔ enseignant / admin sur le même compte e-mail. */
+  switchAdultRole: (next: "parent" | "enseignant" | "admin") => Promise<string | null>;
   refreshAbonnement: () => Promise<void>;
   /** Met à jour le foyer en mémoire (ex. après régénération du code). */
   setFoyerState: (next: Foyer | null) => void;
@@ -233,26 +237,30 @@ async function restoreAdult(): Promise<{
     const user = data.session?.user;
     if (user?.email) {
       const admin = isAdminEmail(user.email);
-      let role = await getUserProfileRole(user.id);
+      const profile = await getUserProfile(user.id);
       const oauthHint = sessionStorage.getItem("hl-oauth-role");
       sessionStorage.removeItem("hl-oauth-role");
-      if (!role) {
-        if (oauthHint === "parent") role = "parent";
-        else role = admin ? "admin" : "enseignant";
-      }
-      if (admin) role = "admin";
-      role = await ensureUserProfile(
+      const preferred: AdultRole | null =
+        oauthHint === "parent" || oauthHint === "enseignant" || oauthHint === "admin"
+          ? oauthHint
+          : profile?.role ?? null;
+      const requested: AdultRole = admin
+        ? "admin"
+        : preferred ?? (admin ? "admin" : "enseignant");
+      const ensured = await ensureUserProfile(
         user.id,
-        role,
+        requested,
         user.email.split("@")[0] ?? user.email,
         user.email,
       );
+      const role = pickActiveRole(ensured.roles, preferred ?? ensured.active, admin);
       const account: TeacherAccount = {
         id: user.id,
         email: user.email,
         backend: "supabase",
-        isAdmin: role === "admin",
+        isAdmin: role === "admin" || ensured.roles.includes("admin"),
         accountRole: role,
+        roles: ensured.roles,
       };
       let foyer: Foyer | null = null;
       let abonnement: Abonnement | null = null;
@@ -268,11 +276,15 @@ async function restoreAdult(): Promise<{
   const local = loadLocalTeacher();
   if (!local) return null;
   const admin = isAdminEmail(local.email);
-  const role = (local as { accountRole?: "parent" | "enseignant" | "admin" }).accountRole
-    ?? (admin ? "admin" : "enseignant");
+  const roles = normalizeRoles(
+    local.roles,
+    local.accountRole ?? (admin ? "admin" : "enseignant"),
+  );
+  const role = pickActiveRole(roles, local.accountRole, admin);
   let foyer: Foyer | null = null;
   let abonnement: Abonnement | null = null;
   if (role === "parent") {
+    migrateLocalParentFoyer(local.email, local.id);
     foyer = await ensureFoyer(local.id);
     abonnement = await getAbonnement("foyer", foyer.id);
   } else {
@@ -282,8 +294,9 @@ async function restoreAdult(): Promise<{
     account: {
       ...local,
       backend: "local",
-      isAdmin: admin || role === "admin",
+      isAdmin: admin || roles.includes("admin"),
       accountRole: role,
+      roles,
     },
     role,
     foyer,
@@ -930,21 +943,20 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         }
         const admin = isAdminEmail(user.email);
         const requestedRole = admin ? "admin" : "enseignant";
-        const accountRole = await ensureUserProfile(
+        const ensured = await ensureUserProfile(
           user.id,
           requestedRole,
           user.email.split("@")[0] ?? user.email,
           user.email,
         );
-        if (accountRole === "parent") {
-          return "Ce compte est déjà un compte parent. Utilise la connexion parent.";
-        }
+        const accountRole = pickActiveRole(ensured.roles, requestedRole, admin);
         const account: TeacherAccount = {
           id: user.id,
           email: user.email,
           backend: "supabase",
-          isAdmin: accountRole === "admin",
+          isAdmin: accountRole === "admin" || ensured.roles.includes("admin"),
           accountRole,
+          roles: ensured.roles,
         };
         const store = persistence ?? (await createPersistence());
         setPersistence(store);
@@ -977,15 +989,28 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         if (!isEmail(email)) return "Indique un e-mail valide pour retrouver cet espace sur l’appareil.";
         try {
           const normalized = email.trim().toLowerCase();
+          const prev = loadLocalTeacher();
+          const same =
+            prev && prev.email.toLowerCase() === normalized ? prev : null;
+          const roles = mergeRole(
+            normalizeRoles(same?.roles, same?.accountRole),
+            isAdminEmail(normalized) ? "admin" : "enseignant",
+          );
+          const accountRole = pickActiveRole(
+            roles,
+            isAdminEmail(normalized) ? "admin" : "enseignant",
+            isAdminEmail(normalized),
+          );
           const account: TeacherAccount = {
             id: `local-${normalized}`,
             email: normalized,
             backend: "local",
-            isAdmin: isAdminEmail(normalized),
-            accountRole: isAdminEmail(normalized) ? "admin" : "enseignant",
+            isAdmin: roles.includes("admin"),
+            accountRole,
+            roles,
           };
+          migrateLocalParentFoyer(normalized, account.id);
           saveLocalTeacher(account);
-          // Toujours le store navigateur pour les ids local-* (même si Supabase est branché).
           const store = localPersistence;
           setPersistence(store);
           let list = await store.listClasses(account.id);
@@ -999,7 +1024,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           setAbonnement(await ensureSeedPremiumTeacher(account.id, account.email));
           setActiveClassIdState(list[0]?.id ?? null);
           if (list[0]) saveActiveClassId(list[0].id);
-          setRole(account.isAdmin ? "admin" : "enseignant");
+          setRole(accountRole);
           return null;
         } catch (err) {
           return err instanceof Error ? err.message : "Impossible d’ouvrir l’espace local.";
@@ -1036,20 +1061,19 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             ? "Compte créé. Confirme l’e-mail reçu, puis reconnecte-toi."
             : "Connexion incomplète. Réessaie.";
         }
-        const accountRole = await ensureUserProfile(
+        const ensured = await ensureUserProfile(
           user.id,
           "parent",
           user.email.split("@")[0] ?? user.email,
           user.email,
         );
-        if (accountRole !== "parent") {
-          return "Ce compte est déjà un compte professeur. Utilise la connexion enseignant.";
-        }
         const account: TeacherAccount = {
           id: user.id,
           email: user.email,
           backend: "supabase",
+          isAdmin: ensured.roles.includes("admin"),
           accountRole: "parent",
+          roles: ensured.roles,
         };
         const createdFoyer = await ensureFoyer(user.id);
         setTeacher(account);
@@ -1075,12 +1099,19 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         if (!isEmail(email)) return "Indique un e-mail valide.";
         try {
           const normalized = email.trim().toLowerCase();
+          const prev = loadLocalTeacher();
+          const same =
+            prev && prev.email.toLowerCase() === normalized ? prev : null;
+          const roles = mergeRole(normalizeRoles(same?.roles, same?.accountRole), "parent");
           const account: TeacherAccount = {
-            id: `local-parent-${normalized}`,
+            id: `local-${normalized}`,
             email: normalized,
             backend: "local",
+            isAdmin: roles.includes("admin"),
             accountRole: "parent",
+            roles,
           };
+          migrateLocalParentFoyer(normalized, account.id);
           saveLocalTeacher(account);
           const createdFoyer = await ensureFoyer(account.id);
           setTeacher(account);
@@ -1092,6 +1123,61 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         } catch (err) {
           return err instanceof Error ? err.message : "Impossible d’ouvrir le foyer local.";
         }
+      },
+      switchAdultRole: async (next) => {
+        if (!teacher) return "Aucun compte connecté.";
+        const roles = normalizeRoles(teacher.roles, teacher.accountRole);
+        if (!roles.includes(next) && next !== "admin") {
+          // Accorder le rôle à la demande (même e-mail, portail différent).
+        }
+        let nextRoles = mergeRole(roles, next);
+        if (isAdminEmail(teacher.email)) nextRoles = mergeRole(nextRoles, "admin");
+        const active = pickActiveRole(nextRoles, next, next === "admin");
+
+        if (teacher.backend === "supabase") {
+          await ensureUserProfile(
+            teacher.id,
+            active,
+            teacher.email.split("@")[0] ?? teacher.email,
+            teacher.email,
+          );
+        }
+
+        const nextAccount: TeacherAccount = {
+          ...teacher,
+          accountRole: active,
+          roles: nextRoles,
+          isAdmin: nextRoles.includes("admin"),
+        };
+        if (teacher.backend === "local") saveLocalTeacher(nextAccount);
+        setTeacher(nextAccount);
+
+        if (active === "parent") {
+          migrateLocalParentFoyer(teacher.email, teacher.id);
+          const createdFoyer = await ensureFoyer(teacher.id);
+          setFoyer(createdFoyer);
+          setAbonnement(await getAbonnement("foyer", createdFoyer.id));
+          setClasses([]);
+          setActiveClassIdState(null);
+          setRole("parent");
+          return null;
+        }
+
+        const store =
+          teacher.backend === "local" ? localPersistence : persistence ?? (await createPersistence());
+        setPersistence(store);
+        let list = await store.listClasses(teacher.id);
+        if (list.length === 0) {
+          const created = await store.createClass(teacher.id, "Ma classe");
+          list = [created];
+        }
+        setClasses(list);
+        setFoyer(null);
+        setAbonnement(await ensureSeedPremiumTeacher(teacher.id, teacher.email));
+        setActiveClassIdState(list[0]?.id ?? null);
+        if (list[0]) saveActiveClassId(list[0].id);
+        setRole(active);
+        return null;
       },
       loginEleveFoyer: async (childId, pin) => {
         const child = await verifyEleveFoyerPin(childId, pin);

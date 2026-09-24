@@ -4548,3 +4548,168 @@ html[data-skin="newfront"][data-theme="dark"][data-colorblind="1"] {
   --elevated: #18263a;
   --topbar-bg: color-mix(in srgb, var(--panel) 88%, transparent);
 }
+
+/* —— Bandeau RetroVault : toolbar + compte —— */
+html[data-skin="newfront"] .topbar-toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+html[data-skin="newfront"] .account-cluster {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+html[data-skin="newfront"] .account-avatar-btn {
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: transparent;
+  text-decoration: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+html[data-skin="newfront"] .account-avatar-btn:hover {
+  border-color: color-mix(in srgb, var(--action) 45%, var(--line));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--action) 18%, transparent);
+}
+
+html[data-skin="newfront"] .account-cluster .account-chip-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+}
+
+html[data-skin="newfront"] .account-meta {
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+@media (min-width: 720px) {
+  html[data-skin="newfront"] .account-meta {
+    display: flex;
+  }
+}
+
+html[data-skin="newfront"] .account-meta .account-chip-name {
+  text-decoration: none;
+  max-width: 12ch;
+  font-size: 0.8rem;
+}
+
+html[data-skin="newfront"] .account-role-switch {
+  display: inline-flex;
+  gap: 2px;
+}
+
+html[data-skin="newfront"] .colors-menu-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+html[data-skin="newfront"] .nav-icon-square svg {
+  display: block;
+}
+
+/* —— Hub tiles (dashboard RetroVault) —— */
+html[data-skin="newfront"] .hub-section {
+  margin: 0 0 28px;
+}
+
+html[data-skin="newfront"] .hub-section-head {
+  margin-bottom: 14px;
+}
+
+html[data-skin="newfront"] .hub-section-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.45rem, 2.4vw, 1.85rem);
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+html[data-skin="newfront"] .hub-section-lead {
+  margin: 8px 0 0;
+  max-width: 36rem;
+  color: var(--soft);
+  font-size: 0.95rem;
+  font-weight: 550;
+}
+
+html[data-skin="newfront"] .hub-tiles {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  html[data-skin="newfront"] .hub-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 960px) {
+  html[data-skin="newfront"] .hub-tiles {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+html[data-skin="newfront"] .hub-tile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  background: color-mix(in srgb, var(--ink) 2.5%, var(--panel));
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+html[data-skin="newfront"] .hub-tile:hover {
+  background: color-mix(in srgb, var(--ink) 5%, var(--panel));
+  border-color: color-mix(in srgb, var(--action) 28%, var(--line));
+  transform: translateY(-1px);
+}
+
+html[data-skin="newfront"] .hub-tile-icon {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--soft-action);
+  color: var(--action);
+}
+
+html[data-skin="newfront"] .hub-tile-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+html[data-skin="newfront"] .hub-tile-label {
+  font-weight: 750;
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
+html[data-skin="newfront"] .hub-tile-desc {
+  font-size: 0.78rem;
+  font-weight: 550;
+  color: var(--soft);
+  line-height: 1.35;
+}

@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
+import { Moon, Sun } from "lucide-react";
 import { initColorblind, setColorblind } from "../lib/colorblind";
 import { initThemeMode, setThemeMode, type ThemeMode } from "../lib/themeMode";
 
@@ -51,7 +52,7 @@ export function ColorsMenu() {
         onClick={() => setOpen((v) => !v)}
       >
         <span className="colors-menu-glyph" aria-hidden="true">
-          {themeMode === "dark" ? "☾" : "☀"}
+          {themeMode === "dark" ? <Moon size={17} strokeWidth={2.25} /> : <Sun size={17} strokeWidth={2.25} />}
         </span>
       </button>
 

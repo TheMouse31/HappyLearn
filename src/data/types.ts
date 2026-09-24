@@ -19,8 +19,10 @@ export type TeacherAccount = {
   email: string;
   backend: "local" | "supabase";
   isAdmin?: boolean;
-  /** Rôle adulte authentifié (parent ou enseignant/admin). */
+  /** Rôle adulte actif (portail courant). */
   accountRole?: "parent" | "enseignant" | "admin";
+  /** Tous les rôles disponibles pour ce compte (même e-mail). */
+  roles?: Array<"parent" | "enseignant" | "admin">;
 };
 
 export type Foyer = {

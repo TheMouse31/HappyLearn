@@ -1,8 +1,8 @@
 import { canSpeak, stopSpeech, subscribeSpeech, toggleSpeech } from "../lib/speech";
 import { useEffect, useState } from "react";
+import { Volume2, VolumeX } from "lucide-react";
 
 type Props = {
-  /** Place the control in the topbar instead of floating. */
   variant?: "float" | "nav";
 };
 
@@ -49,7 +49,11 @@ export function ListenButton({ variant = "nav" }: Props) {
         }
       }}
     >
-      <span aria-hidden="true">{on ? "■" : "▶"}</span>
+      {on ? (
+        <VolumeX size={variant === "nav" ? 17 : 18} strokeWidth={2.25} aria-hidden />
+      ) : (
+        <Volume2 size={variant === "nav" ? 17 : 18} strokeWidth={2.25} aria-hidden />
+      )}
       {variant === "float" ? <span>{label}</span> : null}
     </button>
   );

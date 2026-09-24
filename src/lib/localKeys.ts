@@ -132,17 +132,29 @@ export function loadLocalTeacher(): {
   id: string;
   email: string;
   accountRole?: "parent" | "enseignant" | "admin";
+  roles?: Array<"parent" | "enseignant" | "admin">;
 } | null {
   try {
     const raw = JSON.parse(localStorage.getItem(TEACHER_KEY) ?? "null") as unknown;
     if (!raw || typeof raw !== "object") return null;
-    const row = raw as { id?: unknown; email?: unknown; accountRole?: unknown };
+    const row = raw as {
+      id?: unknown;
+      email?: unknown;
+      accountRole?: unknown;
+      roles?: unknown;
+    };
     if (typeof row.id !== "string" || typeof row.email !== "string") return null;
     const accountRole =
       row.accountRole === "parent" || row.accountRole === "enseignant" || row.accountRole === "admin"
         ? row.accountRole
         : undefined;
-    return { id: row.id, email: row.email, accountRole };
+    const roles = Array.isArray(row.roles)
+      ? row.roles.filter(
+          (r): r is "parent" | "enseignant" | "admin" =>
+            r === "parent" || r === "enseignant" || r === "admin",
+        )
+      : undefined;
+    return { id: row.id, email: row.email, accountRole, roles };
   } catch {
     return null;
   }
@@ -152,6 +164,7 @@ export function saveLocalTeacher(teacher: {
   id: string;
   email: string;
   accountRole?: "parent" | "enseignant" | "admin";
+  roles?: Array<"parent" | "enseignant" | "admin">;
 }): void {
   localStorage.setItem(TEACHER_KEY, JSON.stringify(teacher));
 }

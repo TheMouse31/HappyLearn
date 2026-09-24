@@ -15,6 +15,7 @@ import { generateClassCode } from "./classCode";
 import { hashChildPin } from "./childPin";
 import { newId } from "./localKeys";
 import { getSupabase } from "./supabase";
+import { mergeRole, normalizeRoles } from "./adultRoles";
 
 const LOCAL_FOYERS_KEY = "happy-learn-foyers";
 const LOCAL_ELEVES_FOYER_KEY = "happy-learn-eleves-foyer";
@@ -97,53 +98,104 @@ export async function ensureUserProfile(
   role: "parent" | "enseignant" | "admin",
   displayName: string,
   email?: string,
-): Promise<"parent" | "enseignant" | "admin"> {
+): Promise<{ active: "parent" | "enseignant" | "admin"; roles: Array<"parent" | "enseignant" | "admin"> }> {
   const client = getSupabase();
-  if (!client) return role;
-  const existing = await getUserProfileRole(userId);
-  // Ne pas écraser un rôle déjà fixé (sauf promotion admin).
-  const effective =
-    existing && !(role === "admin" && existing !== "admin") && existing !== role
-      ? existing
-      : existing === "admin"
-        ? "admin"
-        : role;
-  await client.from("profils_utilisateurs").upsert({
+  if (!client) return { active: role, roles: [role] };
+
+  const existing = await getUserProfile(userId);
+  let roles = normalizeRoles(existing?.roles, existing?.role ?? null);
+  roles = mergeRole(roles, role);
+  if (role === "admin" || existing?.role === "admin") {
+    roles = mergeRole(roles, "admin");
+  }
+  // Le rôle demandé devient le rôle actif (portail courant).
+  const active = role;
+
+  const payload: Record<string, unknown> = {
     user_id: userId,
-    role: effective,
+    role: active,
     display_name: displayName,
     email: email?.trim().toLowerCase() || null,
-  });
-  if (effective === "enseignant" || effective === "admin") {
+    roles,
+  };
+
+  const { error } = await client.from("profils_utilisateurs").upsert(payload);
+  if (error && /roles/i.test(error.message)) {
+    // Migration multi-rôles pas encore appliquée : conserver le rôle demandé.
+    await client.from("profils_utilisateurs").upsert({
+      user_id: userId,
+      role: active,
+      display_name: displayName,
+      email: email?.trim().toLowerCase() || null,
+    });
+  }
+
+  if (active === "enseignant" || active === "admin" || roles.includes("enseignant") || roles.includes("admin")) {
     await client.from("profils_enseignants").upsert({
       user_id: userId,
       display_name: displayName,
-      ...(effective === "admin" ? { is_admin: true } : {}),
+      ...(roles.includes("admin") || active === "admin" ? { is_admin: true } : {}),
     });
   }
-  return effective;
+  return { active, roles };
 }
 
-export async function getUserProfileRole(
+export async function getUserProfile(
   userId: string,
-): Promise<"parent" | "enseignant" | "admin" | null> {
+): Promise<{ role: "parent" | "enseignant" | "admin"; roles: Array<"parent" | "enseignant" | "admin"> } | null> {
   const client = getSupabase();
   if (!client) return null;
   const { data } = await client
     .from("profils_utilisateurs")
-    .select("role")
+    .select("role, roles")
     .eq("user_id", userId)
     .maybeSingle();
   if (data?.role === "parent" || data?.role === "enseignant" || data?.role === "admin") {
-    return data.role;
+    const roles = normalizeRoles(
+      Array.isArray(data.roles) ? (data.roles as string[]) : null,
+      data.role,
+    );
+    return { role: data.role, roles };
   }
   const { data: pe } = await client
     .from("profils_enseignants")
     .select("is_admin")
     .eq("user_id", userId)
     .maybeSingle();
-  if (pe) return pe.is_admin ? "admin" : "enseignant";
+  if (pe) {
+    const role = pe.is_admin ? "admin" : "enseignant";
+    return { role, roles: [role] };
+  }
   return null;
+}
+
+export async function getUserProfileRole(
+  userId: string,
+): Promise<"parent" | "enseignant" | "admin" | null> {
+  const profile = await getUserProfile(userId);
+  return profile?.role ?? null;
+}
+
+export async function getUserProfileRoles(
+  userId: string,
+): Promise<Array<"parent" | "enseignant" | "admin">> {
+  const profile = await getUserProfile(userId);
+  return profile?.roles ?? [];
+}
+
+/** Migre un ancien foyer local-parent-* vers l’id unifié local-{email}. */
+export function migrateLocalParentFoyer(email: string, unifiedId: string): void {
+  const legacyId = `local-parent-${email.trim().toLowerCase()}`;
+  if (legacyId === unifiedId) return;
+  const foyers = readJson<Foyer[]>(LOCAL_FOYERS_KEY, []);
+  let changed = false;
+  for (const f of foyers) {
+    if (f.ownerId === legacyId) {
+      f.ownerId = unifiedId;
+      changed = true;
+    }
+  }
+  if (changed) writeJson(LOCAL_FOYERS_KEY, foyers);
 }
 
 export async function ensureFoyer(ownerId: string, nom = "Ma famille"): Promise<Foyer> {

@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
+import { CreditCard, Home, Users } from "lucide-react";
 import { Button } from "../components/Button";
+import { HubTiles } from "../components/HubTiles";
 import { Shell } from "../components/Shell";
+import { StatusBadge } from "../components/StatusBadge";
 import { GRADES, gradeLabel } from "../data/catalog";
 import type { ChildSession, EleveFoyer, GradeLevel, StoredAnswer } from "../data/types";
 import { formatStudentName } from "../data/types";
@@ -17,7 +20,6 @@ import {
 } from "../lib/familyStore";
 import { useSession } from "../lib/session";
 import { abonnementLabel, isAbonnementActive } from "../lib/subscription";
-import { StatusBadge } from "../components/StatusBadge";
 import { buildStudentStats, activityStatusLabel } from "../lib/studentStats";
 import { createPersistence } from "../lib/persistence";
 
@@ -100,6 +102,30 @@ export function ParentSpaceScreen() {
   return (
     <Shell brand="Happy Learn" stepLabel="Espace parent" homeTo="/espace-parent">
       <section className="teacher-space suivi-classe">
+        <HubTiles
+          title="Tableau de bord"
+          lead="Gère ton foyer, l’abonnement et le suivi des enfants."
+          tiles={[
+            {
+              to: "/espace-parent",
+              label: "Mon foyer",
+              description: "Enfants, code et séances",
+              icon: Home,
+            },
+            {
+              to: "/abonnement",
+              label: "Abonnement",
+              description: "Premium famille",
+              icon: CreditCard,
+            },
+            {
+              to: "/connexion/enseignant",
+              label: "Espace enseignant",
+              description: "Même e-mail, bascule via le bandeau",
+              icon: Users,
+            },
+          ]}
+        />
         <header className="suivi-header space-hub-header">
           <div>
             <p className="suivi-greeting">Famille · {teacher.email}</p>

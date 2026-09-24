@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import type { ReactNode } from "react";
+import { ArrowLeft, Home, Shield, Users } from "lucide-react";
 import { AccountChip } from "./AccountChip";
 import { ColorsMenu } from "./ColorsMenu";
 import { ListenButton } from "./ListenButton";
@@ -19,7 +20,6 @@ type Props = {
   homeTo?: string;
   showSetupSteps?: boolean;
   confirmLeaveMission?: boolean;
-  /** Chrome adapté : eleve = barre fluide, auth = connexion, default = adulte. */
   variant?: ShellVariant;
 };
 
@@ -68,7 +68,6 @@ export function Shell({
         ? "/"
         : resolvedHome;
   const brandClickable = !(hideNav || variant === "eleve-mission");
-
   const showBack = Boolean(!hideNav && variant !== "eleve-mission" && (onBack || backTo));
 
   function goBack() {
@@ -103,7 +102,7 @@ export function Shell({
         <div className="topbar-start">
           {showBack ? (
             <button type="button" className="nav-icon-btn nav-icon-square" onClick={goBack} aria-label="Retour">
-              ←
+              <ArrowLeft size={18} strokeWidth={2.25} aria-hidden />
             </button>
           ) : null}
           {brandClickable ? (
@@ -133,21 +132,58 @@ export function Shell({
           )}
           {stepLabel && !hideStepPill ? <div className="step-pill">{stepLabel}</div> : null}
         </div>
+
         <div className="topbar-end">
-          {!hideUtilities ? (
-            <div className="topbar-tools">
-              <ColorsMenu />
-              <ListenButton />
-            </div>
-          ) : null}
           {showSubBadge ? (
             <SubscriptionStatusBadge abonnement={abonnement} premiumActive={premiumActive} />
           ) : null}
-          {!hideHomeButton && !hideNav ? (
-            <button type="button" className="nav-icon-btn nav-icon-square home-btn" onClick={goHome} aria-label="Accueil">
-              <span aria-hidden="true">⌂</span>
-            </button>
+
+          {!hideUtilities || showAccount ? (
+            <div className="topbar-toolbar" role="toolbar" aria-label="Raccourcis">
+              {!hideUtilities ? (
+                <>
+                  <ColorsMenu />
+                  <ListenButton />
+                </>
+              ) : null}
+              {role === "enseignant" || role === "admin" ? (
+                <Link
+                  to="/espace-professeur"
+                  className="nav-icon-btn nav-icon-square"
+                  title="Espace enseignant"
+                  aria-label="Espace enseignant"
+                >
+                  <Users size={17} strokeWidth={2.25} aria-hidden />
+                </Link>
+              ) : null}
+              {role === "admin" ? (
+                <Link
+                  to="/espace-admin"
+                  className="nav-icon-btn nav-icon-square"
+                  title="Administration"
+                  aria-label="Administration"
+                >
+                  <Shield size={17} strokeWidth={2.25} aria-hidden />
+                </Link>
+              ) : null}
+              {role === "parent" ? (
+                <Link
+                  to="/espace-parent"
+                  className="nav-icon-btn nav-icon-square"
+                  title="Espace parent"
+                  aria-label="Espace parent"
+                >
+                  <Users size={17} strokeWidth={2.25} aria-hidden />
+                </Link>
+              ) : null}
+              {!hideHomeButton && !hideNav ? (
+                <button type="button" className="nav-icon-btn nav-icon-square" onClick={goHome} aria-label="Accueil">
+                  <Home size={17} strokeWidth={2.25} aria-hidden />
+                </button>
+              ) : null}
+            </div>
           ) : null}
+
           {showAccount ? <AccountChip compact={isEleveChrome} /> : null}
           {extra}
         </div>
