@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "../components/Button";
 import { Neo } from "../components/Neo";
+import { OAuthButtons } from "../components/OAuthButtons";
 import { Shell } from "../components/Shell";
 import { useSession } from "../lib/session";
 import { supabaseConfigured } from "../lib/supabase";
@@ -11,7 +12,7 @@ type TeacherMode = "connexion" | "inscription";
 
 export function TeacherLoginScreen() {
   const navigate = useNavigate();
-  const { role, loginTeacherPassword, loginTeacherMagic, loginTeacherLocal, loginTeacherGoogle } =
+  const { role, loginTeacherPassword, loginTeacherMagic, loginTeacherLocal, loginTeacherGoogle, loginTeacherApple } =
     useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -151,21 +152,25 @@ export function TeacherLoginScreen() {
                 </Button>
               ) : null}
               {hasServer ? (
-                <Button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => {
+                <OAuthButtons
+                  busy={busy}
+                  onGoogle={() => {
                     setBusy(true);
                     setError("");
-                    sessionStorage.setItem("hl-oauth-role", "enseignant");
                     void loginTeacherGoogle().then((message) => {
                       setBusy(false);
                       if (message) setError(message);
                     });
                   }}
-                >
-                  Continuer avec Google
-                </Button>
+                  onApple={() => {
+                    setBusy(true);
+                    setError("");
+                    void loginTeacherApple().then((message) => {
+                      setBusy(false);
+                      if (message) setError(message);
+                    });
+                  }}
+                />
               ) : null}
               {hasServer ? (
                 <Button

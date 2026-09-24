@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import type { ReactNode } from "react";
+import { AccountChip } from "./AccountChip";
 import { ColorsMenu } from "./ColorsMenu";
 import { ListenButton } from "./ListenButton";
 import { useSession } from "../lib/session";
@@ -12,7 +13,7 @@ type Props = {
 
 export function PublicLayout({ children, fullBleed = true }: Props) {
   const navigate = useNavigate();
-  const { role, premiumActive } = useSession();
+  const { role, premiumActive, teacher, displayName } = useSession();
   const { pathname } = useLocation();
   const continueTo =
     role === "eleve"
@@ -30,6 +31,7 @@ export function PublicLayout({ children, fullBleed = true }: Props) {
             : null;
   const isConnexion = pathname.startsWith("/connexion");
   const isHome = pathname === "/";
+  const loggedIn = Boolean(role);
 
   return (
     <div
@@ -52,9 +54,10 @@ export function PublicLayout({ children, fullBleed = true }: Props) {
           ) : null}
           <ColorsMenu />
           <ListenButton />
+          {loggedIn ? <AccountChip /> : null}
           {continueTo ? (
             <button type="button" className="primary nav-cta" onClick={() => navigate(continueTo)}>
-              Continuer
+              {teacher?.email || displayName ? "Mon espace" : "Continuer"}
             </button>
           ) : isConnexion ? (
             <span className="nav-cta-link is-current" aria-current="page">

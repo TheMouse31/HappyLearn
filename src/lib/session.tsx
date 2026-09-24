@@ -149,12 +149,14 @@ type SessionState = {
   loginTeacherMagic: (email: string) => Promise<string | null>;
   loginTeacherLocal: (email: string) => Promise<string | null>;
   loginTeacherGoogle: () => Promise<string | null>;
+  loginTeacherApple: () => Promise<string | null>;
   loginParentPassword: (
     email: string,
     password: string,
     mode: "connexion" | "inscription",
   ) => Promise<string | null>;
   loginParentGoogle: () => Promise<string | null>;
+  loginParentApple: () => Promise<string | null>;
   loginParentLocal: (email: string) => Promise<string | null>;
   refreshAbonnement: () => Promise<void>;
   /** Met à jour le foyer en mémoire (ex. après régénération du code). */
@@ -983,11 +985,25 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       loginTeacherGoogle: async () => {
         const client = getSupabase();
         if (!client) return "Google nécessite Supabase.";
+        sessionStorage.setItem("hl-oauth-role", "enseignant");
         const { error } = await client.auth.signInWithOAuth({
           provider: "google",
           options: {
             redirectTo: `${window.location.origin}/connexion/enseignant`,
             queryParams: { access_type: "offline", prompt: "consent" },
+          },
+        });
+        if (error) return teacherAuthMessage(error.message);
+        return null;
+      },
+      loginTeacherApple: async () => {
+        const client = getSupabase();
+        if (!client) return "Apple nécessite Supabase.";
+        sessionStorage.setItem("hl-oauth-role", "enseignant");
+        const { error } = await client.auth.signInWithOAuth({
+          provider: "apple",
+          options: {
+            redirectTo: `${window.location.origin}/connexion/enseignant`,
           },
         });
         if (error) return teacherAuthMessage(error.message);
@@ -1040,6 +1056,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         sessionStorage.setItem("hl-oauth-role", "parent");
         const { error } = await client.auth.signInWithOAuth({
           provider: "google",
+          options: { redirectTo: `${window.location.origin}/connexion/parent` },
+        });
+        if (error) return teacherAuthMessage(error.message);
+        return null;
+      },
+      loginParentApple: async () => {
+        const client = getSupabase();
+        if (!client) return "Apple nécessite Supabase.";
+        sessionStorage.setItem("hl-oauth-role", "parent");
+        const { error } = await client.auth.signInWithOAuth({
+          provider: "apple",
           options: { redirectTo: `${window.location.origin}/connexion/parent` },
         });
         if (error) return teacherAuthMessage(error.message);

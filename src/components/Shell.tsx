@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import type { ReactNode } from "react";
+import { AccountChip } from "./AccountChip";
 import { ColorsMenu } from "./ColorsMenu";
 import { ListenButton } from "./ListenButton";
 import { SetupSteps } from "./SetupSteps";
@@ -51,6 +52,11 @@ export function Shell({
   const hideUtilities = isEleveChrome || isAuth;
   const hideHomeButton = isEleveChrome || isAuth || (lockedSession && pathname === "/mission");
   const hideStepPill = Boolean(showSetupSteps) || variant === "eleve-mission";
+  const hideNav = lockedSession && (pathname === "/salle-attente" || pathname === "/mission");
+  const showAccount =
+    !hideNav &&
+    !isAuth &&
+    (role === "parent" || role === "enseignant" || role === "admin" || role === "eleve");
   const brandTo = lockedSession
     ? "/salle-attente"
     : isAuth
@@ -58,7 +64,6 @@ export function Shell({
       : role === "enseignant" || role === "admin"
         ? "/"
         : resolvedHome;
-  const hideNav = lockedSession && (pathname === "/salle-attente" || pathname === "/mission");
   const brandClickable = !(hideNav || variant === "eleve-mission");
 
   const showBack = Boolean(!hideNav && variant !== "eleve-mission" && (onBack || backTo));
@@ -138,6 +143,7 @@ export function Shell({
               <span>Accueil</span>
             </button>
           ) : null}
+          {showAccount ? <AccountChip compact={isEleveChrome} /> : null}
           {extra}
         </div>
       </header>

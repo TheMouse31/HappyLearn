@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "../components/Button";
 import { Neo } from "../components/Neo";
+import { OAuthButtons } from "../components/OAuthButtons";
 import { Shell } from "../components/Shell";
 import { useSession } from "../lib/session";
 import { supabaseConfigured } from "../lib/supabase";
@@ -10,8 +11,14 @@ type ParentMode = "connexion" | "inscription";
 
 export function ParentLoginScreen() {
   const navigate = useNavigate();
-  const { role, loginParentPassword, loginParentGoogle, loginParentLocal, premiumActive } =
-    useSession();
+  const {
+    role,
+    loginParentPassword,
+    loginParentGoogle,
+    loginParentApple,
+    loginParentLocal,
+    premiumActive,
+  } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [parentMode, setParentMode] = useState<ParentMode>("connexion");
@@ -125,10 +132,9 @@ export function ParentLoginScreen() {
                   : "Ouvrir l’espace parent"}
               </Button>
               {hasServer ? (
-                <Button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => {
+                <OAuthButtons
+                  busy={busy}
+                  onGoogle={() => {
                     setBusy(true);
                     setError("");
                     void loginParentGoogle().then((message) => {
@@ -136,9 +142,15 @@ export function ParentLoginScreen() {
                       if (message) setError(message);
                     });
                   }}
-                >
-                  Continuer avec Google
-                </Button>
+                  onApple={() => {
+                    setBusy(true);
+                    setError("");
+                    void loginParentApple().then((message) => {
+                      setBusy(false);
+                      if (message) setError(message);
+                    });
+                  }}
+                />
               ) : null}
               {hasServer ? (
                 <Button
