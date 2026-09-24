@@ -4766,3 +4766,165 @@ html[data-skin="newfront"] .abonnement-page .abonnement-status-row {
 html[data-skin="newfront"] .abonnement-page .actions {
   margin-top: 18px;
 }
+
+html[data-skin="newfront"] .abonnement-page {
+  max-width: 1080px;
+}
+
+html[data-skin="newfront"] .abo-table-wrap {
+  overflow-x: auto;
+  margin: 8px 0 22px;
+  border: 1px solid color-mix(in srgb, var(--line) 85%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+}
+
+html[data-skin="newfront"] .abo-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+}
+
+html[data-skin="newfront"] .abo-table th,
+html[data-skin="newfront"] .abo-table td {
+  padding: 12px 14px;
+  text-align: center;
+  vertical-align: middle;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+}
+
+html[data-skin="newfront"] .abo-table thead th {
+  padding: 0;
+  background: color-mix(in srgb, var(--panel) 80%, var(--action) 4%);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 90%, transparent);
+}
+
+html[data-skin="newfront"] .abo-table thead th:first-child,
+html[data-skin="newfront"] .abo-table tbody th {
+  text-align: left;
+  font-weight: 650;
+  color: var(--ink);
+  width: 22%;
+  padding: 12px 16px;
+}
+
+html[data-skin="newfront"] .abo-table tbody th {
+  font-size: 0.92rem;
+}
+
+html[data-skin="newfront"] .abo-table tbody tr:last-child th,
+html[data-skin="newfront"] .abo-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+html[data-skin="newfront"] .abo-plan-pick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  min-height: 148px;
+  padding: 16px 12px;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: center;
+  transition: background 0.15s ease;
+}
+
+html[data-skin="newfront"] .abo-plan-pick:hover {
+  background: color-mix(in srgb, var(--action) 8%, transparent);
+}
+
+html[data-skin="newfront"] .abo-plan-pick.is-selected,
+html[data-skin="newfront"] .abo-table td.is-selected-col {
+  background: color-mix(in srgb, var(--action) 10%, transparent);
+}
+
+html[data-skin="newfront"] .abo-plan-pick.is-recommended {
+  box-shadow: inset 0 3px 0 var(--action);
+}
+
+html[data-skin="newfront"] .abo-plan-name {
+  font-family: var(--font-display, Fraunces, Georgia, serif);
+  font-size: 1.15rem;
+  font-weight: 650;
+  color: var(--ink);
+}
+
+html[data-skin="newfront"] .abo-plan-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--action);
+}
+
+html[data-skin="newfront"] .abo-plan-price {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-top: 4px;
+}
+
+html[data-skin="newfront"] .abo-plan-yearly {
+  font-size: 0.78rem;
+  color: var(--soft);
+}
+
+html[data-skin="newfront"] .abo-plan-blurb {
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--soft);
+  max-width: 11.5rem;
+  margin-top: 4px;
+}
+
+html[data-skin="newfront"] .abo-yes {
+  font-weight: 700;
+  color: var(--action);
+}
+
+html[data-skin="newfront"] .abo-no {
+  color: var(--soft);
+  opacity: 0.7;
+}
+
+html[data-skin="newfront"] .abo-detail {
+  font-size: 0.85rem;
+  color: var(--ink);
+}
+
+html[data-skin="newfront"] .abo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+html[data-skin="newfront"] .visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 720px) {
+  html[data-skin="newfront"] .abo-plan-blurb {
+    display: none;
+  }
+
+  html[data-skin="newfront"] .abo-plan-pick {
+    min-height: 110px;
+    padding: 12px 8px;
+  }
+}
