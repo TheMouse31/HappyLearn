@@ -17,7 +17,7 @@ import {
 } from "../lib/familyStore";
 import { useSession } from "../lib/session";
 import { abonnementLabel, isAbonnementActive } from "../lib/subscription";
-import { StatusBadge, SubscriptionStatusBadge } from "../components/StatusBadge";
+import { StatusBadge } from "../components/StatusBadge";
 import { buildStudentStats, activityStatusLabel } from "../lib/studentStats";
 import { createPersistence } from "../lib/persistence";
 
@@ -30,7 +30,6 @@ export function ParentSpaceScreen() {
     premiumActive,
     refreshAbonnement,
     setFoyerState,
-    logout,
   } = useSession();
   const [eleves, setEleves] = useState<EleveFoyer[]>([]);
   const [sessions, setSessions] = useState<ChildSession[]>([]);
@@ -101,12 +100,9 @@ export function ParentSpaceScreen() {
   return (
     <Shell brand="Happy Learn" stepLabel="Espace parent" homeTo="/espace-parent">
       <section className="teacher-space suivi-classe">
-        <header className="suivi-header">
+        <header className="suivi-header space-hub-header">
           <div>
-            <div className="suivi-title-row">
-              <p className="suivi-greeting">Famille · {teacher.email}</p>
-              <SubscriptionStatusBadge abonnement={abonnement} premiumActive={premiumActive} />
-            </div>
+            <p className="suivi-greeting">Famille · {teacher.email}</p>
             <h1>{foyer.nom}</h1>
             <p className="field-help">
               Code foyer : <strong>{foyerCode}</strong>{" "}
@@ -131,11 +127,6 @@ export function ParentSpaceScreen() {
             <p className="field-help">
               Les enfants se connectent avec ce code + leur PIN (4 chiffres).
             </p>
-          </div>
-          <div className="suivi-header-actions">
-            <Button type="button" onClick={() => void logout()}>
-              Se déconnecter
-            </Button>
           </div>
         </header>
 

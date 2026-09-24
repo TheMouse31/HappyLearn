@@ -28,7 +28,7 @@ import {
   upsertAbonnement,
 } from "../lib/familyStore";
 import { abonnementLabel } from "../lib/subscription";
-import { StatusBadge, SubscriptionStatusBadge, abonnementTone } from "../components/StatusBadge";
+import { StatusBadge, abonnementTone } from "../components/StatusBadge";
 import {
   CUSTOM_ILLUSTRATIONS_EVENT,
   deleteCustomIllustration,
@@ -53,7 +53,7 @@ type IllustStudio = "library" | "characters";
 export function AdminSpaceScreen() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { role, teacher, logout, backend, abonnement, premiumActive } = useSession();
+  const { role, teacher, backend } = useSession();
   const tabParam = searchParams.get("tab");
   const tab: AdminTab =
     tabParam === "missions" ||
@@ -171,12 +171,9 @@ export function AdminSpaceScreen() {
       }
     >
       <section className="admin-space">
-        <header className="admin-head">
+        <header className="admin-head space-hub-header">
           <div>
-            <div className="suivi-title-row">
-              <p className="pilot-eyebrow">Administration</p>
-              <SubscriptionStatusBadge abonnement={abonnement} premiumActive={premiumActive} />
-            </div>
+            <p className="pilot-eyebrow">Administration</p>
             <h1>Espace admin</h1>
             <p className="lead" data-listen>
               Gère les missions, crée des illustrations, gère les comptes admin et suis l’usage de la plateforme.
@@ -184,14 +181,6 @@ export function AdminSpaceScreen() {
           </div>
           <div className="admin-head-actions">
             <span className="admin-email">{teacher.email}</span>
-            <Button
-              type="button"
-              onClick={() => {
-                void logout().then(() => navigate("/"));
-              }}
-            >
-              Déconnexion
-            </Button>
           </div>
         </header>
 

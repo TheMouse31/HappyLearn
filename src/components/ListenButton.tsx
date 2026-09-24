@@ -33,7 +33,7 @@ export function ListenButton({ variant = "nav" }: Props) {
       type="button"
       className={
         variant === "nav"
-          ? `nav-icon-btn listen-nav ${on ? "is-on" : ""}`
+          ? `nav-icon-btn nav-icon-square listen-nav ${on ? "is-on" : ""}`
           : `listen ${on ? "is-on" : ""}`
       }
       aria-pressed={on}

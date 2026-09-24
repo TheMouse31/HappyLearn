@@ -4,6 +4,7 @@ import { AccountChip } from "./AccountChip";
 import { ColorsMenu } from "./ColorsMenu";
 import { ListenButton } from "./ListenButton";
 import { SetupSteps } from "./SetupSteps";
+import { SubscriptionStatusBadge } from "./StatusBadge";
 import { useSession } from "../lib/session";
 
 export type ShellVariant = "default" | "eleve" | "eleve-mission" | "auth";
@@ -45,7 +46,7 @@ export function Shell({
 }: Props) {
   const navigate = useNavigate();
   const { pathname, search } = useLocation();
-  const { role, lockedSession } = useSession();
+  const { role, lockedSession, abonnement, premiumActive } = useSession();
   const resolvedHome = homeTo ?? defaultHomeTo(role, lockedSession);
   const isEleveChrome = variant === "eleve" || variant === "eleve-mission";
   const isAuth = variant === "auth";
@@ -57,6 +58,8 @@ export function Shell({
     !hideNav &&
     !isAuth &&
     (role === "parent" || role === "enseignant" || role === "admin" || role === "eleve");
+  const showSubBadge =
+    showAccount && (role === "parent" || role === "enseignant" || role === "admin");
   const brandTo = lockedSession
     ? "/salle-attente"
     : isAuth
@@ -96,10 +99,10 @@ export function Shell({
 
   return (
     <div className={`app-shell shell-${variant}`}>
-      <header className="topbar">
+      <header className="topbar topbar-pro">
         <div className="topbar-start">
           {showBack ? (
-            <button type="button" className="nav-icon-btn nav-back-btn" onClick={goBack} aria-label="Retour">
+            <button type="button" className="nav-icon-btn nav-icon-square" onClick={goBack} aria-label="Retour">
               ←
             </button>
           ) : null}
@@ -128,19 +131,21 @@ export function Shell({
               <span className="brand-word">{brand}</span>
             </span>
           )}
+          {stepLabel && !hideStepPill ? <div className="step-pill">{stepLabel}</div> : null}
         </div>
         <div className="topbar-end">
-          {stepLabel && !hideStepPill ? <div className="step-pill">{stepLabel}</div> : null}
           {!hideUtilities ? (
-            <>
+            <div className="topbar-tools">
               <ColorsMenu />
               <ListenButton />
-            </>
+            </div>
+          ) : null}
+          {showSubBadge ? (
+            <SubscriptionStatusBadge abonnement={abonnement} premiumActive={premiumActive} />
           ) : null}
           {!hideHomeButton && !hideNav ? (
-            <button type="button" className="nav-icon-btn home-btn" onClick={goHome} aria-label="Accueil">
+            <button type="button" className="nav-icon-btn nav-icon-square home-btn" onClick={goHome} aria-label="Accueil">
               <span aria-hidden="true">⌂</span>
-              <span>Accueil</span>
             </button>
           ) : null}
           {showAccount ? <AccountChip compact={isEleveChrome} /> : null}

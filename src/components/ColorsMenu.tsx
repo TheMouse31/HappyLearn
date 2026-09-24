@@ -1,25 +1,17 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { initColorblind, setColorblind } from "../lib/colorblind";
-import {
-  DEFAULT_THEME_COLOR,
-  THEME_PRESETS,
-  initThemeColor,
-  setThemeColor,
-} from "../lib/themeColor";
 import { initThemeMode, setThemeMode, type ThemeMode } from "../lib/themeMode";
 
-/** Opens a panel: appearance (light/dark), daltonien mode, site accent. */
+/** Panneau d’apparence : thème clair/sombre + mode daltonien. */
 export function ColorsMenu() {
   const panelId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [daltonien, setDaltonien] = useState(false);
-  const [color, setColor] = useState(DEFAULT_THEME_COLOR);
   const [themeMode, setThemeModeState] = useState<ThemeMode>("light");
 
   useEffect(() => {
     setDaltonien(initColorblind());
-    setColor(initThemeColor());
     setThemeModeState(initThemeMode());
   }, []);
 
@@ -39,35 +31,32 @@ export function ColorsMenu() {
     };
   }, [open]);
 
-  const label = daltonien ? "Daltonien" : themeMode === "dark" ? "Sombre" : "Couleurs";
-
   function applyMode(next: ThemeMode) {
     setThemeMode(next);
     setThemeModeState(next);
-    // Re-apply accent so soft mixes match the active surface.
-    setThemeColor(color);
   }
 
   return (
     <div className={`colors-menu ${open ? "is-open" : ""}`} ref={rootRef}>
       <button
         type="button"
-        className={`nav-icon-btn colors-menu-trigger ${daltonien ? "is-daltonien" : ""} ${
-          themeMode === "dark" ? "is-dark-mode" : ""
-        }`}
+        className={`nav-icon-btn nav-icon-square colors-menu-trigger${
+          daltonien ? " is-daltonien" : ""
+        }${themeMode === "dark" ? " is-dark-mode" : ""}`}
         aria-expanded={open}
         aria-controls={panelId}
         aria-haspopup="dialog"
-        aria-label="Ouvrir les options d’apparence"
-        title="Apparence et couleurs"
+        aria-label="Apparence : thème et accessibilité"
+        title="Apparence"
         onClick={() => setOpen((v) => !v)}
       >
-        <span className="colors-menu-swatch" style={{ background: color }} aria-hidden="true" />
-        <span className="colors-menu-label">{label}</span>
+        <span className="colors-menu-glyph" aria-hidden="true">
+          {themeMode === "dark" ? "☾" : "☀"}
+        </span>
       </button>
 
       {open ? (
-        <div className="colors-panel" id={panelId} role="dialog" aria-label="Apparence Happy Learn">
+        <div className="colors-panel" id={panelId} role="dialog" aria-label="Apparence">
           <p className="colors-panel-title">Apparence</p>
 
           <div className="theme-mode-toggle" role="group" aria-label="Thème clair ou sombre">
@@ -106,63 +95,8 @@ export function ColorsMenu() {
               <small>Palette deutéranopie (bleu = succès, motifs sur les pastilles)</small>
             </span>
           </label>
-
-          <div className="colors-divider" />
-
-          <p className="colors-panel-subtitle">Couleur du site</p>
-          <p className="colors-panel-hint">Change les boutons, liens et accents de Happy Learn.</p>
-
-          <div className="colors-presets" role="list" aria-label="Couleurs proposées">
-            {THEME_PRESETS.map((preset) => {
-              const active = color.toLowerCase() === preset.toLowerCase();
-              return (
-                <button
-                  key={preset}
-                  type="button"
-                  role="listitem"
-                  className={`colors-preset ${active ? "is-active" : ""}`}
-                  style={{ background: preset }}
-                  aria-label={`Choisir ${preset}`}
-                  aria-pressed={active}
-                  onClick={() => {
-                    setThemeColor(preset);
-                    setColor(preset);
-                  }}
-                />
-              );
-            })}
-          </div>
-
-          <label className="colors-picker-row">
-            <span>Personnaliser</span>
-            <input
-              type="color"
-              value={isLikelyHex(color) ? color : DEFAULT_THEME_COLOR}
-              aria-label="Choisir une couleur personnalisée"
-              onChange={(e) => {
-                const next = e.target.value;
-                setThemeColor(next);
-                setColor(next);
-              }}
-            />
-          </label>
-
-          <button
-            type="button"
-            className="colors-reset"
-            onClick={() => {
-              setThemeColor(DEFAULT_THEME_COLOR);
-              setColor(DEFAULT_THEME_COLOR);
-            }}
-          >
-            Couleur par défaut
-          </button>
         </div>
       ) : null}
     </div>
   );
-}
-
-function isLikelyHex(value: string): boolean {
-  return /^#[0-9a-fA-F]{6}$/.test(value);
 }

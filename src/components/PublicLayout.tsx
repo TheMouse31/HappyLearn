@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { AccountChip } from "./AccountChip";
 import { ColorsMenu } from "./ColorsMenu";
 import { ListenButton } from "./ListenButton";
+import { SubscriptionStatusBadge } from "./StatusBadge";
 import { useSession } from "../lib/session";
 
 type Props = {
@@ -13,7 +14,7 @@ type Props = {
 
 export function PublicLayout({ children, fullBleed = true }: Props) {
   const navigate = useNavigate();
-  const { role, premiumActive, teacher, displayName } = useSession();
+  const { role, premiumActive, teacher, displayName, abonnement } = useSession();
   const { pathname } = useLocation();
   const continueTo =
     role === "eleve"
@@ -32,6 +33,7 @@ export function PublicLayout({ children, fullBleed = true }: Props) {
   const isConnexion = pathname.startsWith("/connexion");
   const isHome = pathname === "/";
   const loggedIn = Boolean(role);
+  const showSubBadge = loggedIn && (role === "parent" || role === "enseignant" || role === "admin");
 
   return (
     <div
@@ -39,7 +41,7 @@ export function PublicLayout({ children, fullBleed = true }: Props) {
         isHome ? " is-home" : ""
       }${isConnexion ? " is-connexion" : ""}`}
     >
-      <header className="topbar public-topbar">
+      <header className="topbar public-topbar topbar-pro">
         <Link to="/" className="brand brand-link" aria-label="Happy Learn — accueil">
           <span className="brand-mark" aria-hidden="true">
             ✦
@@ -52,8 +54,13 @@ export function PublicLayout({ children, fullBleed = true }: Props) {
               Comment ça marche
             </a>
           ) : null}
-          <ColorsMenu />
-          <ListenButton />
+          <div className="topbar-tools">
+            <ColorsMenu />
+            <ListenButton />
+          </div>
+          {showSubBadge ? (
+            <SubscriptionStatusBadge abonnement={abonnement} premiumActive={premiumActive} />
+          ) : null}
           {loggedIn ? <AccountChip /> : null}
           {continueTo ? (
             <button type="button" className="primary nav-cta" onClick={() => navigate(continueTo)}>

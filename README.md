@@ -113,9 +113,9 @@ Le professeur lance une session éphémère (code à 6 caractères). Les élève
 - Bascule **Classic / NewFront** dans la barre (préférence `happy-learn-skin`).
   NewFront : home plein écran sans scroll, typo Fraunces + Plus Jakarta Sans.
 - Bouton **Écouter** dans la topbar : lecture à voix haute (cliquer pour arrêter).
-- Bouton **Couleurs** : panneau avec
+- Bouton **Apparence** (icône soleil/lune) : panneau avec
+  - **Thème clair / sombre** — `happy-learn-theme-mode`
   - **Mode daltonien** (deutéranopie, pastilles à motifs) — `happy-learn-colorblind`
-  - **Couleur du site** (pastilles + color picker) — accents / boutons / hero — `happy-learn-theme-color`
 - `lang=fr`, `aria-live`, respect de `prefers-reduced-motion`.
 
 ## Parcours enfant

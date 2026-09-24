@@ -16,7 +16,6 @@ import type {
 import { formatStudentName } from "../data/types";
 import { UNIVERSES } from "../data/universes";
 import { useSession } from "../lib/session";
-import { SubscriptionStatusBadge } from "../components/StatusBadge";
 import {
   activityStatusLabel,
   buildClassSummary,
@@ -88,10 +87,7 @@ export function TeacherSpaceScreen() {
     listClassMissionsDone,
     listClassThemeCoverage,
     setThemeCoveredInClass,
-    logout,
     backend,
-    abonnement,
-    premiumActive,
   } = useSession();
 
   const current = classes.find((item) => item.id === activeClassId) ?? classes[0] ?? null;
@@ -369,31 +365,11 @@ export function TeacherSpaceScreen() {
   const showActivityFilters = mode === "eleves" || mode === "seances";
 
   return (
-    <Shell
-      brand="Happy Learn"
-      stepLabel="Espace enseignant"
-      homeTo="/espace-professeur"
-      backTo="/"
-      extra={
-        <Button
-          onClick={() => {
-            void logout().then(() => navigate("/"));
-          }}
-        >
-          Se déconnecter
-        </Button>
-      }
-    >
+    <Shell brand="Happy Learn" stepLabel="Espace enseignant" homeTo="/espace-professeur" backTo="/">
       <section className="teacher-space suivi-classe">
-        <div className="suivi-topbar">
+        <div className="suivi-topbar space-hub-header">
           <div>
-            <div className="suivi-title-row">
-              <span className="kicker">Suivi de classe</span>
-              <SubscriptionStatusBadge
-                abonnement={abonnement}
-                premiumActive={premiumActive}
-              />
-            </div>
+            <span className="kicker">Suivi de classe</span>
             <p className="suivi-greeting">Connecté · {teacher.email}</p>
           </div>
           <button
