@@ -532,7 +532,7 @@ export function AdminSpaceScreen() {
             <h2>Comptes administrateurs</h2>
             <p className="lead">
               Les e-mails listés ici ouvrent l’espace admin à la connexion enseignant.{" "}
-              <code>{SEED_ADMIN_EMAILS[0]}</code> est toujours admin.
+              {SEED_ADMIN_EMAILS.join(", ")} {SEED_ADMIN_EMAILS.length > 1 ? "sont" : "est"} toujours admin.
             </p>
             <ul className="admin-email-list">
               {adminEmails.map((email) => {

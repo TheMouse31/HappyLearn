@@ -3,7 +3,13 @@
 const ADMIN_STORAGE_KEY = "happy-learn-admin-emails";
 
 /** Seed figé : toujours admin. */
-export const SEED_ADMIN_EMAILS = ["test@test.fr"] as const;
+export const SEED_ADMIN_EMAILS = ["test@test.fr", "nicolas.saraille@gmail.com"] as const;
+
+/**
+ * Profs avec Premium offert (admin_grant) à chaque connexion.
+ * Nicolas = admin + enseignant premium.
+ */
+export const SEED_PREMIUM_TEACHER_EMAILS = ["nicolas.saraille@gmail.com"] as const;
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
@@ -44,6 +50,12 @@ export function writeAdminEmails(emails: string[]): void {
 export function isAdminEmail(email: string | null | undefined): boolean {
   if (!email) return false;
   return readAdminEmails().includes(normalizeEmail(email));
+}
+
+export function isSeedPremiumTeacherEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+  const normalized = normalizeEmail(email);
+  return SEED_PREMIUM_TEACHER_EMAILS.map(normalizeEmail).includes(normalized);
 }
 
 export function addAdminEmail(email: string): { ok: true } | { ok: false; error: string } {

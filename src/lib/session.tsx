@@ -47,16 +47,41 @@ import {
 } from "./localKeys";
 import { createPersistence, localPersistence, type Persistence } from "./persistence";
 import { canUseRealtime, subscribeClasseSession, subscribeSessionParticipants } from "./realtime";
-import { isAdminEmail } from "./admins";
+import { isAdminEmail, isSeedPremiumTeacherEmail } from "./admins";
 import { getSupabase } from "./supabase";
 import {
   ensureFoyer,
   ensureUserProfile,
   getAbonnement,
   getUserProfileRole,
+  upsertAbonnement,
   verifyEleveFoyerPin,
 } from "./familyStore";
 import { isAbonnementActive } from "./subscription";
+
+async function ensureSeedPremiumTeacher(
+  userId: string,
+  email: string | null | undefined,
+): Promise<Abonnement | null> {
+  if (!isSeedPremiumTeacherEmail(email)) {
+    return getAbonnement("enseignant", userId);
+  }
+  const end = new Date();
+  end.setFullYear(end.getFullYear() + 10);
+  try {
+    return await upsertAbonnement({
+      subjectType: "enseignant",
+      subjectId: userId,
+      status: "active",
+      source: userId.startsWith("local-") ? "local" : "admin_grant",
+      currentPeriodEnd: end.toISOString(),
+      grantedBy: userId,
+      grantedNote: "Compte fondateur — admin + premium",
+    });
+  } catch {
+    return getAbonnement("enseignant", userId);
+  }
+}
 
 type SessionState = {
   ready: boolean;
@@ -237,7 +262,7 @@ async function restoreAdult(): Promise<{
         foyer = await ensureFoyer(user.id);
         abonnement = await getAbonnement("foyer", foyer.id);
       } else {
-        abonnement = await getAbonnement("enseignant", user.id);
+        abonnement = await ensureSeedPremiumTeacher(user.id, user.email);
       }
       return { account, role, foyer, abonnement };
     }
@@ -253,7 +278,7 @@ async function restoreAdult(): Promise<{
     foyer = await ensureFoyer(local.id);
     abonnement = await getAbonnement("foyer", foyer.id);
   } else {
-    abonnement = await getAbonnement("enseignant", local.id);
+    abonnement = await ensureSeedPremiumTeacher(local.id, local.email);
   }
   return {
     account: {
@@ -933,7 +958,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         setTeacher(account);
         setClasses(list);
         setFoyer(null);
-        setAbonnement(await getAbonnement("enseignant", account.id));
+        setAbonnement(await ensureSeedPremiumTeacher(account.id, account.email));
         setActiveClassIdState(list[0]?.id ?? null);
         if (list[0]) saveActiveClassId(list[0].id);
         setRole(accountRole);
@@ -973,7 +998,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           setTeacher(account);
           setClasses(list);
           setFoyer(null);
-          setAbonnement(await getAbonnement("enseignant", account.id));
+          setAbonnement(await ensureSeedPremiumTeacher(account.id, account.email));
           setActiveClassIdState(list[0]?.id ?? null);
           if (list[0]) saveActiveClassId(list[0].id);
           setRole(account.isAdmin ? "admin" : "enseignant");
@@ -1121,7 +1146,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         if (role === "parent" && foyer) {
           setAbonnement(await getAbonnement("foyer", foyer.id));
         } else if (role === "enseignant" || role === "admin") {
-          setAbonnement(await getAbonnement("enseignant", teacher.id));
+          setAbonnement(await ensureSeedPremiumTeacher(teacher.id, teacher.email));
         }
       },
       setFoyerState: (next) => {
