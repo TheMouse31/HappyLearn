@@ -54,7 +54,7 @@ Projet actuel branché : migrations `supabase/migrations/` + `supabase/seed.sql`
 3. Storage (plus tard) : bucket public `neo` pour les visuels webp. En local / Pages, les fichiers sont dans `public/neo/`.
 4. Authentication
    - **Élèves** : pas de compte e-mail. Sans code : prénom libre. Avec code classe / session : choix du prénom dans la liste saisie par le professeur.
-   - **Professeurs** : inscription libre (e-mail + mot de passe) ou lien magique. Self-signup ouvert, confirmation e-mail désactivée pour les tests.
+   - **Professeurs** : inscription libre (e-mail + mot de passe). Self-signup ouvert, confirmation e-mail désactivée pour les tests.
    - **URL Configuration** (déjà en place pour la démo) :
      - Site URL : `https://happy-learn.pages.dev`
      - Redirect allow-list : `http://localhost:5173/**`, `http://127.0.0.1:5173/**`, `https://happy-learn.pages.dev/**`, `https://*.happy-learn.pages.dev/**`
@@ -88,7 +88,7 @@ npx wrangler pages deploy dist --project-name happy-learn
 La page d’accueil `/` présente Happy Learn. La connexion est sur `/connexion` (élève ou professeur).
 
 - **Élève** : `/connexion/eleve` — sans code : prénom libre. Avec code classe / session : sélection du prénom dans la liste du professeur.
-- **Professeur** : `/connexion/enseignant` — e-mail + mot de passe, ou lien magique. Crée des classes, gère la liste d’élèves, partage un code.
+- **Professeur** : `/connexion/enseignant` — e-mail + mot de passe. Crée des classes, gère la liste d’élèves, partage un code.
 
 ### Espace enseignant
 

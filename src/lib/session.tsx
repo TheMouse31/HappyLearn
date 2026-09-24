@@ -173,7 +173,6 @@ type SessionState = {
     password: string,
     mode: "connexion" | "inscription",
   ) => Promise<string | null>;
-  loginTeacherMagic: (email: string) => Promise<string | null>;
   loginTeacherLocal: (email: string) => Promise<string | null>;
   loginTeacherGoogle: () => Promise<string | null>;
   loginParentPassword: (
@@ -973,17 +972,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         if (list[0]) saveActiveClassId(list[0].id);
         setRole(accountRole);
         return null;
-      },
-      loginTeacherMagic: async (email) => {
-        if (!isEmail(email)) return "Indique un e-mail professionnel valide.";
-        const client = getSupabase();
-        if (!client) return "local";
-        const { error } = await client.auth.signInWithOtp({
-          email: email.trim(),
-          options: { emailRedirectTo: `${window.location.origin}/` },
-        });
-        if (error) return teacherAuthMessage(error.message);
-        return "sent";
       },
       loginTeacherLocal: async (email) => {
         if (!isEmail(email)) return "Indique un e-mail valide pour retrouver cet espace sur l’appareil.";
