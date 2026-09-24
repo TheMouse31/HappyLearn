@@ -4,23 +4,21 @@ import { PublicLayout } from "../components/PublicLayout";
 import { useSession } from "../lib/session";
 import { useSkin } from "../lib/useSkin";
 
+function continuePath(
+  role: string | null,
+  premiumActive: boolean,
+): string | null {
+  if (role === "eleve") return "/accueil";
+  if (role === "parent") return premiumActive ? "/espace-parent" : "/abonnement";
+  if (role === "enseignant") return premiumActive ? "/espace-professeur" : "/abonnement";
+  if (role === "admin") return "/espace-admin";
+  return null;
+}
+
 function ClassicHomeBody() {
   const navigate = useNavigate();
   const { role, premiumActive, logout } = useSession();
-  const continueTo =
-    role === "eleve"
-      ? "/accueil"
-      : role === "parent"
-        ? premiumActive
-          ? "/espace-parent"
-          : "/abonnement"
-        : role === "enseignant"
-          ? premiumActive
-            ? "/espace-professeur"
-            : "/abonnement"
-          : role === "admin"
-            ? "/espace-admin"
-            : null;
+  const continueTo = continuePath(role, premiumActive);
 
   return (
     <>
@@ -29,8 +27,8 @@ function ClassicHomeBody() {
           <p className="home-brand">Happy Learn</p>
           <h1>Les apprentissages du primaire, racontés comme une mission</h1>
           <p className="lead" data-listen>
-            Du CP au CM2, toutes les matières. Les élèves progressent avec Néo dans une aventure. Les professeurs suivent
-            la classe, sans note ni classement.
+            Du CP au CM2, toutes les matières. Les élèves progressent avec Néo. Les adultes suivent sans note ni
+            classement.
           </p>
           {continueTo ? (
             <div className="actions home-actions">
@@ -48,24 +46,15 @@ function ClassicHomeBody() {
               </button>
             </div>
           ) : (
-            <div className="role-card-grid" role="group" aria-label="Qui es-tu ?">
-              <Link className="role-card" to="/connexion/eleve">
-                <span className="role-card-label">Je suis un élève</span>
-                <span className="role-card-hint">Prénom · école ou maison · pas d’e-mail</span>
-              </Link>
-              <Link className="role-card" to="/connexion/parent">
-                <span className="role-card-label">Je suis parent</span>
-                <span className="role-card-hint">Foyer · enfants · abonnement</span>
-              </Link>
-              <Link className="role-card role-card-teacher" to="/connexion/enseignant">
-                <span className="role-card-label">Je suis professeur</span>
-                <span className="role-card-hint">E-mail · classes · suivi des élèves</span>
+            <div className="actions home-actions">
+              <Link className="primary" to="/connexion">
+                Se connecter
               </Link>
             </div>
           )}
         </div>
         <aside className="mascot-stage home-mascot">
-          <p className="bubble">Prêt pour une mission ? Choisis qui tu es pour commencer.</p>
+          <p className="bubble">Prêt pour une mission ? Connecte-toi pour commencer.</p>
           <Neo pose="guide" />
         </aside>
       </section>
@@ -74,16 +63,16 @@ function ClassicHomeBody() {
         <h2>Comment ça marche</h2>
         <ol className="how-steps">
           <li>
-            <strong>Choisis qui tu es</strong>
-            <span>Élève, parent à la maison, ou professeur à l’école.</span>
+            <strong>Connecte-toi</strong>
+            <span>Élève, parent ou professeur — une seule porte d’entrée.</span>
           </li>
           <li>
-            <strong>Pars en mission avec Néo</strong>
-            <span>Univers, indices et progression à ton rythme.</span>
+            <strong>Choisis une compétence</strong>
+            <span>Puis une mission dans un univers qui aide vraiment à comprendre.</span>
           </li>
           <li>
-            <strong>Le prof ou le parent suit</strong>
-            <span>Sessions live, foyer maison et réussites — sans classement.</span>
+            <strong>Progresse avec Néo</strong>
+            <span>Sans note ni classement — juste apprendre.</span>
           </li>
         </ol>
       </section>
@@ -94,20 +83,7 @@ function ClassicHomeBody() {
 function NewFrontHomeBody() {
   const navigate = useNavigate();
   const { role, premiumActive, logout } = useSession();
-  const continueTo =
-    role === "eleve"
-      ? "/accueil"
-      : role === "parent"
-        ? premiumActive
-          ? "/espace-parent"
-          : "/abonnement"
-        : role === "enseignant"
-          ? premiumActive
-            ? "/espace-professeur"
-            : "/abonnement"
-          : role === "admin"
-            ? "/espace-admin"
-            : null;
+  const continueTo = continuePath(role, premiumActive);
 
   return (
     <div className="hl-home">
@@ -135,15 +111,9 @@ function NewFrontHomeBody() {
               </button>
             </div>
           ) : (
-            <div className="hl-hero-cta" role="group" aria-label="Qui es-tu ?">
-              <Link className="primary hl-cta" to="/connexion/eleve">
-                Je suis élève
-              </Link>
-              <Link className="ghost-btn hl-cta-secondary" to="/connexion/parent">
-                Je suis parent
-              </Link>
-              <Link className="ghost-btn hl-cta-secondary" to="/connexion/enseignant">
-                Je suis professeur
+            <div className="hl-hero-cta">
+              <Link className="primary hl-cta" to="/connexion">
+                Se connecter
               </Link>
             </div>
           )}
@@ -165,22 +135,22 @@ function NewFrontHomeBody() {
             <span className="hl-how-num" aria-hidden="true">
               1
             </span>
-            <strong>Choisis ton rôle</strong>
-            <span>Élève, parent à la maison, ou professeur à l’école.</span>
+            <strong>Connecte-toi</strong>
+            <span>Élève, parent ou professeur.</span>
           </li>
           <li>
             <span className="hl-how-num" aria-hidden="true">
               2
             </span>
-            <strong>Pars en mission</strong>
-            <span>Univers, indices et étapes claires — Néo t’accompagne.</span>
+            <strong>Choisis une compétence</strong>
+            <span>Puis une mission pertinente — Néo t’accompagne.</span>
           </li>
           <li>
             <span className="hl-how-num" aria-hidden="true">
               3
             </span>
-            <strong>Suivi famille ou classe</strong>
-            <span>Session live, foyer maison et programme — sans classement.</span>
+            <strong>Progresse</strong>
+            <span>Sans note ni classement.</span>
           </li>
         </ol>
       </section>

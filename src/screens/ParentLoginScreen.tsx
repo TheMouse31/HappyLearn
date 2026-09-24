@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "../components/Button";
 import { Neo } from "../components/Neo";
 import { Shell } from "../components/Shell";
@@ -33,7 +33,7 @@ export function ParentLoginScreen() {
   }
 
   return (
-    <Shell brand="Happy Learn" stepLabel="Parent" homeTo="/" backTo="/connexion">
+    <Shell variant="auth" brand="Happy Learn" backTo="/connexion">
       <div className="split login-layout">
         <aside className="mascot-stage">
           <p className="bubble">À la maison : tu pilotes le foyer, les enfants jouent avec un code PIN.</p>
@@ -157,9 +157,6 @@ export function ParentLoginScreen() {
                   Essayer en local (cet appareil)
                 </Button>
               ) : null}
-              <Link className="text-link" to="/">
-                Accueil du site
-              </Link>
             </div>
           </form>
         </section>

@@ -324,10 +324,11 @@ export function MissionScreen() {
 
   return (
     <Shell
-      stepLabel={`Mission ${copy.title}`}
-      confirmLeaveMission={!lockedSession}
-      homeTo={lockedSession ? "/salle-attente" : "/accueil"}
-      backTo={lockedSession ? undefined : hostMode ? "/espace-professeur/session" : "/pret"}
+      variant={lockedSession || hostMode ? "default" : "eleve-mission"}
+      stepLabel={lockedSession || hostMode ? `Mission ${copy.title}` : undefined}
+      confirmLeaveMission={false}
+      homeTo={lockedSession ? "/salle-attente" : hostMode ? "/espace-professeur/session" : "/accueil"}
+      backTo={undefined}
       extra={
         lockedSession ? (
           liveParticipant ? (
@@ -344,6 +345,8 @@ export function MissionScreen() {
           ) : null
         ) : (
           <Button
+            type="button"
+            className="mission-quit-btn"
             onClick={() => {
               const dest = hostMode ? "/espace-professeur/session" : "/accueil";
               const ok = window.confirm(

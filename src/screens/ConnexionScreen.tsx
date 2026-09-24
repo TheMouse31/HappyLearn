@@ -1,5 +1,6 @@
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import { Neo } from "../components/Neo";
 import { PublicLayout } from "../components/PublicLayout";
 import { useSession } from "../lib/session";
 
@@ -28,32 +29,36 @@ export function ConnexionScreen() {
   if (role === "admin") return <Navigate to="/espace-admin" replace />;
 
   return (
-    <PublicLayout>
-      <section className="login-page">
-        <span className="kicker">Connexion</span>
-        <h1>Qui es-tu ?</h1>
-        <p className="lead" data-listen>
-          Deux modes : à l’école avec ton professeur, ou à la maison avec ta famille.
-        </p>
-        <div className="role-card-grid" role="group" aria-label="Qui es-tu ?">
-          <Link className="role-card" to="/connexion/eleve">
-            <span className="role-card-label">Je suis un élève</span>
-            <span className="role-card-hint">École (code session) ou maison (code foyer + PIN)</span>
-          </Link>
-          <Link className="role-card" to="/connexion/parent">
-            <span className="role-card-label">Je suis parent</span>
-            <span className="role-card-hint">Foyer, enfants, abonnement, stats</span>
-          </Link>
-          <Link className="role-card role-card-teacher" to="/connexion/enseignant">
-            <span className="role-card-label">Je suis professeur</span>
-            <span className="role-card-hint">E-mail, Google, ou lien magique</span>
-          </Link>
+    <PublicLayout fullBleed>
+      <section className="connexion-hub" aria-labelledby="connexion-title">
+        <div className="connexion-hub-glow" aria-hidden="true" />
+        <div className="connexion-hub-copy">
+          <p className="connexion-hub-brand">Happy Learn</p>
+          <h1 id="connexion-title">Qui es-tu ?</h1>
+          <p className="connexion-hub-lead" data-listen>
+            École ou maison — un seul chemin pour commencer.
+          </p>
+          <div className="connexion-role-list" role="group" aria-label="Qui es-tu ?">
+            <Link className="connexion-role" to="/connexion/eleve">
+              <span className="connexion-role-label">Élève</span>
+              <span className="connexion-role-hint">Code session ou foyer + PIN</span>
+            </Link>
+            <Link className="connexion-role" to="/connexion/parent">
+              <span className="connexion-role-label">Parent</span>
+              <span className="connexion-role-hint">Foyer, enfants, stats</span>
+            </Link>
+            <Link className="connexion-role connexion-role-teacher" to="/connexion/enseignant">
+              <span className="connexion-role-label">Professeur</span>
+              <span className="connexion-role-hint">Classes et sessions live</span>
+            </Link>
+          </div>
         </div>
-        <p className="actions">
-          <Link className="text-link" to="/">
-            ← Retour à l’accueil
-          </Link>
-        </p>
+        <aside className="connexion-hub-visual" aria-hidden="true">
+          <div className="connexion-hub-neo">
+            <p className="bubble">Dis-moi qui tu es, on démarre.</p>
+            <Neo pose="guide" />
+          </div>
+        </aside>
       </section>
     </PublicLayout>
   );

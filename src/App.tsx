@@ -1,5 +1,7 @@
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import type { ReactNode } from "react";
+import { hasCompetenceNav } from "./data/competenceNav";
+import { useSession } from "./lib/session";
 import { HomePage } from "./screens/HomePage";
 import { ConnexionScreen } from "./screens/ConnexionScreen";
 import { EleveLoginScreen } from "./screens/EleveLoginScreen";
@@ -10,6 +12,8 @@ import { PaywallScreen } from "./screens/PaywallScreen";
 import { WelcomeScreen } from "./screens/WelcomeScreen";
 import { NicknameScreen } from "./screens/NicknameScreen";
 import { CourseScreen } from "./screens/CourseScreen";
+import { CompetenceScreen } from "./screens/CompetenceScreen";
+import { MissionPickScreen } from "./screens/MissionPickScreen";
 import { PresentationScreen } from "./screens/PresentationScreen";
 import { UniverseScreen } from "./screens/UniverseScreen";
 import { MaterialScreen } from "./screens/MaterialScreen";
@@ -21,7 +25,6 @@ import { SessionControlScreen } from "./screens/SessionControlScreen";
 import { MissionEditorScreen } from "./screens/MissionEditorScreen";
 import { AdminSpaceScreen } from "./screens/AdminSpaceScreen";
 import { StudentWaitingScreen } from "./screens/StudentWaitingScreen";
-import { useSession } from "./lib/session";
 
 const LOCKED_ALLOWED = new Set(["/salle-attente", "/mission"]);
 
@@ -43,6 +46,20 @@ function PremiumGate({ children }: { children: ReactNode }) {
     return <Navigate to="/abonnement" replace />;
   }
   return children;
+}
+
+function SeanceRedirect() {
+  const { grade, subject } = useSession();
+  if (hasCompetenceNav(grade, subject)) return <Navigate to="/competence" replace />;
+  return <PresentationScreen />;
+}
+
+function UniversRedirect() {
+  const { grade, subject, competenceId } = useSession();
+  if (hasCompetenceNav(grade, subject)) {
+    return <Navigate to={competenceId ? "/missions" : "/competence"} replace />;
+  }
+  return <UniverseScreen />;
 }
 
 export default function App() {
@@ -75,8 +92,10 @@ export default function App() {
         <Route path="/accueil" element={<WelcomeScreen />} />
         <Route path="/prenom" element={<NicknameScreen />} />
         <Route path="/classe" element={<CourseScreen />} />
-        <Route path="/seance" element={<PresentationScreen />} />
-        <Route path="/univers" element={<UniverseScreen />} />
+        <Route path="/competence" element={<CompetenceScreen />} />
+        <Route path="/missions" element={<MissionPickScreen />} />
+        <Route path="/seance" element={<SeanceRedirect />} />
+        <Route path="/univers" element={<UniversRedirect />} />
         <Route path="/materiel" element={<MaterialScreen />} />
         <Route path="/pret" element={<ReadyScreen />} />
         <Route path="/mission" element={<MissionScreen />} />

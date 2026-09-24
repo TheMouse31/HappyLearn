@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import type { ReactNode } from "react";
 import { ColorsMenu } from "./ColorsMenu";
 import { ListenButton } from "./ListenButton";
@@ -15,10 +15,24 @@ type Props = {
 export function PublicLayout({ children, fullBleed = false }: Props) {
   const navigate = useNavigate();
   const skin = useSkin();
-  const { role } = useSession();
+  const { role, premiumActive } = useSession();
+  const { pathname } = useLocation();
   const continueTo =
-    role === "eleve" ? "/accueil" : role === "enseignant" ? "/espace-professeur" : null;
-  const bleed = fullBleed && skin === "newfront";
+    role === "eleve"
+      ? "/accueil"
+      : role === "parent"
+        ? premiumActive
+          ? "/espace-parent"
+          : "/abonnement"
+        : role === "enseignant"
+          ? premiumActive
+            ? "/espace-professeur"
+            : "/abonnement"
+          : role === "admin"
+            ? "/espace-admin"
+            : null;
+  const bleed = fullBleed || skin === "newfront";
+  const isConnexion = pathname.startsWith("/connexion");
 
   return (
     <div className={`app-shell public-shell${bleed ? " is-bleed" : ""}`}>
@@ -30,9 +44,11 @@ export function PublicLayout({ children, fullBleed = false }: Props) {
           <span className="brand-word">Happy Learn</span>
         </Link>
         <nav className="public-nav" aria-label="Navigation principale">
-          <a className="nav-text-link" href="#comment-ca-marche">
-            Comment ça marche
-          </a>
+          {!isConnexion ? (
+            <a className="nav-text-link" href="#comment-ca-marche">
+              Comment ça marche
+            </a>
+          ) : null}
           <SkinToggle />
           <ColorsMenu />
           <ListenButton />
@@ -40,6 +56,10 @@ export function PublicLayout({ children, fullBleed = false }: Props) {
             <button type="button" className="primary nav-cta" onClick={() => navigate(continueTo)}>
               Continuer
             </button>
+          ) : isConnexion ? (
+            <span className="nav-cta-link is-current" aria-current="page">
+              Connexion
+            </span>
           ) : (
             <Link className="nav-cta-link" to="/connexion">
               Connexion

@@ -5206,3 +5206,283 @@ button.is-active-toggle {
     min-width: 132px;
   }
 }
+
+/* —— Navigation compétence + connexion hub —— */
+.setup-steps-indicator {
+  background: color-mix(in srgb, var(--bg, #f7fffb) 88%, #dff5ea);
+  border: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  padding: 8px 18px 10px;
+}
+
+.setup-steps-indicator ol {
+  gap: 6px 10px;
+  justify-content: flex-end;
+}
+
+.setup-steps-indicator span {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: color-mix(in srgb, var(--soft) 80%, #888);
+  padding: 3px 0;
+}
+
+.setup-steps-indicator .is-done span {
+  color: #1a7a55;
+}
+
+.setup-steps-indicator .is-current span {
+  color: var(--ink);
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid #a8d4c2;
+}
+
+.shell-eleve .nav-back-btn,
+.shell-auth .nav-back-btn,
+.shell-eleve-mission .nav-back-btn {
+  min-width: 40px;
+  padding-inline: 10px;
+}
+
+.topbar-tools-menu {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.competence-pick,
+.mission-offer-grid {
+  display: grid;
+  gap: 12px;
+  margin: 18px 0 8px;
+}
+
+.competence-card,
+.mission-offer-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  text-align: left;
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1.5px solid color-mix(in srgb, var(--line) 80%, #b7d9c8);
+  background: #fff;
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.competence-card:hover,
+.mission-offer-card:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: #2a9b6a;
+  box-shadow: 0 8px 24px color-mix(in srgb, #1a7a55 12%, transparent);
+}
+
+.competence-card.is-selected,
+.mission-offer-card.is-selected {
+  border-color: #1a7a55;
+  background: #f3fff8;
+}
+
+.competence-card strong,
+.mission-offer-card strong {
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+
+.competence-card span,
+.mission-offer-blurb {
+  color: var(--soft);
+  font-size: 0.92rem;
+}
+
+.mission-offer-card {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.mission-offer-card:disabled,
+.mission-offer-card.is-soon {
+  opacity: 0.62;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.mission-offer-icon {
+  font-size: 1.6rem;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.mission-offer-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mission-offer-body small {
+  color: #1a7a55;
+  font-weight: 700;
+}
+
+.connexion-hub {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(240px, 0.9fr);
+  gap: 28px 40px;
+  align-items: center;
+  min-height: min(72vh, 640px);
+  padding: 28px 8px 40px;
+  overflow: hidden;
+}
+
+.connexion-hub-glow {
+  position: absolute;
+  inset: -20% -10% auto;
+  height: 70%;
+  background:
+    radial-gradient(ellipse at 20% 30%, color-mix(in srgb, #7ed9b0 35%, transparent), transparent 55%),
+    radial-gradient(ellipse at 80% 10%, color-mix(in srgb, #ffd6a5 28%, transparent), transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.connexion-hub-copy,
+.connexion-hub-visual {
+  position: relative;
+  z-index: 1;
+}
+
+.connexion-hub-brand {
+  margin: 0 0 8px;
+  font-family: var(--font-display, Georgia, "Times New Roman", serif);
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  font-weight: 700;
+  color: #0f5c40;
+  letter-spacing: -0.02em;
+}
+
+.connexion-hub h1 {
+  margin: 0 0 10px;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  line-height: 1.1;
+}
+
+.connexion-hub-lead {
+  margin: 0 0 22px;
+  max-width: 34ch;
+  color: var(--soft);
+  font-size: 1.05rem;
+}
+
+.connexion-role-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 420px;
+  animation: connexion-rise 0.55s ease both;
+}
+
+.connexion-role {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 18px;
+  border-radius: 16px;
+  border: 1.5px solid color-mix(in srgb, #1a7a55 25%, #d7ebe1);
+  background: color-mix(in srgb, #fff 88%, #e8faf1);
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.connexion-role:hover {
+  transform: translateX(4px);
+  border-color: #1a7a55;
+  background: #fff;
+}
+
+.connexion-role-teacher {
+  border-color: color-mix(in srgb, #3d7ea6 35%, #d7ebe1);
+  background: color-mix(in srgb, #fff 86%, #e4f2fb);
+}
+
+.connexion-role-label {
+  font-weight: 800;
+  font-size: 1.08rem;
+  color: var(--ink);
+}
+
+.connexion-role-hint {
+  font-size: 0.9rem;
+  color: var(--soft);
+}
+
+.connexion-hub-neo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: connexion-rise 0.7s ease 0.08s both;
+}
+
+.connexion-mode-tabs {
+  margin-bottom: 14px;
+}
+
+.nav-cta-link.is-current {
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+@keyframes connexion-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 860px) {
+  .connexion-hub {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    padding-top: 12px;
+  }
+
+  .connexion-hub-visual {
+    order: -1;
+  }
+
+  .connexion-hub-neo .bubble {
+    max-width: 28ch;
+  }
+
+  .setup-steps-indicator ol {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 560px) {
+  .competence-card,
+  .mission-offer-card,
+  .connexion-role {
+    padding: 14px 14px;
+  }
+
+  .topbar-tools-menu {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

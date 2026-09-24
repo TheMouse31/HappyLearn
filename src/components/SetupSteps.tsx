@@ -1,10 +1,11 @@
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
+/** Indicateur de progression (non cliquable) — parcours compétence. */
 const STEPS = [
   { path: "/classe", label: "Classe" },
-  { path: "/seance", label: "Présentation" },
-  { path: "/univers", label: "Univers" },
-  { path: "/materiel", label: "Matériel" },
+  { path: "/competence", label: "Compétence" },
+  { path: "/missions", label: "Mission" },
+  { path: "/materiel", label: "Mode" },
   { path: "/pret", label: "Prêt" },
 ] as const;
 
@@ -14,19 +15,14 @@ export function SetupSteps() {
   if (currentIndex < 0) return null;
 
   return (
-    <nav className="setup-steps" aria-label="Étapes de préparation">
+    <nav className="setup-steps setup-steps-indicator" aria-label="Étapes de préparation">
       <ol>
         {STEPS.map((step, index) => {
           const done = index < currentIndex;
           const current = index === currentIndex;
-          const clickable = done;
           return (
             <li key={step.path} className={current ? "is-current" : done ? "is-done" : ""}>
-              {clickable ? (
-                <Link to={step.path}>{step.label}</Link>
-              ) : (
-                <span aria-current={current ? "step" : undefined}>{step.label}</span>
-              )}
+              <span aria-current={current ? "step" : undefined}>{step.label}</span>
             </li>
           );
         })}

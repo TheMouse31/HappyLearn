@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "../components/Button";
 import { Neo } from "../components/Neo";
 import { Shell } from "../components/Shell";
@@ -123,7 +123,7 @@ export function EleveLoginScreen() {
   if (role === "eleve") return <Navigate to="/accueil" replace />;
 
   return (
-    <Shell brand="Happy Learn" stepLabel="Élève" homeTo="/" backTo="/connexion">
+    <Shell variant="auth" brand="Happy Learn" backTo="/connexion">
       <div className="split login-layout">
         <aside className="mascot-stage">
           <p className="bubble">
@@ -138,7 +138,7 @@ export function EleveLoginScreen() {
         <section>
           <span className="kicker">Espace élève</span>
           <h1>Bienvenue</h1>
-          <div className="role-tabs" role="tablist" aria-label="Mode">
+          <div className="role-tabs connexion-mode-tabs" role="tablist" aria-label="Mode">
             <button
               type="button"
               role="tab"
@@ -315,9 +315,6 @@ export function EleveLoginScreen() {
               >
                 Entrer
               </Button>
-              <Link className="text-link" to="/">
-                Accueil du site
-              </Link>
             </div>
           </form>
         </section>

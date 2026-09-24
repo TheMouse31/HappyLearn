@@ -113,6 +113,19 @@ export function saveCourse(grade: GradeLevel, subject: SubjectSlug): void {
 export function clearCourse(): void {
   localStorage.removeItem(COURSE_GRADE_KEY);
   localStorage.removeItem(COURSE_SUBJECT_KEY);
+  localStorage.removeItem(COMPETENCE_KEY);
+}
+
+const COMPETENCE_KEY = "happy-learn-competence";
+
+export function loadCompetenceId(): string | null {
+  const value = localStorage.getItem(COMPETENCE_KEY);
+  return value && value.trim() ? value.trim() : null;
+}
+
+export function saveCompetenceId(id: string | null): void {
+  if (id) localStorage.setItem(COMPETENCE_KEY, id);
+  else localStorage.removeItem(COMPETENCE_KEY);
 }
 
 export function loadLocalTeacher(): {

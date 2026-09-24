@@ -27,6 +27,7 @@ import {
   clearPrenom,
   loadActiveClassId,
   loadClassCode,
+  loadCompetenceId,
   loadCourseGrade,
   loadCourseSubject,
   loadFoyerChild,
@@ -36,6 +37,7 @@ import {
   loadPrenom,
   saveActiveClassId,
   saveClassCode,
+  saveCompetenceId,
   saveCourse,
   saveFoyerChild,
   saveHostMode,
@@ -67,6 +69,7 @@ type SessionState = {
   className: string;
   grade: GradeLevel | null;
   subject: SubjectSlug | null;
+  competenceId: string | null;
   universe: UniverseSlug | null;
   mode: PlayMode | null;
   missionId: string | null;
@@ -92,6 +95,8 @@ type SessionState = {
   kickedFromSession: boolean;
   setPrenom: (value: string) => void;
   setCourse: (grade: GradeLevel, subject: SubjectSlug) => void;
+  setCompetence: (competenceId: string) => void;
+  pickMissionOffer: (missionId: string, universe: UniverseSlug) => void;
   setUniverse: (value: UniverseSlug) => void;
   setMode: (value: PlayMode) => void;
   loginEleve: (
@@ -271,6 +276,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [className, setClassName] = useState("");
   const [grade, setGrade] = useState<GradeLevel | null>(null);
   const [subject, setSubject] = useState<SubjectSlug | null>(null);
+  const [competenceId, setCompetenceIdState] = useState<string | null>(null);
   const [universe, setUniverse] = useState<UniverseSlug | null>(null);
   const [mode, setMode] = useState<PlayMode | null>(null);
   const [missionId, setMissionId] = useState<string | null>(null);
@@ -355,6 +361,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         setClassCode(savedCode);
         setGrade(loadCourseGrade());
         setSubject(loadCourseSubject());
+        setCompetenceIdState(loadCompetenceId());
         if (savedFoyerChild) {
           setPrenomState(savedFoyerChild.prenom);
           setNom(savedFoyerChild.nom);
@@ -551,6 +558,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       className,
       grade,
       subject,
+      competenceId,
       universe,
       mode,
       missionId,
@@ -580,6 +588,22 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         setGrade(nextGrade);
         setSubject(nextSubject);
         saveCourse(nextGrade, nextSubject);
+        setCompetenceIdState(null);
+        saveCompetenceId(null);
+        setUniverse(null);
+        setMode(null);
+        setMissionId(null);
+      },
+      setCompetence: (nextId) => {
+        setCompetenceIdState(nextId);
+        saveCompetenceId(nextId);
+        setUniverse(null);
+        setMode(null);
+        setMissionId(null);
+      },
+      pickMissionOffer: (nextMissionId, nextUniverse) => {
+        setMissionId(nextMissionId);
+        setUniverse(nextUniverse);
       },
       setUniverse,
       setMode,
@@ -1126,6 +1150,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         setClassName("");
         setGrade(null);
         setSubject(null);
+        setCompetenceIdState(null);
         setUniverse(null);
         setMode(null);
         setMissionId(null);
@@ -1264,6 +1289,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       className,
       grade,
       subject,
+      competenceId,
       universe,
       mode,
       missionId,

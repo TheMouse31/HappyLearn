@@ -1,115 +1,84 @@
 import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "../components/Button";
+import { ColorsMenu } from "../components/ColorsMenu";
+import { ListenButton } from "../components/ListenButton";
 import { Neo } from "../components/Neo";
 import { Shell } from "../components/Shell";
+import { SkinToggle } from "../components/SkinToggle";
 import { gradeLabel, isCoursePlayable, subjectLabel } from "../data/catalog";
+import { hasCompetenceNav } from "../data/competenceNav";
 import { useSession } from "../lib/session";
-import { useSkin } from "../lib/useSkin";
 
 export function WelcomeScreen() {
   const navigate = useNavigate();
-  const skin = useSkin();
-  const { prenom, displayName, role, classCode, grade, subject, logout } = useSession();
+  const { prenom, displayName, role, classCode, grade, subject, competenceId, logout } = useSession();
   if (role === "enseignant") return <Navigate to="/espace-professeur" replace />;
   if (!prenom) return <Navigate to="/connexion/eleve" replace />;
 
   const playable = isCoursePlayable(grade, subject);
   const courseLabel =
     grade && subject ? `${gradeLabel(grade)} · ${subjectLabel(subject)}` : null;
+  const competenceFlow = hasCompetenceNav(grade, subject);
+  const nextTo = !playable
+    ? "/classe"
+    : competenceFlow
+      ? competenceId
+        ? "/missions"
+        : "/competence"
+      : "/seance";
+  const nextLabel = playable ? "Continuer" : "Choisir ma classe";
 
-  if (skin === "newfront") {
-    const nextLabel = playable ? "Continuer la mission" : "Choisir ma classe";
-    const nextTo = playable ? "/seance" : "/classe";
-    return (
-      <Shell
-        brand="Happy Learn"
-        stepLabel="À toi de jouer"
-        homeTo="/accueil"
-        extra={
+  return (
+    <Shell
+      variant="eleve"
+      brand="Happy Learn"
+      homeTo="/accueil"
+      extra={
+        <div className="topbar-tools-menu" role="group" aria-label="Options">
+          <SkinToggle />
+          <ColorsMenu />
+          <ListenButton />
           <Button
+            type="button"
             onClick={() => {
-              void logout().then(() => navigate("/"));
+              void logout().then(() => navigate("/connexion"));
             }}
           >
             Changer d’élève
           </Button>
-        }
-      >
-        <section className="intro student-home">
-          <span className="kicker">Prochaine étape</span>
-          <h1>Salut {displayName} !</h1>
-          <p className="lead" data-listen>
-            {playable
-              ? `Ta mission ${courseLabel} t’attend. Choisis ton univers et c’est parti.`
-              : "Indique ta classe et ta matière, puis pars en mission avec Néo."}
-          </p>
-          {classCode ? (
-            <p className="student-home-meta">Classe {classCode}</p>
-          ) : (
-            <p className="student-home-meta">Mode maison — sans code classe</p>
-          )}
-          <div className="student-next">
-            <div className="mascot-stage">
-              <p className="bubble">
-                {playable ? "On y va ?" : `Bonjour ${displayName} ! Je serai ton guide.`}
-              </p>
-              <Neo pose="guide" />
-            </div>
-            <div className="actions student-next-actions">
-              <Button variant="primary" onClick={() => navigate(nextTo)}>
-                {nextLabel}
-              </Button>
-              {courseLabel ? (
-                <Button onClick={() => navigate("/classe")}>Changer de classe / matière</Button>
-              ) : null}
-            </div>
-          </div>
-        </section>
-      </Shell>
-    );
-  }
-
-  return (
-    <Shell
-      brand="Happy Learn"
-      stepLabel="Accueil élève"
-      homeTo="/accueil"
-      extra={
-        <Button
-          onClick={() => {
-            void logout().then(() => navigate("/"));
-          }}
-        >
-          Changer d’élève
-        </Button>
+        </div>
       }
     >
-      <section className="intro">
-        <span className="kicker">Happy Learn</span>
+      <section className="intro student-home">
+        <span className="kicker">À toi de jouer</span>
         <h1>Salut {displayName} !</h1>
         <p className="lead" data-listen>
-          Ici tu prépares ta mission : classe, matière, univers. Néo t’accompagne à chaque étape.
+          {playable
+            ? competenceFlow
+              ? `Parcours ${courseLabel} : choisis une compétence, puis une mission.`
+              : `Ta mission ${courseLabel} t’attend.`
+            : "Indique ta classe et ta matière, puis pars en mission avec Néo."}
         </p>
-        {classCode ? <p>Tu es dans la classe {classCode}.</p> : <p>Tu joues à la maison, sans code classe.</p>}
-        {courseLabel ? (
-          <p>
-            Parcours actuel : <strong>{courseLabel}</strong>
-            {playable ? "" : " (bientôt disponible)"}
-          </p>
+        {classCode ? (
+          <p className="student-home-meta">Classe {classCode}</p>
         ) : (
-          <p>Indique ensuite ton niveau (CP à CM2) et ta matière.</p>
+          <p className="student-home-meta">Mode maison — sans code classe</p>
         )}
-        <div className="mascot-stage">
-          <p className="bubble">Bonjour {displayName} ! Je serai ton guide pendant tes missions.</p>
-          <Neo pose="guide" />
-        </div>
-        <div className="actions">
-          <Button variant="primary" onClick={() => navigate(playable ? "/seance" : "/classe")}>
-            Continuer la mission
-          </Button>
-          <Button onClick={() => navigate("/classe")}>
-            {courseLabel ? "Changer de classe / matière" : "Choisir classe et matière"}
-          </Button>
+        <div className="student-next">
+          <div className="mascot-stage">
+            <p className="bubble">
+              {playable ? "On y va ?" : `Bonjour ${displayName} ! Je serai ton guide.`}
+            </p>
+            <Neo pose="guide" />
+          </div>
+          <div className="actions student-next-actions">
+            <Button variant="primary" onClick={() => navigate(nextTo)}>
+              {nextLabel}
+            </Button>
+            <Button onClick={() => navigate("/classe")}>
+              {courseLabel ? "Changer de classe / matière" : "Choisir classe et matière"}
+            </Button>
+          </div>
         </div>
       </section>
     </Shell>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "../components/Button";
 import { Neo } from "../components/Neo";
 import { Shell } from "../components/Shell";
@@ -32,7 +32,7 @@ export function TeacherLoginScreen() {
   if (role === "enseignant") return <Navigate to="/espace-professeur" replace />;
 
   return (
-    <Shell brand="Happy Learn" stepLabel="Professeur" homeTo="/" backTo="/connexion">
+    <Shell variant="auth" brand="Happy Learn" backTo="/connexion">
       <div className="split login-layout">
         <aside className="mascot-stage">
           <p className="bubble">L’espace enseignant sert à préparer ta classe et suivre les missions.</p>
@@ -185,9 +185,6 @@ export function TeacherLoginScreen() {
                   Essayer en local (cet appareil)
                 </Button>
               ) : null}
-              <Link className="text-link" to="/">
-                Accueil du site
-              </Link>
             </div>
           </form>
         </section>

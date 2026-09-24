@@ -12,6 +12,7 @@ import {
   subjectLabel,
 } from "../data/catalog";
 import type { GradeLevel, SubjectSlug } from "../data/types";
+import { hasCompetenceNav } from "../data/competenceNav";
 import { useSession } from "../lib/session";
 
 export function CourseScreen() {
@@ -28,7 +29,7 @@ export function CourseScreen() {
   if (!prenom) return <Navigate to="/connexion/eleve" replace />;
 
   return (
-    <Shell brand="Happy Learn" stepLabel="Classe et matière" backTo="/accueil" showSetupSteps>
+    <Shell variant="eleve" brand="Happy Learn" backTo="/accueil" showSetupSteps>
       <div className="split course-layout">
         <aside className="mascot-stage">
           <p className="bubble">
@@ -124,7 +125,7 @@ export function CourseScreen() {
                   setError("Ce parcours arrive bientôt. Choisis CM2 et Mathématiques pour jouer maintenant.");
                   return;
                 }
-                navigate("/seance");
+                navigate(hasCompetenceNav(pickedGrade, pickedSubject) ? "/competence" : "/seance");
               }}
             >
               Continuer
