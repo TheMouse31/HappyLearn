@@ -11,30 +11,29 @@ function continuePath(role: string | null, premiumActive: boolean): string | nul
   return null;
 }
 
-/** Ancienne home (layout classique) — préférée à la home NewFront full-bleed. */
-function ClassicHomeBody() {
+function HomeBody() {
   const navigate = useNavigate();
   const { role, premiumActive, logout } = useSession();
   const continueTo = continuePath(role, premiumActive);
 
   return (
-    <div className="classic-home">
-      <section className="home-hero">
-        <div className="home-hero-copy">
-          <p className="home-brand">Happy Learn</p>
-          <h1>Les apprentissages du primaire, racontés comme une mission</h1>
-          <p className="lead" data-listen>
-            Du CP au CM2, toutes les matières. Les élèves progressent avec Néo. Les adultes suivent sans note ni
-            classement.
+    <div className="hl-home">
+      <section className="hl-hero" aria-labelledby="hl-hero-title">
+        <div className="hl-hero-glow" aria-hidden="true" />
+        <div className="hl-hero-copy">
+          <p className="hl-hero-brand">Happy Learn</p>
+          <h1 id="hl-hero-title">Apprendre comme une mission</h1>
+          <p className="hl-hero-lead" data-listen>
+            Du CP au CM2, avec Néo. Sans note, sans classement — juste progresser.
           </p>
           {continueTo ? (
-            <div className="actions home-actions">
-              <button type="button" className="primary" onClick={() => navigate(continueTo)}>
-                Continuer
+            <div className="hl-hero-cta">
+              <button type="button" className="primary hl-cta" onClick={() => navigate(continueTo)}>
+                Continuer ma session
               </button>
               <button
                 type="button"
-                className="text-link"
+                className="ghost-btn"
                 onClick={() => {
                   void logout().then(() => navigate("/connexion"));
                 }}
@@ -43,33 +42,46 @@ function ClassicHomeBody() {
               </button>
             </div>
           ) : (
-            <div className="actions home-actions">
-              <Link className="primary" to="/connexion">
+            <div className="hl-hero-cta">
+              <Link className="primary hl-cta" to="/connexion">
                 Se connecter
               </Link>
             </div>
           )}
         </div>
-        <aside className="mascot-stage home-mascot">
-          <p className="bubble">Prêt pour une mission ? Connecte-toi pour commencer.</p>
-          <Neo pose="guide" />
+        <aside className="hl-hero-visual" aria-hidden="true">
+          <div className="hl-hero-neo">
+            <Neo pose="guide" />
+          </div>
         </aside>
       </section>
 
-      <section className="home-how" id="comment-ca-marche">
-        <h2>Comment ça marche</h2>
-        <ol className="how-steps">
+      <section className="hl-how" id="comment-ca-marche">
+        <div className="hl-how-head">
+          <p className="hl-section-kicker">Simple comme 1, 2, 3</p>
+          <h2>Comment ça marche</h2>
+        </div>
+        <ol className="hl-how-steps">
           <li>
+            <span className="hl-how-num" aria-hidden="true">
+              1
+            </span>
             <strong>Connecte-toi</strong>
-            <span>Élève, parent ou professeur — une seule porte d’entrée.</span>
+            <span>Élève, parent ou professeur.</span>
           </li>
           <li>
+            <span className="hl-how-num" aria-hidden="true">
+              2
+            </span>
             <strong>Choisis une compétence</strong>
-            <span>Puis une mission dans un univers qui aide vraiment à comprendre.</span>
+            <span>Puis une mission pertinente — Néo t’accompagne.</span>
           </li>
           <li>
-            <strong>Progresse avec Néo</strong>
-            <span>Sans note ni classement — juste apprendre.</span>
+            <span className="hl-how-num" aria-hidden="true">
+              3
+            </span>
+            <strong>Progresse</strong>
+            <span>Sans note ni classement.</span>
           </li>
         </ol>
       </section>
@@ -80,7 +92,7 @@ function ClassicHomeBody() {
 export function HomePage() {
   return (
     <PublicLayout fullBleed>
-      <ClassicHomeBody />
+      <HomeBody />
     </PublicLayout>
   );
 }
