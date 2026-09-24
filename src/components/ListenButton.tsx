@@ -50,7 +50,7 @@ export function ListenButton({ variant = "nav" }: Props) {
       }}
     >
       <span aria-hidden="true">{on ? "■" : "▶"}</span>
-      <span className="listen-nav-label">{label}</span>
+      {variant === "float" ? <span>{label}</span> : null}
     </button>
   );
 }
