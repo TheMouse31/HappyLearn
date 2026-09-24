@@ -2348,13 +2348,13 @@ html[data-skin="newfront"] .public-window{
 html[data-skin="newfront"] .public-nav{
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  gap: 8px;
+  flex-wrap: nowrap;
 }
 
 html[data-skin="newfront"] .nav-text-link, html[data-skin="newfront"] .text-link{
-  color: #0b6f5c;
-  font-weight: 750;
+  color: var(--soft);
+  font-weight: 650;
   text-decoration: none;
 }
 
