@@ -41,15 +41,15 @@ export function ConnexionScreen() {
           <div className="connexion-role-list" role="group" aria-label="Qui es-tu ?">
             <Link className="connexion-role" to="/connexion/eleve">
               <span className="connexion-role-label">Élève</span>
-              <span className="connexion-role-hint">Code session ou foyer + PIN</span>
+              <span className="connexion-role-hint">École ou maison</span>
             </Link>
             <Link className="connexion-role" to="/connexion/parent">
               <span className="connexion-role-label">Parent</span>
-              <span className="connexion-role-hint">Foyer, enfants, stats</span>
+              <span className="connexion-role-hint">Même e-mail — tu peux aussi ouvrir l’espace prof</span>
             </Link>
             <Link className="connexion-role connexion-role-teacher" to="/connexion/enseignant">
               <span className="connexion-role-label">Professeur</span>
-              <span className="connexion-role-hint">Classes et sessions live</span>
+              <span className="connexion-role-hint">Même e-mail — tu peux aussi ouvrir le foyer</span>
             </Link>
           </div>
         </div>

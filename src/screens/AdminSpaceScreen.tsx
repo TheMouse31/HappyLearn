@@ -513,9 +513,9 @@ export function AdminSpaceScreen() {
 
         {tab === "abonnements" ? (
           <div className="admin-panel">
-            <h2>Accorder le Premium</h2>
+            <h2>Abonnements</h2>
             <p className="lead">
-              Offre ou prolonge un abonnement sans Stripe (enseignant ou foyer parent).
+              Accorde, prolonge ou révoque un Premium (enseignant ou foyer parent).
             </p>
             <form
               className="login-form"
@@ -631,6 +631,27 @@ export function AdminSpaceScreen() {
                   ) : (
                     <StatusBadge tone="neutral">{g.source}</StatusBadge>
                   )}
+                  {g.status === "active" || g.status === "trialing" ? (
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        void upsertAbonnement({
+                          subjectType: g.subjectType,
+                          subjectId: g.subjectId,
+                          source: g.source,
+                          status: "canceled",
+                          currentPeriodEnd: g.currentPeriodEnd,
+                          grantedBy: teacher?.id ?? null,
+                          grantedNote: g.grantedNote ?? "Révoqué par admin",
+                        }).then(async () => {
+                          setGrantMessage("Abonnement révoqué.");
+                          setGrants(await listAbonnementsAdmin());
+                        });
+                      }}
+                    >
+                      Révoquer
+                    </Button>
+                  ) : null}
                 </li>
               ))}
             </ul>

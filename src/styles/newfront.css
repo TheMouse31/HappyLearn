@@ -5051,3 +5051,169 @@ html[data-skin="newfront"] .mission-studio-toolbar-top {
     flex-wrap: wrap;
   }
 }
+
+/* —— Wizard connexion élève —— */
+html[data-skin="newfront"] .eleve-wizard .eleve-step-enter {
+  animation: eleveStepIn 0.38s ease both;
+}
+
+@keyframes eleveStepIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+html[data-skin="newfront"] .eleve-choice-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 18px 0 8px;
+}
+
+html[data-skin="newfront"] .eleve-choice-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 22px 16px;
+  border: 2px solid color-mix(in srgb, var(--line) 80%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--panel) 94%, transparent);
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  text-align: center;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+html[data-skin="newfront"] .eleve-choice-card:hover,
+html[data-skin="newfront"] .eleve-choice-card:focus-visible {
+  transform: scale(1.03);
+  border-color: var(--action);
+  background: color-mix(in srgb, var(--action) 8%, var(--panel));
+  outline: none;
+}
+
+html[data-skin="newfront"] .eleve-choice-card strong {
+  font-family: var(--font-display, Fraunces, Georgia, serif);
+  font-size: 1.2rem;
+}
+
+html[data-skin="newfront"] .eleve-choice-card span {
+  font-size: 0.85rem;
+  color: var(--soft);
+}
+
+html[data-skin="newfront"] .eleve-big-field input {
+  font-size: 1.35rem;
+  letter-spacing: 0.06em;
+  text-align: center;
+  padding: 14px 16px;
+  border-radius: 14px;
+}
+
+html[data-skin="newfront"] .eleve-name-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  margin: 14px 0 18px;
+}
+
+html[data-skin="newfront"] .eleve-name-chip {
+  padding: 14px 12px;
+  border-radius: 14px;
+  border: 2px solid color-mix(in srgb, var(--line) 75%, transparent);
+  background: var(--panel);
+  font: inherit;
+  font-weight: 650;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+html[data-skin="newfront"] .eleve-name-chip:hover {
+  transform: scale(1.02);
+  border-color: var(--action);
+}
+
+html[data-skin="newfront"] .eleve-name-chip.is-selected {
+  border-color: var(--action);
+  background: color-mix(in srgb, var(--action) 12%, var(--panel));
+  color: var(--action);
+}
+
+html[data-skin="newfront"] .eleve-pin-dots {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin: 18px 0 20px;
+}
+
+html[data-skin="newfront"] .eleve-pin-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--line) 90%, transparent);
+  background: transparent;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+html[data-skin="newfront"] .eleve-pin-dot.is-filled {
+  background: var(--action);
+  border-color: var(--action);
+}
+
+html[data-skin="newfront"] .eleve-pin-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  max-width: 280px;
+  margin: 0 auto 16px;
+}
+
+html[data-skin="newfront"] .eleve-pin-key {
+  aspect-ratio: 1.35;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
+  background: var(--panel);
+  font-size: 1.35rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--ink);
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+
+html[data-skin="newfront"] .eleve-pin-key:hover:not(:disabled) {
+  transform: scale(1.04);
+  background: color-mix(in srgb, var(--action) 10%, var(--panel));
+}
+
+html[data-skin="newfront"] .eleve-pin-key:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+html[data-skin="newfront"] .eleve-pin-spacer {
+  visibility: hidden;
+}
+
+html[data-skin="newfront"] .eleve-back {
+  display: inline-block;
+  margin-top: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+}
+
+@media (max-width: 640px) {
+  html[data-skin="newfront"] .eleve-choice-cards {
+    grid-template-columns: 1fr;
+  }
+}

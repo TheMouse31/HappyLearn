@@ -55,8 +55,8 @@ export const ADMIN_NAV: AdminNavItem[] = [
   {
     id: "grants",
     to: "/espace-admin/grants",
-    label: "Grants Premium",
-    stepLabel: "Grants Premium",
+    label: "Abonnements",
+    stepLabel: "Abonnements",
     icon: CreditCard,
   },
 ];

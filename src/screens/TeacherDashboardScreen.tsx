@@ -1,12 +1,12 @@
 import { Navigate } from "react-router-dom";
-import { CreditCard, Play, Users } from "lucide-react";
+import { CreditCard, Home, Play, Users } from "lucide-react";
 import { HubTiles } from "../components/HubTiles";
 import { Shell } from "../components/Shell";
 import { useSession } from "../lib/session";
 
 /** Hub enseignant — chaque tuile ouvre une page dédiée. */
 export function TeacherDashboardScreen() {
-  const { role, teacher } = useSession();
+  const { role, teacher, switchAdultRole } = useSession();
   if (role !== "enseignant" && role !== "admin") {
     return <Navigate to="/connexion/enseignant" replace />;
   }
@@ -36,6 +36,15 @@ export function TeacherDashboardScreen() {
               label: "Abonnement",
               description: "Voir ou gérer Premium",
               icon: CreditCard,
+            },
+            {
+              to: "/espace-parent",
+              label: "Mon foyer",
+              description: "Espace parent — même e-mail",
+              icon: Home,
+              onNavigate: async () => {
+                await switchAdultRole("parent");
+              },
             },
           ]}
         />

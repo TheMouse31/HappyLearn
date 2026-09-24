@@ -12,8 +12,7 @@ type TeacherMode = "connexion" | "inscription";
 
 export function TeacherLoginScreen() {
   const navigate = useNavigate();
-  const { role, loginTeacherPassword, loginTeacherMagic, loginTeacherLocal, loginTeacherGoogle } =
-    useSession();
+  const { role, loginTeacherPassword, loginTeacherMagic, loginTeacherGoogle } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [teacherMode, setTeacherMode] = useState<TeacherMode>("connexion");
@@ -36,7 +35,7 @@ export function TeacherLoginScreen() {
     <Shell variant="auth" brand="Happy Learn" backTo="/connexion">
       <div className="split login-layout">
         <aside className="mascot-stage">
-          <p className="bubble">L’espace enseignant sert à préparer ta classe et suivre les missions.</p>
+          <p className="bubble">Prépare ta classe. Même e-mail pour le foyer parent si tu as des enfants.</p>
           <Neo pose="guide" />
         </aside>
         <section>
@@ -45,29 +44,25 @@ export function TeacherLoginScreen() {
           <p className="lead" data-listen>
             Crée des classes, ajoute tes élèves, partage un code, et suis leurs missions sans note ni classement.
           </p>
-          <form
-            className="login-form"
-            onSubmit={(event) => {
-              event.preventDefault();
-              setBusy(true);
-              setError("");
-              setInfo("");
-              if (!hasServer) {
-                void loginTeacherLocal(email).then((message) => {
+          {!hasServer ? (
+            <p className="error" role="status">
+              Connexion indisponible pour le moment. Réessaie plus tard.
+            </p>
+          ) : (
+            <form
+              className="login-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                setBusy(true);
+                setError("");
+                setInfo("");
+                void loginTeacherPassword(email, password, teacherMode).then((message) => {
                   setBusy(false);
                   if (message) setError(message);
                   else navigate(isAdminEmail(email) ? "/espace-admin" : "/espace-professeur");
                 });
-                return;
-              }
-              void loginTeacherPassword(email, password, teacherMode).then((message) => {
-                setBusy(false);
-                if (message) setError(message);
-                else navigate(isAdminEmail(email) ? "/espace-admin" : "/espace-professeur");
-              });
-            }}
-          >
-            {hasServer ? (
+              }}
+            >
               <div className="role-tabs" role="tablist" aria-label="Type de compte enseignant">
                 <button
                   type="button"
@@ -88,19 +83,17 @@ export function TeacherLoginScreen() {
                   Créer un compte
                 </button>
               </div>
-            ) : null}
-            <div className="field">
-              <label htmlFor="email">E-mail</label>
-              <input
-                id="email"
-                type="email"
-                autoComplete="username"
-                value={email}
-                placeholder="prenom.nom@ecole.fr"
-                onChange={(event) => setEmail(event.target.value)}
-              />
-            </div>
-            {hasServer ? (
+              <div className="field">
+                <label htmlFor="email">E-mail</label>
+                <input
+                  id="email"
+                  type="email"
+                  autoComplete="username"
+                  value={email}
+                  placeholder="prenom.nom@ecole.fr"
+                  onChange={(event) => setEmail(event.target.value)}
+                />
+              </div>
               <div className="field">
                 <label htmlFor="password">Mot de passe</label>
                 <input
@@ -112,27 +105,16 @@ export function TeacherLoginScreen() {
                   onChange={(event) => setPassword(event.target.value)}
                 />
               </div>
-            ) : (
-              <p className="field-help">
-                Mode local : pas de serveur pour le moment. L’espace enseignant reste sur cet appareil, sans mot de
-                passe. Brancher Supabase active le compte e-mail réel.
+              <p className="error" aria-live="polite">
+                {error}
               </p>
-            )}
-            <p className="error" aria-live="polite">
-              {error}
-            </p>
-            <p className="feedback info" aria-live="polite">
-              {info}
-            </p>
-            <div className="actions">
-              <Button variant="primary" type="submit" disabled={busy}>
-                {hasServer
-                  ? teacherMode === "inscription"
-                    ? "Créer le compte"
-                    : "Se connecter"
-                  : "Ouvrir l’espace enseignant"}
-              </Button>
-              {hasServer ? (
+              <p className="feedback info" aria-live="polite">
+                {info}
+              </p>
+              <div className="actions">
+                <Button variant="primary" type="submit" disabled={busy}>
+                  {teacherMode === "inscription" ? "Créer le compte" : "Se connecter"}
+                </Button>
                 <Button
                   type="button"
                   disabled={busy}
@@ -150,8 +132,6 @@ export function TeacherLoginScreen() {
                 >
                   Recevoir un lien magique
                 </Button>
-              ) : null}
-              {hasServer ? (
                 <OAuthButtons
                   busy={busy}
                   onGoogle={() => {
@@ -163,27 +143,9 @@ export function TeacherLoginScreen() {
                     });
                   }}
                 />
-              ) : null}
-              {hasServer ? (
-                <Button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => {
-                    setBusy(true);
-                    setError("");
-                    setInfo("");
-                    void loginTeacherLocal(email).then((message) => {
-                      setBusy(false);
-                      if (message) setError(message);
-                      else navigate("/espace-professeur");
-                    });
-                  }}
-                >
-                  Essayer en local (cet appareil)
-                </Button>
-              ) : null}
-            </div>
-          </form>
+              </div>
+            </form>
+          )}
         </section>
       </div>
     </Shell>

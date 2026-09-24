@@ -11,13 +11,7 @@ type ParentMode = "connexion" | "inscription";
 
 export function ParentLoginScreen() {
   const navigate = useNavigate();
-  const {
-    role,
-    loginParentPassword,
-    loginParentGoogle,
-    loginParentLocal,
-    premiumActive,
-  } = useSession();
+  const { role, loginParentPassword, loginParentGoogle, premiumActive } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [parentMode, setParentMode] = useState<ParentMode>("connexion");
@@ -42,7 +36,7 @@ export function ParentLoginScreen() {
     <Shell variant="auth" brand="Happy Learn" backTo="/connexion">
       <div className="split login-layout">
         <aside className="mascot-stage">
-          <p className="bubble">À la maison : tu pilotes le foyer, les enfants jouent avec un code PIN.</p>
+          <p className="bubble">À la maison : tu pilotes le foyer. Même e-mail pour l’espace prof si besoin.</p>
           <Neo pose="guide" />
         </aside>
         <section>
@@ -51,28 +45,24 @@ export function ParentLoginScreen() {
           <p className="lead" data-listen>
             Crée un compte familial, ajoute tes enfants, suis leurs progrès et gère l’abonnement.
           </p>
-          <form
-            className="login-form"
-            onSubmit={(event) => {
-              event.preventDefault();
-              setBusy(true);
-              setError("");
-              if (!hasServer) {
-                void loginParentLocal(email).then((message) => {
+          {!hasServer ? (
+            <p className="error" role="status">
+              Connexion indisponible pour le moment. Réessaie plus tard.
+            </p>
+          ) : (
+            <form
+              className="login-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                setBusy(true);
+                setError("");
+                void loginParentPassword(email, password, parentMode).then((message) => {
                   setBusy(false);
                   if (message) setError(message);
                   else navigate("/espace-parent");
                 });
-                return;
-              }
-              void loginParentPassword(email, password, parentMode).then((message) => {
-                setBusy(false);
-                if (message) setError(message);
-                else navigate("/espace-parent");
-              });
-            }}
-          >
-            {hasServer ? (
+              }}
+            >
               <div className="role-tabs" role="tablist" aria-label="Type de compte parent">
                 <button
                   type="button"
@@ -93,18 +83,16 @@ export function ParentLoginScreen() {
                   Créer un compte
                 </button>
               </div>
-            ) : null}
-            <div className="field">
-              <label htmlFor="parent-email">E-mail</label>
-              <input
-                id="parent-email"
-                type="email"
-                autoComplete="username"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-              />
-            </div>
-            {hasServer ? (
+              <div className="field">
+                <label htmlFor="parent-email">E-mail</label>
+                <input
+                  id="parent-email"
+                  type="email"
+                  autoComplete="username"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                />
+              </div>
               <div className="field">
                 <label htmlFor="parent-password">Mot de passe</label>
                 <input
@@ -116,21 +104,13 @@ export function ParentLoginScreen() {
                   onChange={(event) => setPassword(event.target.value)}
                 />
               </div>
-            ) : (
-              <p className="field-help">Mode local : compte foyer sur cet appareil uniquement.</p>
-            )}
-            <p className="error" aria-live="polite">
-              {error}
-            </p>
-            <div className="actions">
-              <Button variant="primary" type="submit" disabled={busy}>
-                {hasServer
-                  ? parentMode === "inscription"
-                    ? "Créer le compte"
-                    : "Se connecter"
-                  : "Ouvrir l’espace parent"}
-              </Button>
-              {hasServer ? (
+              <p className="error" aria-live="polite">
+                {error}
+              </p>
+              <div className="actions">
+                <Button variant="primary" type="submit" disabled={busy}>
+                  {parentMode === "inscription" ? "Créer le compte" : "Se connecter"}
+                </Button>
                 <OAuthButtons
                   busy={busy}
                   onGoogle={() => {
@@ -142,26 +122,9 @@ export function ParentLoginScreen() {
                     });
                   }}
                 />
-              ) : null}
-              {hasServer ? (
-                <Button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => {
-                    setBusy(true);
-                    setError("");
-                    void loginParentLocal(email).then((message) => {
-                      setBusy(false);
-                      if (message) setError(message);
-                      else navigate("/espace-parent");
-                    });
-                  }}
-                >
-                  Essayer en local (cet appareil)
-                </Button>
-              ) : null}
-            </div>
-          </form>
+              </div>
+            </form>
+          )}
         </section>
       </div>
     </Shell>

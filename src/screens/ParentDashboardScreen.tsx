@@ -34,7 +34,7 @@ export function ParentDashboardScreen() {
             {
               to: "/espace-professeur",
               label: "Espace enseignant",
-              description: "Passer en mode professeur (même e-mail)",
+              description: "Même e-mail — classes et sessions",
               icon: Users,
               onNavigate: async () => {
                 await switchAdultRole("enseignant");
