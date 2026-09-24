@@ -83,7 +83,7 @@ async function main() {
     log.push("fractions football: " + /Football|terrain/i.test(frac));
     log.push("fractions rugby: " + /Rugby|mêlée/i.test(frac));
     log.push("fractions equitation: " + /Équitation|écurie/i.test(frac));
-    log.push("fractions no espace: " + !/orbital|Espace/i.test(frac));
+    log.push("fractions no espace offer: " + !/Commandes orbitales|Insigne orbital/i.test(frac));
 
     await page.getByRole("button", { name: /Autre compétence/i }).click();
     await page.waitForTimeout(500);
