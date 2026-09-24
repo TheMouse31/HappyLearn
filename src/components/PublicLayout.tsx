@@ -29,9 +29,14 @@ export function PublicLayout({ children, fullBleed = true }: Props) {
             ? "/espace-admin"
             : null;
   const isConnexion = pathname.startsWith("/connexion");
+  const isHome = pathname === "/";
 
   return (
-    <div className={`app-shell public-shell${fullBleed ? " is-bleed" : ""}`}>
+    <div
+      className={`app-shell public-shell${fullBleed ? " is-bleed" : ""}${
+        isHome ? " is-home" : ""
+      }${isConnexion ? " is-connexion" : ""}`}
+    >
       <header className="topbar public-topbar">
         <Link to="/" className="brand brand-link" aria-label="Happy Learn — accueil">
           <span className="brand-mark" aria-hidden="true">
