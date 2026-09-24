@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 import { ColorsMenu } from "./ColorsMenu";
 import { ListenButton } from "./ListenButton";
 import { SetupSteps } from "./SetupSteps";
-import { SkinToggle } from "./SkinToggle";
 import { useSession } from "../lib/session";
 
 export type ShellVariant = "default" | "eleve" | "eleve-mission" | "auth";
@@ -129,7 +128,6 @@ export function Shell({
           {stepLabel && !hideStepPill ? <div className="step-pill">{stepLabel}</div> : null}
           {!hideUtilities ? (
             <>
-              <SkinToggle />
               <ColorsMenu />
               <ListenButton />
             </>

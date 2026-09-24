@@ -2889,23 +2889,6 @@ button.text-link {
 }
 
 
-/* —— Bascule Classic / NewFront —— */
-.skin-toggle.is-newfront {
-  border-color: #0f8f78;
-  background: #dff7f0;
-  color: #0b2420;
-}
-
-.skin-toggle.is-classic {
-  border-color: var(--line);
-}
-
-@media (max-width: 620px) {
-  .skin-toggle-label {
-    display: none;
-  }
-}
-
 /* Theme accent follows CSS variables set by ColorsMenu */
 html[data-theme-color] .primary,
 html[data-theme-color] .nav-cta,

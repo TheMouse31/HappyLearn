@@ -2,19 +2,16 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import type { ReactNode } from "react";
 import { ColorsMenu } from "./ColorsMenu";
 import { ListenButton } from "./ListenButton";
-import { SkinToggle } from "./SkinToggle";
 import { useSession } from "../lib/session";
-import { useSkin } from "../lib/useSkin";
 
 type Props = {
   children: ReactNode;
-  /** Edge-to-edge hero pages (NewFront home). */
+  /** Edge-to-edge hero pages (accueil / connexion). */
   fullBleed?: boolean;
 };
 
-export function PublicLayout({ children, fullBleed = false }: Props) {
+export function PublicLayout({ children, fullBleed = true }: Props) {
   const navigate = useNavigate();
-  const skin = useSkin();
   const { role, premiumActive } = useSession();
   const { pathname } = useLocation();
   const continueTo =
@@ -31,11 +28,10 @@ export function PublicLayout({ children, fullBleed = false }: Props) {
           : role === "admin"
             ? "/espace-admin"
             : null;
-  const bleed = fullBleed || skin === "newfront";
   const isConnexion = pathname.startsWith("/connexion");
 
   return (
-    <div className={`app-shell public-shell${bleed ? " is-bleed" : ""}`}>
+    <div className={`app-shell public-shell${fullBleed ? " is-bleed" : ""}`}>
       <header className="topbar public-topbar">
         <Link to="/" className="brand brand-link" aria-label="Happy Learn — accueil">
           <span className="brand-mark" aria-hidden="true">
@@ -49,7 +45,6 @@ export function PublicLayout({ children, fullBleed = false }: Props) {
               Comment ça marche
             </a>
           ) : null}
-          <SkinToggle />
           <ColorsMenu />
           <ListenButton />
           {continueTo ? (
@@ -67,7 +62,7 @@ export function PublicLayout({ children, fullBleed = false }: Props) {
           )}
         </nav>
       </header>
-      <div className={`window public-window${bleed ? " is-bleed" : ""}`}>{children}</div>
+      <div className={`window public-window${fullBleed ? " is-bleed" : ""}`}>{children}</div>
     </div>
   );
 }

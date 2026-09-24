@@ -4,7 +4,6 @@ import { ColorsMenu } from "../components/ColorsMenu";
 import { ListenButton } from "../components/ListenButton";
 import { Neo } from "../components/Neo";
 import { Shell } from "../components/Shell";
-import { SkinToggle } from "../components/SkinToggle";
 import { gradeLabel, isCoursePlayable, subjectLabel } from "../data/catalog";
 import { hasCompetenceNav } from "../data/competenceNav";
 import { useSession } from "../lib/session";
@@ -35,7 +34,6 @@ export function WelcomeScreen() {
       homeTo="/accueil"
       extra={
         <div className="topbar-tools-menu" role="group" aria-label="Options">
-          <SkinToggle />
           <ColorsMenu />
           <ListenButton />
           <Button
