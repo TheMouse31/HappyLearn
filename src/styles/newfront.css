@@ -3944,3 +3944,95 @@ html[data-skin="newfront"] .public-shell.is-bleed.is-home .hl-how {
     justify-self: center;
   }
 }
+
+/* —— Home : pleine largeur bord à bord —— */
+html[data-skin="newfront"] .public-shell.is-bleed.is-home {
+  width: 100%;
+  max-width: none;
+}
+
+html[data-skin="newfront"] .public-shell.is-bleed.is-home .topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  margin: 0;
+  border-radius: 0;
+  border-left: 0;
+  border-right: 0;
+  border-top: 0;
+  min-height: 56px;
+  padding: 8px clamp(16px, 3vw, 40px);
+}
+
+html[data-skin="newfront"] .public-shell.is-bleed.is-home .window.is-bleed {
+  width: 100%;
+}
+
+html[data-skin="newfront"] .public-shell.is-bleed.is-home .hl-home {
+  width: 100%;
+}
+
+html[data-skin="newfront"] .public-shell.is-bleed.is-home .hl-hero {
+  max-width: none !important;
+  width: 100%;
+  margin: 0;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.95fr);
+  gap: clamp(16px, 3vw, 48px);
+  padding: clamp(64px, 9vh, 88px) clamp(20px, 5vw, 72px) clamp(16px, 2.5vh, 28px);
+  box-sizing: border-box;
+}
+
+html[data-skin="newfront"] .public-shell.is-bleed.is-home .hl-hero-copy {
+  max-width: min(36rem, 100%);
+}
+
+html[data-skin="newfront"] .public-shell.is-bleed.is-home .hl-hero-visual {
+  justify-self: end;
+  width: 100%;
+}
+
+html[data-skin="newfront"] .public-shell.is-bleed.is-home .hl-hero-neo {
+  width: min(420px, 42vw, 100%);
+  max-height: min(52vh, 460px);
+  margin-left: auto;
+}
+
+html[data-skin="newfront"] .public-shell.is-bleed.is-home .hl-hero-neo .neo {
+  max-height: min(52vh, 460px);
+}
+
+html[data-skin="newfront"] .public-shell.is-bleed.is-home .hl-how {
+  max-width: none !important;
+  width: 100%;
+  margin: 0;
+  padding: 16px clamp(20px, 5vw, 72px) 18px;
+  box-sizing: border-box;
+}
+
+html[data-skin="newfront"] .public-shell.is-bleed.is-home .public-shell.is-bleed .listen,
+html[data-skin="newfront"] .public-shell.is-bleed.is-home .listen {
+  right: clamp(16px, 3vw, 40px);
+}
+
+@media (max-width: 620px) {
+  html[data-skin="newfront"] .public-shell.is-bleed.is-home .topbar {
+    padding: 6px 12px;
+  }
+
+  html[data-skin="newfront"] .public-shell.is-bleed.is-home .hl-hero {
+    padding: 58px 16px 10px;
+    grid-template-columns: 1fr;
+  }
+
+  html[data-skin="newfront"] .public-shell.is-bleed.is-home .hl-hero-neo {
+    width: min(168px, 48vw);
+    max-height: 24vh;
+    margin-inline: auto;
+  }
+
+  html[data-skin="newfront"] .public-shell.is-bleed.is-home .hl-how {
+    padding: 12px 16px 14px;
+  }
+}
