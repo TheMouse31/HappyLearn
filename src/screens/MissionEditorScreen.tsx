@@ -12,7 +12,6 @@ import {
 } from "../components/IllustrationCreatePanel";
 import { RichTextEditor } from "../components/RichTextEditor";
 import { ScenePicker } from "../components/ScenePicker";
-import { Shell } from "../components/Shell";
 import { UniverseScene } from "../components/UniverseScene";
 import { GRADES, SUBJECTS, gradeLabel, subjectLabel } from "../data/catalog";
 import {
@@ -612,25 +611,15 @@ export function MissionEditorScreen() {
 
   if (mode === "list") {
     return (
-      <Shell brand="Happy Learn" stepLabel="Studio missions" homeTo="/espace-admin" backTo="/espace-admin">
         <section className="mission-studio">
-          <header className="mission-studio-hero">
-            <div>
-              <p className="pilot-eyebrow">Studio missions</p>
-              <h1>Catalogue</h1>
-              <p className="lead" data-listen>
-                Crée, publie et affine les parcours. Les illustrations d’étapes se gèrent dans la bibliothèque.
-              </p>
-            </div>
-            <div className="mission-studio-hero-actions">
-              <Button variant="primary" type="button" onClick={startCreate}>
-                Nouvelle mission
-              </Button>
-              <Button type="button" onClick={() => navigate("/espace-admin/panel?tab=illustrations")}>
-                Bibliothèque d’illustrations
-              </Button>
-            </div>
-          </header>
+          <div className="mission-studio-toolbar-top">
+            <Button variant="primary" type="button" onClick={startCreate}>
+              Nouvelle mission
+            </Button>
+            <Button type="button" onClick={() => navigate("/espace-admin/illustrations")}>
+              Bibliothèque d’illustrations
+            </Button>
+          </div>
           {syncNote ? <p className="field-help">{syncNote}</p> : null}
 
           <div className="mission-studio-toolbar">
@@ -847,25 +836,12 @@ export function MissionEditorScreen() {
             <p className="field-help">Aucune mission ne correspond aux filtres.</p>
           ) : null}
         </section>
-      </Shell>
     );
   }
 
   const answerNeeded = currentDraft ? needsAnswer(currentDraft.kind) : false;
 
   return (
-    <Shell
-      brand="Happy Learn"
-      stepLabel={readOnly ? "Lecture seule" : "Éditeur"}
-      homeTo="/espace-admin"
-      onBack={() => {
-        setMode("list");
-        setMessage("");
-        setError("");
-        // Nettoyer ?new=1 / ?id= pour un catalogue propre.
-        navigate("/espace-admin/missions", { replace: true });
-      }}
-    >
       <section className={`mission-studio is-editing${previewOpen ? " has-preview" : ""}`}>
         <header className="mission-studio-bar">
           <div className="mission-studio-bar-main">
@@ -1523,6 +1499,5 @@ export function MissionEditorScreen() {
           ) : null}
         </div>
       </section>
-    </Shell>
   );
 }

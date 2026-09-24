@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Sparkles } from "lucide-react";
 import type { Abonnement } from "../data/types";
 import { abonnementLabel, isAbonnementActive } from "../lib/subscription";
 
@@ -71,7 +72,7 @@ export function SubscriptionStatusBadge({ abonnement, premiumActive, className }
       tone={tone}
       className={className}
       title={abonnementLabel(abonnement)}
-      icon={tone === "premium" ? "✦" : undefined}
+      icon={tone === "premium" ? <Sparkles size={12} strokeWidth={2.25} /> : undefined}
     >
       {text}
     </StatusBadge>

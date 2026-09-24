@@ -4928,3 +4928,126 @@ html[data-skin="newfront"] .visually-hidden {
     padding: 12px 8px;
   }
 }
+
+/* —— Admin unifié (sidebar + contenu) —— */
+html[data-skin="newfront"] .admin-layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 0 22px;
+  align-items: start;
+  min-height: calc(100vh - 120px);
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+html[data-skin="newfront"] .admin-sidebar {
+  position: sticky;
+  top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 10px 0 18px;
+  border-right: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
+  min-height: 280px;
+}
+
+html[data-skin="newfront"] .admin-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+html[data-skin="newfront"] .admin-sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 0.92rem;
+  font-weight: 600;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+html[data-skin="newfront"] .admin-sidebar-link:hover {
+  background: color-mix(in srgb, var(--action) 8%, transparent);
+}
+
+html[data-skin="newfront"] .admin-sidebar-link.is-active {
+  background: color-mix(in srgb, var(--action) 14%, transparent);
+  color: var(--action);
+}
+
+html[data-skin="newfront"] .admin-sidebar-link.is-muted {
+  color: var(--soft);
+  font-weight: 550;
+}
+
+html[data-skin="newfront"] .admin-sidebar-footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+}
+
+html[data-skin="newfront"] .admin-sidebar-email {
+  margin: 0;
+  padding: 0 12px;
+  font-size: 0.75rem;
+  color: var(--soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-skin="newfront"] .admin-main {
+  min-width: 0;
+  padding: 4px 0 28px;
+}
+
+html[data-skin="newfront"] .admin-space {
+  max-width: none;
+  margin: 0;
+}
+
+html[data-skin="newfront"] .illust-studio-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 18px;
+}
+
+html[data-skin="newfront"] .mission-studio-toolbar-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 16px;
+}
+
+@media (max-width: 860px) {
+  html[data-skin="newfront"] .admin-layout {
+    grid-template-columns: 1fr;
+  }
+
+  html[data-skin="newfront"] .admin-sidebar {
+    position: static;
+    border-right: none;
+    border-bottom: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
+    min-height: 0;
+    padding-bottom: 12px;
+  }
+
+  html[data-skin="newfront"] .admin-sidebar-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  html[data-skin="newfront"] .admin-sidebar-footer {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+}

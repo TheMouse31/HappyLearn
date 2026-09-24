@@ -1,10 +1,10 @@
 /**
- * Hub admin (`/espace-admin`) : stats, entrée studio missions,
- * bibliothèque d’illustrations (étapes + overrides Néo), comptes admin.
- * Onglet via `?tab=` (overview | missions | illustrations | admins).
+ * Sections admin (contenu sous AdminLayout) :
+ * overview | illustrations | admins | grants.
  */
 import { useEffect, useMemo, useState } from "react";
-import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Sparkles } from "lucide-react";
 import { Button } from "../components/Button";
 import {
   EMPTY_ILLUSTRATION_FORM,
@@ -12,7 +12,7 @@ import {
   type IllustrationFormState,
 } from "../components/IllustrationCreatePanel";
 import { Neo } from "../components/Neo";
-import { Shell } from "../components/Shell";
+import { adminSectionFromPath } from "../components/AdminLayout";
 import { listAdminCatalog } from "../data/missions/index";
 import {
   addAdminEmail,
@@ -46,23 +46,15 @@ import { isMediaVideoUrl } from "../lib/mediaStorage";
 import { loadPlatformStats, type PlatformStats } from "../lib/platformStats";
 import { useSession } from "../lib/session";
 
-type AdminTab = "overview" | "missions" | "illustrations" | "admins" | "abonnements";
-/** Sous-onglets du studio visuel : bibliothèque d’étapes vs sprites Néo. */
+/** Sous-onglets illustrations : bibliothèque d’étapes vs sprites Néo. */
 type IllustStudio = "library" | "characters";
 
 export function AdminSpaceScreen() {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const { pathname } = useLocation();
   const { role, teacher, backend } = useSession();
-  const tabParam = searchParams.get("tab");
-  const tab: AdminTab =
-    tabParam === "missions" ||
-    tabParam === "illustrations" ||
-    tabParam === "admins" ||
-    tabParam === "abonnements" ||
-    tabParam === "overview"
-      ? tabParam
-      : "overview";
+  const section = adminSectionFromPath(pathname).id;
+  const tab = section === "grants" ? "abonnements" : section;
 
   const [stats, setStats] = useState<PlatformStats | null>(null);
   const [missionCount, setMissionCount] = useState(0);
@@ -119,14 +111,7 @@ export function AdminSpaceScreen() {
     void listAbonnementsAdmin().then(setGrants);
   }, [tab]);
 
-  // Ancien lien ?tab=missions → studio dédié.
-  useEffect(() => {
-    if (tabParam === "missions") {
-      navigate("/espace-admin/missions", { replace: true });
-    }
-  }, [tabParam, navigate]);
-
-  // Resync si une illustration est créée depuis le studio missions (même onglet ou autre).
+  // Resync si une illustration est créée depuis le studio missions.
   useEffect(() => {
     function sync() {
       setCustomItems(loadCustomIllustrations());
@@ -144,9 +129,8 @@ export function AdminSpaceScreen() {
     return <Navigate to="/connexion/enseignant" replace />;
   }
 
-  function setTab(next: AdminTab) {
-    // overview = URL propre sans query.
-    setSearchParams(next === "overview" ? {} : { tab: next });
+  if (section === "missions") {
+    return <Navigate to="/espace-admin/missions" replace />;
   }
 
   function resetCustomForm() {
@@ -164,81 +148,7 @@ export function AdminSpaceScreen() {
   }
 
   return (
-    <Shell
-      brand="Happy Learn"
-      stepLabel="Panneau admin"
-      homeTo="/espace-admin"
-      backTo="/espace-admin"
-      onBack={
-        tab === "overview"
-          ? undefined
-          : () => {
-              setTab("overview");
-            }
-      }
-    >
-      <section className="admin-space dedicated-page">
-        <header className="dedicated-page-header admin-head space-hub-header">
-          <div>
-            <span className="kicker">Administration</span>
-            <h1>
-              {tab === "overview"
-                ? "Vue d’ensemble"
-                : tab === "missions"
-                  ? "Missions"
-                  : tab === "illustrations"
-                    ? "Illustrations"
-                    : tab === "admins"
-                      ? "Comptes admin"
-                      : tab === "abonnements"
-                        ? "Grants Premium"
-                        : "Panneau"}
-            </h1>
-            <p className="lead" data-listen>
-              {tab === "overview"
-                ? "Suis l’usage de la plateforme et accède aux outils."
-                : tab === "missions"
-                  ? "Ouvre le studio pour créer ou modifier des missions."
-                  : tab === "illustrations"
-                    ? "Gère les illustrations et overrides Néo."
-                    : tab === "admins"
-                      ? "Ajoute ou retire des comptes administrateurs."
-                      : "Accorde un Premium à un enseignant ou un foyer."}
-            </p>
-          </div>
-          <div className="admin-head-actions">
-            <span className="admin-email">{teacher.email}</span>
-          </div>
-        </header>
-
-        {/* Navigation principale : l’état vit dans l’URL (?tab=). Missions → studio dédié. */}
-        <nav className="admin-tabs" aria-label="Sections administration">
-          {(
-            [
-              ["overview", "Vue d’ensemble"],
-              ["missions", "Missions"],
-              ["illustrations", "Illustrations"],
-              ["admins", "Admins"],
-              ["abonnements", "Abonnements"],
-            ] as const
-          ).map(([id, label]) => (
-            <button
-              key={id}
-              type="button"
-              className={tab === id ? "is-selected" : ""}
-              onClick={() => {
-                if (id === "missions") {
-                  navigate("/espace-admin/missions");
-                  return;
-                }
-                setTab(id);
-              }}
-            >
-              {label}
-            </button>
-          ))}
-        </nav>
-
+    <section className="admin-space">
         {tab === "overview" ? (
           <div className="admin-panel">
             <h2>Utilisation de la plateforme</h2>
@@ -280,7 +190,7 @@ export function AdminSpaceScreen() {
               <Button variant="primary" type="button" onClick={() => navigate("/espace-admin/missions")}>
                 Gérer les missions
               </Button>
-              <Button type="button" onClick={() => setTab("illustrations")}>
+              <Button type="button" onClick={() => navigate("/espace-admin/illustrations")}>
                 Bibliothèque d’illustrations
               </Button>
               <Button type="button" onClick={() => navigate("/espace-professeur/session")}>
@@ -293,54 +203,25 @@ export function AdminSpaceScreen() {
           </div>
         ) : null}
 
-        {/* Entrée vers MissionEditorScreen (/espace-admin/missions). */}
-        {tab === "missions" ? (
-          <div className="admin-panel">
-            <h2>Studio missions</h2>
-            <p className="lead">
-              Catalogue, création et publication des parcours — avec aperçu élève et illustrations
-              d’étapes.
-            </p>
-            <div className="admin-quick">
-              <Button variant="primary" type="button" onClick={() => navigate("/espace-admin/missions")}>
-                Ouvrir le studio
-              </Button>
-              <Button type="button" onClick={() => navigate("/espace-admin/missions?new=1")}>
-                Nouvelle mission
-              </Button>
-            </div>
-            <p className="field-help">{missionCount} mission{missionCount > 1 ? "s" : ""} au catalogue.</p>
-          </div>
-        ) : null}
-
         {/* Studio illustrations : bibliothèque perso (custom:) + overrides personnages. */}
         {tab === "illustrations" ? (
           <div className="admin-panel illust-studio">
-            <header className="illust-studio-hero">
-              <div>
-                <p className="pilot-eyebrow">Studio visuel</p>
-                <h2>Illustrations</h2>
-                <p className="lead">
-                  La bibliothèque alimente les étapes de mission. Les personnages Néo se gèrent à part.
-                </p>
-              </div>
-              <nav className="illust-studio-tabs" aria-label="Type d’illustrations">
-                <button
-                  type="button"
-                  className={illustStudio === "library" ? "is-selected" : ""}
-                  onClick={() => setIllustStudio("library")}
-                >
-                  Bibliothèque d’étapes
-                </button>
-                <button
-                  type="button"
-                  className={illustStudio === "characters" ? "is-selected" : ""}
-                  onClick={() => setIllustStudio("characters")}
-                >
-                  Personnages Néo
-                </button>
-              </nav>
-            </header>
+            <nav className="illust-studio-tabs" aria-label="Type d’illustrations">
+              <button
+                type="button"
+                className={illustStudio === "library" ? "is-selected" : ""}
+                onClick={() => setIllustStudio("library")}
+              >
+                Bibliothèque d’étapes
+              </button>
+              <button
+                type="button"
+                className={illustStudio === "characters" ? "is-selected" : ""}
+                onClick={() => setIllustStudio("characters")}
+              >
+                Personnages Néo
+              </button>
+            </nav>
 
             {illustStudio === "library" ? (
               <div className="illust-library">
@@ -732,7 +613,14 @@ export function AdminSpaceScreen() {
                   <strong>
                     {g.subjectType} · {g.subjectId.slice(0, 8)}…
                   </strong>{" "}
-                  <StatusBadge tone={abonnementTone(g)} icon={abonnementTone(g) === "premium" ? "✦" : undefined}>
+                  <StatusBadge
+                    tone={abonnementTone(g)}
+                    icon={
+                      abonnementTone(g) === "premium" ? (
+                        <Sparkles size={12} strokeWidth={2.25} />
+                      ) : undefined
+                    }
+                  >
                     {abonnementLabel(g)}
                   </StatusBadge>
                   {g.currentPeriodEnd
@@ -749,6 +637,5 @@ export function AdminSpaceScreen() {
           </div>
         ) : null}
       </section>
-    </Shell>
   );
 }

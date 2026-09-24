@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import type { ReactNode } from "react";
-import { ArrowLeft, Home, Shield, Users } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { AccountChip } from "./AccountChip";
 import { ColorsMenu } from "./ColorsMenu";
 import { ListenButton } from "./ListenButton";
@@ -51,7 +51,6 @@ export function Shell({
   const isEleveChrome = variant === "eleve" || variant === "eleve-mission";
   const isAuth = variant === "auth";
   const hideUtilities = isEleveChrome || isAuth;
-  const hideHomeButton = isEleveChrome || isAuth || (lockedSession && pathname === "/mission");
   const hideStepPill = Boolean(showSetupSteps) || variant === "eleve-mission";
   const hideNav = lockedSession && (pathname === "/salle-attente" || pathname === "/mission");
   const showAccount =
@@ -138,49 +137,10 @@ export function Shell({
             <SubscriptionStatusBadge abonnement={abonnement} premiumActive={premiumActive} />
           ) : null}
 
-          {!hideUtilities || showAccount ? (
+          {!hideUtilities ? (
             <div className="topbar-toolbar" role="toolbar" aria-label="Raccourcis">
-              {!hideUtilities ? (
-                <>
-                  <ColorsMenu />
-                  <ListenButton />
-                </>
-              ) : null}
-              {role === "enseignant" || role === "admin" ? (
-                <Link
-                  to="/espace-professeur"
-                  className="nav-icon-btn nav-icon-square"
-                  title="Espace enseignant"
-                  aria-label="Espace enseignant"
-                >
-                  <Users size={17} strokeWidth={2.25} aria-hidden />
-                </Link>
-              ) : null}
-              {role === "admin" ? (
-                <Link
-                  to="/espace-admin"
-                  className="nav-icon-btn nav-icon-square"
-                  title="Administration"
-                  aria-label="Administration"
-                >
-                  <Shield size={17} strokeWidth={2.25} aria-hidden />
-                </Link>
-              ) : null}
-              {role === "parent" ? (
-                <Link
-                  to="/espace-parent"
-                  className="nav-icon-btn nav-icon-square"
-                  title="Espace parent"
-                  aria-label="Espace parent"
-                >
-                  <Users size={17} strokeWidth={2.25} aria-hidden />
-                </Link>
-              ) : null}
-              {!hideHomeButton && !hideNav ? (
-                <button type="button" className="nav-icon-btn nav-icon-square" onClick={goHome} aria-label="Accueil">
-                  <Home size={17} strokeWidth={2.25} aria-hidden />
-                </button>
-              ) : null}
+              <ColorsMenu />
+              <ListenButton />
             </div>
           ) : null}
 

@@ -1,9 +1,15 @@
 import { Link, useNavigate } from "react-router-dom";
-import { LogOut, RefreshCw } from "lucide-react";
+import { GraduationCap, Home, LogOut, Shield, type LucideIcon } from "lucide-react";
 import { StatusBadge } from "./StatusBadge";
 import { useSession } from "../lib/session";
 import type { AdultRole } from "../lib/adultRoles";
 import { normalizeRoles } from "../lib/adultRoles";
+
+function roleSwitchIcon(target: AdultRole): LucideIcon {
+  if (target === "parent") return Home;
+  if (target === "enseignant") return GraduationCap;
+  return Shield;
+}
 
 type Props = {
   /** Mode compact (parcours élève). */
@@ -90,25 +96,28 @@ export function AccountChip({ compact = false }: Props) {
       </div>
       {switchTargets.length > 0 ? (
         <div className="account-role-switch" role="group" aria-label="Changer d’espace">
-          {switchTargets.map((target) => (
-            <button
-              key={target}
-              type="button"
-              className="nav-icon-btn nav-icon-square"
-              title={`Passer en espace ${roleShort(target)}`}
-              aria-label={`Passer en espace ${roleShort(target)}`}
-              onClick={() => {
-                void switchAdultRole(target).then((err) => {
-                  if (err) return;
-                  if (target === "parent") navigate("/espace-parent");
-                  else if (target === "admin") navigate("/espace-admin");
-                  else navigate("/espace-professeur");
-                });
-              }}
-            >
-              <RefreshCw size={15} strokeWidth={2.25} aria-hidden />
-            </button>
-          ))}
+          {switchTargets.map((target) => {
+            const Icon = roleSwitchIcon(target);
+            return (
+              <button
+                key={target}
+                type="button"
+                className="nav-icon-btn nav-icon-square"
+                title={`Passer en espace ${roleShort(target)}`}
+                aria-label={`Passer en espace ${roleShort(target)}`}
+                onClick={() => {
+                  void switchAdultRole(target).then((err) => {
+                    if (err) return;
+                    if (target === "parent") navigate("/espace-parent");
+                    else if (target === "admin") navigate("/espace-admin");
+                    else navigate("/espace-professeur");
+                  });
+                }}
+              >
+                <Icon size={15} strokeWidth={2.25} aria-hidden />
+              </button>
+            );
+          })}
         </div>
       ) : null}
       <button

@@ -26,7 +26,8 @@ import { TeacherDashboardScreen } from "./screens/TeacherDashboardScreen";
 import { SessionControlScreen } from "./screens/SessionControlScreen";
 import { MissionEditorScreen } from "./screens/MissionEditorScreen";
 import { AdminSpaceScreen } from "./screens/AdminSpaceScreen";
-import { AdminDashboardScreen } from "./screens/AdminDashboardScreen";
+import { AdminPanelRedirect } from "./screens/AdminPanelRedirect";
+import { AdminLayout } from "./components/AdminLayout";
 import { StudentWaitingScreen } from "./screens/StudentWaitingScreen";
 
 const LOCKED_ALLOWED = new Set(["/salle-attente", "/mission"]);
@@ -136,9 +137,14 @@ export default function App() {
           }
         />
         <Route path="/espace-professeur/missions" element={<Navigate to="/espace-admin/missions" replace />} />
-        <Route path="/espace-admin" element={<AdminDashboardScreen />} />
-        <Route path="/espace-admin/panel" element={<AdminSpaceScreen />} />
-        <Route path="/espace-admin/missions" element={<MissionEditorScreen />} />
+        <Route path="/espace-admin" element={<AdminLayout />}>
+          <Route index element={<AdminSpaceScreen />} />
+          <Route path="missions" element={<MissionEditorScreen />} />
+          <Route path="illustrations" element={<AdminSpaceScreen />} />
+          <Route path="admins" element={<AdminSpaceScreen />} />
+          <Route path="grants" element={<AdminSpaceScreen />} />
+        </Route>
+        <Route path="/espace-admin/panel" element={<AdminPanelRedirect />} />
         <Route path="/salle-attente" element={<StudentWaitingScreen />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
