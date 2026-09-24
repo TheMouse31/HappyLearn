@@ -78,8 +78,9 @@ textarea:focus-visible,
 }
 
 .app-shell {
-  width: min(var(--max), 100%);
-  margin: 0 auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
   padding: 12px;
 }
 
