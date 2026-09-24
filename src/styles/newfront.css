@@ -101,9 +101,10 @@ html[data-skin="newfront"] .ghost-btn:hover{
 }
 
 html[data-skin="newfront"] .app-shell{
-  width: min(var(--max), 100%);
-  margin: 0 auto;
-  padding: 14px;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 10px 12px 14px;
 }
 
 html[data-skin="newfront"] .app-shell.public-shell.is-bleed{
@@ -1185,7 +1186,8 @@ html[data-skin="newfront"] .code-hero strong{
 }
 
 html[data-skin="newfront"] .app-shell:has(.session-pilot){
-  width: min(1120px, 100%);
+  width: 100%;
+  max-width: none;
 }
 
 html[data-skin="newfront"] .session-pilot h1{
@@ -1227,7 +1229,8 @@ html[data-skin="newfront"] .teacher-space h2{
 }
 
 html[data-skin="newfront"] .app-shell:has(.suivi-classe){
-  width: min(1520px, 100%);
+  width: 100%;
+  max-width: none;
 }
 
 html[data-skin="newfront"] .app-shell:has(.suivi-classe) .window{
@@ -3283,8 +3286,9 @@ html[data-skin="newfront"] .listen-nav.is-on{
 
 /* —— Shell & window : hauteur utile, padding équilibré —— */
 html[data-skin="newfront"] .app-shell:not(.public-shell) {
-  width: min(1080px, 100%);
-  padding: clamp(10px, 1.8vw, 18px);
+  width: 100%;
+  max-width: none;
+  padding: clamp(8px, 1.2vw, 14px);
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -3943,4 +3947,144 @@ html[data-skin="newfront"] .public-shell.is-bleed.is-home .hl-how {
   html[data-skin="newfront"] .public-shell.is-bleed.is-home .hl-hero-visual {
     justify-self: center;
   }
+}
+
+/* —— Pleine largeur réelle : panneaux bord à bord —— */
+html[data-skin="newfront"] .app-shell:not(.public-shell) {
+  padding: 0;
+  margin: 0;
+}
+
+html[data-skin="newfront"] .app-shell:not(.public-shell) .topbar {
+  border-radius: 0;
+  border-left: 0;
+  border-right: 0;
+  border-top: 0;
+}
+
+html[data-skin="newfront"] .app-shell:not(.public-shell) .window {
+  border-radius: 0;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
+  box-shadow: none;
+  padding: clamp(20px, 3vw, 40px) clamp(20px, 4vw, 56px);
+}
+
+html[data-skin="newfront"] .setup-steps-indicator,
+html[data-skin="newfront"] .setup-steps.setup-steps-indicator {
+  border-left: 0;
+  border-right: 0;
+  border-radius: 0;
+}
+
+@media (min-width: 768px) {
+  html[data-skin="newfront"] .split,
+  html[data-skin="newfront"] .login-layout,
+  html[data-skin="newfront"] .competence-layout,
+  html[data-skin="newfront"] .mission-pick-layout {
+    grid-template-columns: minmax(240px, 0.75fr) minmax(0, 1.6fr);
+    gap: clamp(28px, 4vw, 64px);
+    width: 100%;
+  }
+}
+
+html[data-skin="newfront"] .login-form,
+html[data-skin="newfront"] .competence-pick,
+html[data-skin="newfront"] .mission-offer-grid,
+html[data-skin="newfront"] .choice-grid,
+html[data-skin="newfront"] .summary,
+html[data-skin="newfront"] .connexion-role-list {
+  max-width: none;
+  width: 100%;
+}
+
+html[data-skin="newfront"] .mascot-stage {
+  max-width: none;
+}
+
+html[data-skin="newfront"] .public-shell.is-bleed .topbar {
+  margin: 0;
+  border-radius: 0;
+  left: 0;
+  right: 0;
+  top: 0;
+  width: 100%;
+  position: sticky;
+}
+
+html[data-skin="newfront"] .public-shell.is-bleed.is-home .topbar,
+html[data-skin="newfront"] .public-shell.is-bleed.is-connexion .topbar,
+html[data-skin="newfront"] .public-shell.is-bleed:has(.connexion-hub) .topbar {
+  margin: 0;
+  border-radius: 0;
+  top: 0;
+}
+
+html[data-skin="newfront"] .classic-home {
+  padding: clamp(20px, 3vh, 36px) clamp(16px, 3vw, 40px) clamp(36px, 5vh, 64px);
+}
+
+html[data-skin="newfront"] .classic-home .home-hero {
+  margin-bottom: clamp(20px, 3vh, 32px);
+}
+
+html[data-skin="newfront"] .classic-home .how-steps {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+html[data-skin="newfront"] .classic-home .how-steps li {
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+html[data-skin="newfront"] .connexion-hub {
+  width: 100%;
+  max-width: none;
+  padding: clamp(28px, 5vh, 56px) clamp(20px, 4vw, 56px);
+}
+
+html[data-skin="newfront"] .student-home {
+  max-width: none;
+}
+
+html[data-skin="newfront"] .student-next {
+  grid-template-columns: minmax(200px, 0.7fr) minmax(0, 1.5fr);
+  width: 100%;
+}
+
+html[data-skin="newfront"] .student-next-actions {
+  max-width: 480px;
+}
+
+@media (max-width: 820px) {
+  html[data-skin="newfront"] .classic-home .how-steps {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+html[data-skin="newfront"] .window > .split,
+html[data-skin="newfront"] .window > .intro,
+html[data-skin="newfront"] .window > section,
+html[data-skin="newfront"] .window > .classic-home,
+html[data-skin="newfront"] .login-layout,
+html[data-skin="newfront"] .competence-layout,
+html[data-skin="newfront"] .mission-pick-layout,
+html[data-skin="newfront"] .student-home {
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+}
+
+html[data-skin="newfront"] .shell-eleve .window,
+html[data-skin="newfront"] .shell-auth .window {
+  align-items: stretch;
+}
+
+html[data-skin="newfront"] .shell-eleve .window > .split,
+html[data-skin="newfront"] .shell-auth .window > .split {
+  width: 100%;
+  align-content: center;
 }
