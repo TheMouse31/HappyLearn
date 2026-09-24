@@ -12,12 +12,11 @@ type TeacherMode = "connexion" | "inscription";
 
 export function TeacherLoginScreen() {
   const navigate = useNavigate();
-  const { role, loginTeacherPassword, loginTeacherMagic, loginTeacherGoogle } = useSession();
+  const { role, loginTeacherPassword, loginTeacherGoogle } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [teacherMode, setTeacherMode] = useState<TeacherMode>("connexion");
   const [error, setError] = useState("");
-  const [info, setInfo] = useState("");
   const [busy, setBusy] = useState(false);
   const hasServer = supabaseConfigured();
 
@@ -55,7 +54,6 @@ export function TeacherLoginScreen() {
                 event.preventDefault();
                 setBusy(true);
                 setError("");
-                setInfo("");
                 void loginTeacherPassword(email, password, teacherMode).then((message) => {
                   setBusy(false);
                   if (message) setError(message);
@@ -108,29 +106,9 @@ export function TeacherLoginScreen() {
               <p className="error" aria-live="polite">
                 {error}
               </p>
-              <p className="feedback info" aria-live="polite">
-                {info}
-              </p>
               <div className="actions">
                 <Button variant="primary" type="submit" disabled={busy}>
                   {teacherMode === "inscription" ? "Créer le compte" : "Se connecter"}
-                </Button>
-                <Button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => {
-                    setBusy(true);
-                    setError("");
-                    setInfo("");
-                    void loginTeacherMagic(email).then((message) => {
-                      setBusy(false);
-                      if (message === "sent") {
-                        setInfo("Un lien de connexion a été envoyé. Ouvre-le sur cet appareil.");
-                      } else if (message) setError(message);
-                    });
-                  }}
-                >
-                  Recevoir un lien magique
                 </Button>
                 <OAuthButtons
                   busy={busy}
