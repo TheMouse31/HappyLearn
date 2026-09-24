@@ -169,6 +169,12 @@ html[data-skin="newfront"] .topbar-tools{
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  margin-right: 4px;
+}
+
+html[data-skin="newfront"] .topbar-end > .hl-badge,
+html[data-skin="newfront"] .public-nav > .hl-badge {
+  margin-inline: 2px 4px;
 }
 
 html[data-skin="newfront"] .brand{

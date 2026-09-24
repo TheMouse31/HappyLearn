@@ -65,7 +65,7 @@ export function AccountChip({ compact = false }: Props) {
           void logout().then(() => navigate("/"));
         }}
       >
-        <span aria-hidden="true">⎋</span>
+        <span aria-hidden="true">×</span>
       </button>
     </div>
   );
