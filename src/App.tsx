@@ -28,7 +28,9 @@ import { MissionEditorScreen } from "./screens/MissionEditorScreen";
 import { AdminSpaceScreen } from "./screens/AdminSpaceScreen";
 import { AdminPanelRedirect } from "./screens/AdminPanelRedirect";
 import { AdminLayout } from "./components/AdminLayout";
+import { CookieBanner } from "./components/CookieBanner";
 import { StudentWaitingScreen } from "./screens/StudentWaitingScreen";
+import { PrivacyScreen } from "./screens/PrivacyScreen";
 
 const LOCKED_ALLOWED = new Set(["/salle-attente", "/mission"]);
 
@@ -78,8 +80,11 @@ export default function App() {
 
   return (
     <LockedGate>
+      <>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/confidentialite" element={<PrivacyScreen />} />
+        <Route path="/cookies" element={<Navigate to="/confidentialite" replace />} />
         <Route path="/connexion" element={<ConnexionScreen />} />
         <Route path="/connexion/eleve" element={<EleveLoginScreen />} />
         <Route path="/connexion/enseignant" element={<TeacherLoginScreen />} />
@@ -148,6 +153,8 @@ export default function App() {
         <Route path="/salle-attente" element={<StudentWaitingScreen />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <CookieBanner />
+      </>
     </LockedGate>
   );
 }

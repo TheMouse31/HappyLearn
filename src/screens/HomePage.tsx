@@ -85,6 +85,10 @@ function HomeBody() {
           </li>
         </ol>
       </section>
+
+      <footer className="hl-legal-footer">
+        <Link to="/confidentialite">Confidentialité & cookies</Link>
+      </footer>
     </div>
   );
 }
